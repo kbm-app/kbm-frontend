@@ -11,9 +11,7 @@ import { Pencil, Trash2, Star } from 'lucide-react'
 
 function getMuridFotoUrl(murid: Murid | undefined | null): string | null {
   if (!murid) return null
-  const raw = murid.foto_url ?? (murid.foto ? `${process.env.NEXT_PUBLIC_API_URL}/storage/${murid.foto}` : null)
-  if (!raw) return null
-  try { return new URL(raw).pathname } catch { return raw }
+  return murid.foto_url ?? null
 }
 
 interface MuridDetailProps {

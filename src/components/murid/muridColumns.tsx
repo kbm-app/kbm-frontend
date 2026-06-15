@@ -4,9 +4,7 @@ import { cn, formatDate } from '@/lib/utils'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 
 function getMuridFotoUrl(murid: Murid): string | null {
-  const raw = murid.foto_url ?? (murid.foto ? `${process.env.NEXT_PUBLIC_API_URL}/storage/${murid.foto}` : null)
-  if (!raw) return null
-  try { return new URL(raw).pathname } catch { return raw }
+  return murid.foto_url ?? null
 }
 
 export const STATUS_LABEL: Record<MuridStatus, string> = {
