@@ -1,6 +1,7 @@
 import { ColumnDef } from '@tanstack/react-table'
 import { Pengajar } from '@/types/pengajar'
-import { cn, formatDate } from '@/lib/utils'
+import { StatusBadge } from '@/components/ui/status-badge'
+import { formatDate } from '@/lib/utils'
 import { Eye, Pencil, Trash2 } from 'lucide-react'
 
 interface PengajarColumnsOpts {
@@ -40,14 +41,7 @@ export function getPengajarColumns({ onDetail, onEdit, onDelete }: PengajarColum
     {
       accessorKey: 'is_aktif',
       header: 'Status',
-      cell: ({ getValue }) => (
-        <span className={cn(
-          'text-xs font-medium px-2 py-0.5 rounded-full',
-          getValue<boolean>() ? 'bg-green-100 text-green-700' : 'bg-zinc-100 text-zinc-500'
-        )}>
-          {getValue<boolean>() ? 'Aktif' : 'Nonaktif'}
-        </span>
-      ),
+      cell: ({ getValue }) => <StatusBadge aktif={getValue<boolean>()} />,
     },
     {
       id: 'aksi',

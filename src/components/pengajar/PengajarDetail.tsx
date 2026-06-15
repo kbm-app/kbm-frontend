@@ -5,7 +5,8 @@ import { DetailRow } from '@/components/ui/detail-row'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
-import { cn, formatDate } from '@/lib/utils'
+import { StatusBadge } from '@/components/ui/status-badge'
+import { formatDate } from '@/lib/utils'
 import { Pencil, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
 
 interface PengajarDetailProps {
@@ -40,12 +41,7 @@ export function PengajarDetail({ selected, isToggling, onToggle, onEdit, onDelet
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Data Pengajar</CardTitle>
-            <span className={cn(
-              'text-xs font-medium px-2.5 py-1 rounded-full',
-              selected.is_aktif ? 'bg-green-100 text-green-700' : 'bg-zinc-100 text-zinc-500'
-            )}>
-              {selected.is_aktif ? 'Aktif' : 'Nonaktif'}
-            </span>
+            <StatusBadge aktif={selected.is_aktif} />
           </div>
         </CardHeader>
         <Separator />

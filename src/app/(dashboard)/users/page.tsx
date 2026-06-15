@@ -10,6 +10,7 @@ import UserForm from '@/components/users/UserForm'
 import { UserDetail } from '@/components/users/UserDetail'
 import { getUserColumns, ROLE_LABELS } from '@/components/users/userColumns'
 import { DeleteDialog } from '@/components/ui/delete-dialog'
+import { Pagination } from '@/components/ui/pagination'
 import { Tab, Mode } from '@/types/common'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -170,25 +171,7 @@ export default function UsersPage() {
 
           <DataTable columns={columns} data={data?.data ?? []} isLoading={isLoading} />
 
-          {data && data.last_page > 1 && (
-            <div className="flex items-center gap-2 justify-end">
-              <button
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-3 py-1.5 text-sm border border-border rounded-lg disabled:opacity-40 hover:bg-muted transition-colors"
-              >
-                Sebelumnya
-              </button>
-              <span className="text-sm text-muted-foreground">{page} / {data.last_page}</span>
-              <button
-                onClick={() => setPage((p) => Math.min(data.last_page, p + 1))}
-                disabled={page === data.last_page}
-                className="px-3 py-1.5 text-sm border border-border rounded-lg disabled:opacity-40 hover:bg-muted transition-colors"
-              >
-                Selanjutnya
-              </button>
-            </div>
-          )}
+          <Pagination page={page} lastPage={data?.last_page ?? 1} onPageChange={setPage} />
         </div>
       )}
 

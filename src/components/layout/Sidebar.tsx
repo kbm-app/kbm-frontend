@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useLogout } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, GraduationCap, BookUser, LogOut, UserCircle } from 'lucide-react'
+import { LayoutDashboard, Users, GraduationCap, BookUser, LogOut, UserCircle, School } from 'lucide-react'
 
 const navItems = [
   {
@@ -30,6 +30,12 @@ const navItems = [
     href: '/murid',
     label: 'Murid',
     icon: BookUser,
+    roles: ['super_admin', 'pengajar'],
+  },
+  {
+    href: '/kelas',
+    label: 'Kelas',
+    icon: School,
     roles: ['super_admin', 'pengajar'],
   },
 ]
