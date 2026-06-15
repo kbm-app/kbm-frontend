@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins, Inter } from "next/font/google";
 import { Geist_Mono } from "next/font/google";
+import Providers from "@/components/providers";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -34,7 +35,9 @@ export default function RootLayout({
       lang="id"
       className={`${poppins.variable} ${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
