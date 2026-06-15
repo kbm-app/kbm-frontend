@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useLogin } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
+import { inputClass, labelClass, errorClass } from '@/lib/utils'
 
 const schema = z.object({
   email: z.string().email('Email tidak valid'),
@@ -29,41 +30,33 @@ export default function LoginForm() {
     | undefined
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Email
-        </label>
+        <label className={labelClass}>Email</label>
         <input
           {...register('email')}
           type="email"
           autoComplete="email"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className={inputClass}
         />
-        {errors.email && (
-          <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>
-        )}
+        {errors.email && <p className={errorClass}>{errors.email.message}</p>}
         {apiErrors?.email?.map((msg) => (
-          <p key={msg} className="mt-1 text-xs text-red-500">{msg}</p>
+          <p key={msg} className={errorClass}>{msg}</p>
         ))}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Password
-        </label>
+        <label className={labelClass}>Password</label>
         <input
           {...register('password')}
           type="password"
           autoComplete="current-password"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className={inputClass}
         />
-        {errors.password && (
-          <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>
-        )}
+        {errors.password && <p className={errorClass}>{errors.password.message}</p>}
       </div>
 
-      <Button type="submit" className="w-full" disabled={isPending}>
+      <Button type="submit" size="lg" className="w-full mt-2" disabled={isPending}>
         {isPending ? 'Masuk...' : 'Masuk'}
       </Button>
     </form>

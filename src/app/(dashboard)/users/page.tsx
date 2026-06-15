@@ -7,6 +7,7 @@ import { User, UserRole } from '@/types/user'
 import UserForm from '@/components/users/UserForm'
 import UserStatusToggle from '@/components/users/UserStatusToggle'
 import { Button } from '@/components/ui/button'
+import { cardClass, selectClass } from '@/lib/utils'
 import { Pencil, Trash2, Plus } from 'lucide-react'
 
 const ROLE_LABELS: Record<UserRole, string> = {
@@ -23,15 +24,11 @@ export default function UsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [showForm, setShowForm] = useState(false)
 
-  const { data, isLoading } = useUsers({
-    role: roleFilter || undefined,
-    page,
-  })
-
+  const { data, isLoading } = useUsers({ role: roleFilter || undefined, page })
   const { mutate: deleteUser } = useDeleteUser()
 
   if (currentUser?.role !== 'super_admin') {
-    return <p className="text-sm text-gray-500">Akses ditolak.</p>
+    return <p className="text-sm text-muted-foreground">Akses ditolak.</p>
   }
 
   const openCreate = () => { setSelectedUser(null); setShowForm(true) }
@@ -39,11 +36,11 @@ export default function UsersPage() {
   const closeForm = () => setShowForm(false)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Pengguna</h1>
-        <Button onClick={openCreate}>
-          <Plus size={16} className="mr-1" /> Tambah
+        <h1 className="text-2xl font-bold text-foreground">Pengguna</h1>
+        <Button onClick={openCreate} size="sm">
+          <Plus className="size-3.5" /> Tambah
         </Button>
       </div>
 
@@ -52,7 +49,7 @@ export default function UsersPage() {
         <select
           value={roleFilter}
           onChange={(e) => { setRoleFilter(e.target.value as UserRole | ''); setPage(1) }}
-          className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          className={`${selectClass} w-auto`}
         >
           <option value="">Semua Role</option>
           {Object.entries(ROLE_LABELS).map(([value, label]) => (
@@ -61,60 +58,66 @@ export default function UsersPage() {
         </select>
       </div>
 
-      {/* Form drawer */}
+      {/* Form panel */}
       {showForm && (
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
-          <h2 className="text-base font-semibold text-gray-900 mb-4">
+        <div className={`${cardClass} p-6`}>
+          <h2 className="text-sm font-semibold text-foreground mb-4">
             {selectedUser ? 'Edit Pengguna' : 'Tambah Pengguna'}
           </h2>
           <UserForm user={selectedUser ?? undefined} onSuccess={closeForm} />
-          <button onClick={closeForm} className="mt-3 text-sm text-gray-500 hover:underline">
+          <button
+            onClick={closeForm}
+            className="mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
             Batal
           </button>
         </div>
       )}
 
       {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+      <div className={`${cardClass} overflow-hidden`}>
         {isLoading ? (
-          <div className="p-6 text-sm text-gray-500">Memuat...</div>
+          <div className="p-6 text-sm text-muted-foreground">Memuat...</div>
         ) : (
           <table className="w-full text-sm">
-            <thead className="border-b border-gray-100 bg-gray-50">
+            <thead className="border-b border-border bg-muted/50">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Nama</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Email</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Role</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Nama</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Email</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Role</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Status</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-border">
               {data?.data.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-gray-900">{user.name}</td>
-                  <td className="px-4 py-3 text-gray-600">{user.email}</td>
-                  <td className="px-4 py-3 text-gray-600">{ROLE_LABELS[user.role]}</td>
+                <tr key={user.id} className="hover:bg-muted/30 transition-colors">
+                  <td className="px-4 py-3 font-medium text-foreground">{user.name}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
+                  <td className="px-4 py-3 text-muted-foreground">{ROLE_LABELS[user.role]}</td>
                   <td className="px-4 py-3">
                     <UserStatusToggle user={user} />
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
                         onClick={() => openEdit(user)}
-                        className="p-1.5 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700"
                       >
-                        <Pencil size={14} />
-                      </button>
+                        <Pencil />
+                      </Button>
                       {user.id !== currentUser.id && (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
                           onClick={() => {
                             if (confirm(`Hapus ${user.name}?`)) deleteUser(user.id)
                           }}
-                          className="p-1.5 rounded hover:bg-red-50 text-gray-500 hover:text-red-600"
+                          className="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                         >
-                          <Trash2 size={14} />
-                        </button>
+                          <Trash2 />
+                        </Button>
                       )}
                     </div>
                   </td>
@@ -126,23 +129,20 @@ export default function UsersPage() {
 
         {/* Pagination */}
         {data && data.last_page > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-            <span className="text-xs text-gray-500">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border">
+            <span className="text-xs text-muted-foreground">
               Total {data.total} pengguna
             </span>
             <div className="flex gap-1">
               {Array.from({ length: data.last_page }, (_, i) => i + 1).map((p) => (
-                <button
+                <Button
                   key={p}
+                  size="xs"
+                  variant={p === page ? 'default' : 'ghost'}
                   onClick={() => setPage(p)}
-                  className={`px-2.5 py-1 rounded text-xs font-medium ${
-                    p === page
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
                 >
                   {p}
-                </button>
+                </Button>
               ))}
             </div>
           </div>

@@ -10,10 +10,10 @@ export default function UserStatusToggle({ user }: { user: User }) {
     <button
       onClick={() => mutate(user.id)}
       disabled={isPending}
-      className={`text-xs font-medium px-2 py-0.5 rounded-full transition-colors ${
+      className={`text-xs font-medium px-2.5 py-1 rounded-full border transition-colors disabled:opacity-50 ${
         user.is_active
-          ? 'bg-green-100 text-green-700 hover:bg-green-200'
-          : 'bg-red-100 text-red-700 hover:bg-red-200'
+          ? 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/20'
+          : 'bg-destructive/10 text-destructive border-destructive/20 hover:bg-destructive/20'
       }`}
     >
       {user.is_active ? 'Aktif' : 'Nonaktif'}

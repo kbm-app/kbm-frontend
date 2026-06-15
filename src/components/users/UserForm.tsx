@@ -7,6 +7,7 @@ import { useEffect } from 'react'
 import { User, UserRole } from '@/types/user'
 import { useCreateUser, useUpdateUser } from '@/hooks/useUsers'
 import { Button } from '@/components/ui/button'
+import { inputClass, selectClass, labelClass, errorClass } from '@/lib/utils'
 
 const ROLE_LABELS: Record<UserRole, string> = {
   super_admin: 'Super Admin',
@@ -64,39 +65,39 @@ export default function UserForm({ user, onSuccess }: Props) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Nama</label>
-        <input {...register('name')} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-        {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name.message}</p>}
+        <label className={labelClass}>Nama</label>
+        <input {...register('name')} className={inputClass} />
+        {errors.name && <p className={errorClass}>{errors.name.message}</p>}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-        <input {...register('email')} type="email" className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-        {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email.message}</p>}
-        {apiErrors?.email?.map((msg) => <p key={msg} className="mt-1 text-xs text-red-500">{msg}</p>)}
+        <label className={labelClass}>Email</label>
+        <input {...register('email')} type="email" className={inputClass} />
+        {errors.email && <p className={errorClass}>{errors.email.message}</p>}
+        {apiErrors?.email?.map((msg) => <p key={msg} className={errorClass}>{msg}</p>)}
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Nomor HP</label>
-        <input {...register('phone')} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+        <label className={labelClass}>Nomor HP</label>
+        <input {...register('phone')} className={inputClass} />
       </div>
 
       {!isEdit && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-          <input {...register('password')} type="password" className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
-          {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password.message}</p>}
+          <label className={labelClass}>Password</label>
+          <input {...register('password')} type="password" className={inputClass} />
+          {errors.password && <p className={errorClass}>{errors.password.message}</p>}
         </div>
       )}
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-        <select {...register('role')} className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+        <label className={labelClass}>Role</label>
+        <select {...register('role')} className={selectClass}>
           {Object.entries(ROLE_LABELS).map(([value, label]) => (
             <option key={value} value={value}>{label}</option>
           ))}
         </select>
-        {errors.role && <p className="mt-1 text-xs text-red-500">{errors.role.message}</p>}
+        {errors.role && <p className={errorClass}>{errors.role.message}</p>}
       </div>
 
       <Button type="submit" disabled={isPending} className="w-full">

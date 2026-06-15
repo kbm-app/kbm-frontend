@@ -14,12 +14,12 @@ export default function AvatarUpload({ user }: { user: User }) {
     : null
 
   return (
-    <div className="flex items-center gap-4">
-      <div className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+    <div className="flex items-center gap-5">
+      <div className="relative w-16 h-16 rounded-full overflow-hidden bg-muted flex items-center justify-center shrink-0">
         {avatarUrl ? (
           <Image src={avatarUrl} alt={user.name} fill className="object-cover" />
         ) : (
-          <span className="text-2xl font-bold text-gray-400">
+          <span className="text-xl font-bold text-muted-foreground">
             {user.name.charAt(0).toUpperCase()}
           </span>
         )}
@@ -39,11 +39,11 @@ export default function AvatarUpload({ user }: { user: User }) {
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={isPending}
-          className="text-sm font-medium text-primary hover:underline disabled:opacity-50"
+          className="text-sm font-medium text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
         >
           {isPending ? 'Mengunggah...' : 'Ganti foto'}
         </button>
-        <p className="text-xs text-gray-500 mt-0.5">JPG, PNG. Maks 2MB.</p>
+        <p className="text-xs text-muted-foreground mt-0.5">JPG, PNG. Maks 2MB.</p>
       </div>
     </div>
   )
