@@ -3,6 +3,7 @@ import api from '@/lib/axios'
 import { User, UserRole } from '@/types/user'
 
 interface UserFilters {
+  search?: string
   role?: UserRole
   is_active?: boolean
   page?: number

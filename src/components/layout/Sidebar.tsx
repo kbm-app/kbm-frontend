@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useLogout } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, GraduationCap, BookUser, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, GraduationCap, BookUser, LogOut, UserCircle } from 'lucide-react'
 
 const navItems = [
   {
@@ -15,7 +15,7 @@ const navItems = [
     roles: ['super_admin', 'pengajar', 'murid', 'wali_murid'],
   },
   {
-    href: '/dashboard/users',
+    href: '/users',
     label: 'Pengguna',
     icon: Users,
     roles: ['super_admin'],
@@ -72,10 +72,21 @@ export default function Sidebar() {
       </nav>
 
       <div className="border-t border-sidebar-border pt-3 mt-3">
-        <div className="px-3 mb-2">
-          <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.name}</p>
-          <p className="text-xs text-sidebar-foreground/60 truncate">{user?.email}</p>
-        </div>
+        <Link
+          href="/profile"
+          className={cn(
+            'flex items-center gap-2.5 rounded-lg px-3 py-2 mb-1 transition-colors',
+            pathname === '/profile'
+              ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+              : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+          )}
+        >
+          <UserCircle className="size-4 shrink-0" />
+          <div className="min-w-0">
+            <p className="text-sm font-medium truncate">{user?.name}</p>
+            <p className="text-xs opacity-60 truncate">{user?.email}</p>
+          </div>
+        </Link>
         <button
           onClick={() => logout()}
           disabled={isPending}
