@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useLogout } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, GraduationCap, BookUser, LogOut } from 'lucide-react'
 
 const navItems = [
   {
@@ -19,6 +19,18 @@ const navItems = [
     label: 'Pengguna',
     icon: Users,
     roles: ['super_admin'],
+  },
+  {
+    href: '/pengajar',
+    label: 'Pengajar',
+    icon: GraduationCap,
+    roles: ['super_admin', 'pengajar'],
+  },
+  {
+    href: '/murid',
+    label: 'Murid',
+    icon: BookUser,
+    roles: ['super_admin', 'pengajar'],
   },
 ]
 
@@ -40,7 +52,7 @@ export default function Sidebar() {
 
       <nav className="flex-1 space-y-0.5">
         {visibleItems.map((item) => {
-          const isActive = pathname === item.href
+          const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
           return (
             <Link
               key={item.href}
