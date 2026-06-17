@@ -51,6 +51,7 @@ export function EnrollMuridModal({ open, onOpenChange, onSubmit, isLoading }: En
             onSelect={handleSelect}
             selectedId={selectedMuridId}
             error={errors.murid_id?.message}
+            tanpaKelas
           />
         </Field>
 

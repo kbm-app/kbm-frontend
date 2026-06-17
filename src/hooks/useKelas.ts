@@ -109,6 +109,7 @@ export const useEnrollMurid = (kelasId: number) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kelas', kelasId, 'murid'] })
       queryClient.invalidateQueries({ queryKey: ['kelas', kelasId] })
+      queryClient.invalidateQueries({ queryKey: ['murid'] })
     },
   })
 }
@@ -121,6 +122,7 @@ export const useKeluarkanMurid = (kelasId: number) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kelas', kelasId, 'murid'] })
       queryClient.invalidateQueries({ queryKey: ['kelas', kelasId] })
+      queryClient.invalidateQueries({ queryKey: ['murid'] })
     },
   })
 }

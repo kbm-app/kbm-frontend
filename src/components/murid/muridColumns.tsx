@@ -36,21 +36,28 @@ export function getMuridColumns({ onDetail, onEdit, onDelete }: MuridColumnsOpts
       accessorKey: 'nama',
       header: 'Nama',
       cell: ({ row }) => {
-        const fotoUrl = row.original.foto_url ?? null
+        const m = row.original
+        const fotoUrl = m.foto_url ?? null
+        const kelasNama = m.kelas_aktif?.[0]?.kelas?.nama
         return (
           <div className="flex items-center gap-3">
             {fotoUrl ? (
               <img
                 src={fotoUrl}
-                alt={row.original.nama}
+                alt={m.nama}
                 className="size-8 rounded-full object-cover shrink-0"
               />
             ) : (
               <div className="size-8 rounded-full bg-muted flex items-center justify-center text-xs font-semibold shrink-0">
-                {row.original.nama[0]?.toUpperCase()}
+                {m.nama[0]?.toUpperCase()}
               </div>
             )}
-            <span className="font-medium">{row.original.nama}</span>
+            <div>
+              <p className="font-medium">{m.nama}</p>
+              {kelasNama && (
+                <p className="text-xs text-muted-foreground">{kelasNama}</p>
+              )}
+            </div>
           </div>
         )
       },

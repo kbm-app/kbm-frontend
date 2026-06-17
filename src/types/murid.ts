@@ -1,4 +1,5 @@
 import { User } from './user'
+import { MuridKelas } from './kelas'
 
 export type MuridStatus = 'aktif' | 'nonaktif' | 'alumni' | 'pindah'
 export type HubunganWali = 'ayah' | 'ibu' | 'kakak' | 'wali_lain'
@@ -32,10 +33,15 @@ export interface Murid {
   updated_at: string
   user?: User
   wali_murid?: WaliMurid[]
+  kelas_aktif?: MuridKelas[]
 }
 
 export interface MuridFilters {
   search?: string
   status?: MuridStatus
+  kelas_id?: number
+  usia_min?: number
+  usia_max?: number
+  tanpa_kelas?: boolean
   page?: number
 }

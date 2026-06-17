@@ -13,6 +13,7 @@ interface MuridAutocompleteProps {
   defaultInputValue?: string
   error?: string
   placeholder?: string
+  tanpaKelas?: boolean
 }
 
 export function MuridAutocomplete({
@@ -21,6 +22,7 @@ export function MuridAutocomplete({
   defaultInputValue,
   error,
   placeholder = 'Ketik nama murid untuk mencari...',
+  tanpaKelas,
 }: MuridAutocompleteProps) {
   const [inputValue, setInputValue] = useState(defaultInputValue ?? '')
   const debouncedSearch = useDebounce(inputValue)
@@ -28,6 +30,7 @@ export function MuridAutocomplete({
   const { data: muridData, isFetching } = useMuridList({
     search: debouncedSearch || undefined,
     status: 'aktif',
+    tanpa_kelas: tanpaKelas,
   })
 
   const lastListRef = useRef<Murid[]>([])

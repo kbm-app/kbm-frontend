@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { DataTable } from '@/components/ui/data-table'
 import { useMuridList, useCreateMurid, useUpdateMurid, useDeleteMurid, useMuridDetail } from '@/hooks/useMurid'
+import { useKelasList } from '@/hooks/useKelas'
 import { Murid, MuridStatus } from '@/types/murid'
 import MuridForm from '@/components/murid/MuridForm'
 import { MuridDetail } from '@/components/murid/MuridDetail'
@@ -22,9 +23,20 @@ export default function MuridPage() {
   const [deleteTarget, setDeleteTarget] = useState<Murid | null>(null)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<MuridStatus | ''>('')
+  const [kelasId, setKelasId] = useState<number | ''>('')
+  const [usiaMin, setUsiaMin] = useState('')
+  const [usiaMax, setUsiaMax] = useState('')
   const [page, setPage] = useState(1)
 
-  const { data, isLoading } = useMuridList({ search, status: status || undefined, page })
+  const { data, isLoading } = useMuridList({
+    search,
+    status: status || undefined,
+    kelas_id: kelasId || undefined,
+    usia_min: usiaMin ? Number(usiaMin) : undefined,
+    usia_max: usiaMax ? Number(usiaMax) : undefined,
+    page,
+  })
+  const { data: kelasData } = useKelasList({ is_aktif: true })
   const { mutate: createMurid, isPending: isCreating } = useCreateMurid()
   const { mutate: updateMurid, isPending: isUpdating } = useUpdateMurid(selected?.id ?? 0)
   const { mutate: deleteMurid, isPending: isDeleting } = useDeleteMurid()
@@ -135,6 +147,35 @@ export default function MuridPage() {
                 <option key={value} value={value}>{label}</option>
               ))}
             </select>
+            <select
+              value={kelasId}
+              onChange={(e) => { setKelasId(e.target.value ? Number(e.target.value) : ''); setPage(1) }}
+              className="h-9 border border-border rounded-lg px-3 text-sm bg-background outline-none focus:border-ring transition-colors"
+            >
+              <option value="">Semua kelas</option>
+              {kelasData?.data.map((k) => (
+                <option key={k.id} value={k.id}>{k.nama}</option>
+              ))}
+            </select>
+            <div className="flex items-center gap-1.5">
+              <input
+                type="number"
+                min={0}
+                placeholder="Usia min"
+                value={usiaMin}
+                onChange={(e) => { setUsiaMin(e.target.value); setPage(1) }}
+                className="h-9 w-24 border border-border rounded-lg px-3 text-sm bg-background outline-none focus:border-ring transition-colors"
+              />
+              <span className="text-sm text-muted-foreground">–</span>
+              <input
+                type="number"
+                min={0}
+                placeholder="Usia maks"
+                value={usiaMax}
+                onChange={(e) => { setUsiaMax(e.target.value); setPage(1) }}
+                className="h-9 w-24 border border-border rounded-lg px-3 text-sm bg-background outline-none focus:border-ring transition-colors"
+              />
+            </div>
             <span className="ml-auto text-sm text-muted-foreground self-center">
               {data?.total ?? 0} murid
             </span>

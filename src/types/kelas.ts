@@ -39,6 +39,7 @@ export interface MuridKelas {
   created_at: string
   updated_at: string
   murid?: Murid
+  kelas?: Pick<Kelas, 'id' | 'nama'>
 }
 
 export interface KelasFilters {
