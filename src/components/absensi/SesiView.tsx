@@ -10,6 +10,7 @@ import {
   useUpdatePertemuan,
 } from '@/hooks/useAbsensi'
 import { usePengajarList } from '@/hooks/usePengajar'
+import { useKurikulumAktifKelas, useSelesaikanMateriUmum } from '@/hooks/useKurikulum'
 import { StatusAbsensiMurid, StatusAbsensiPengajar, AbsensiMurid } from '@/types/absensi'
 import { STATUS_MURID, STATUS_PENGAJAR } from '@/lib/constants/absensi'
 import { format } from 'date-fns'
@@ -20,7 +21,7 @@ import { Button } from '@/components/ui/button'
 import { PageLoading } from '@/components/ui/page-loading'
 import { formSelectClass } from '@/components/ui/field'
 import { toast } from 'sonner'
-import { CheckCircle } from 'lucide-react'
+import { Check, CheckCircle } from 'lucide-react'
 
 interface Props {
   pertemuanId: number
@@ -37,9 +38,21 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
   const { mutate: updatePertemuan } = useUpdatePertemuan(pertemuanId)
   const { data: pengajarList } = usePengajarList({})
 
+  // Berlangsung: tanpa pertemuanId (progres sesi ini belum tersimpan)
+  // Selesai/detail: dengan pertemuanId agar dicatat_di_sesi_ini terisi
+  const { data: kurikulumAktif } = useKurikulumAktifKelas(
+    pertemuan?.kelas_id ?? null,
+    !pertemuan || pertemuan.status === 'berlangsung' ? undefined : pertemuanId
+  )
+  const { mutateAsync: selesaikanMateri } = useSelesaikanMateriUmum(kurikulumAktif?.kurikulum_id ?? 0)
+
   const [showKonfirmasi, setShowKonfirmasi] = useState(false)
   const [materi, setMateri] = useState('')
   const [catatan, setCatatan] = useState('')
+  const [isSavingProgress, setIsSavingProgress] = useState(false)
+
+  // Materi umum yang baru dicentang pengajar di sesi ini (belum selesai sebelumnya)
+  const [newlySelectedMateri, setNewlySelectedMateri] = useState<Set<number>>(new Set())
 
   // Draft state untuk absensi pengajar
   const [pengajarStatus, setPengajarStatus] = useState<StatusAbsensiPengajar | null>(null)
@@ -96,7 +109,32 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
     })
   }
 
-  const handleSelesai = () => {
+  const toggleMateri = (materiId: number) => {
+    setNewlySelectedMateri(prev => {
+      const next = new Set(prev)
+      if (next.has(materiId)) next.delete(materiId)
+      else next.add(materiId)
+      return next
+    })
+  }
+
+  const handleSelesai = async () => {
+    // Tandai materi yang baru dipilih sebelum sesi ditutup
+    if (newlySelectedMateri.size > 0 && kurikulumAktif) {
+      setIsSavingProgress(true)
+      try {
+        await Promise.all(
+          Array.from(newlySelectedMateri).map(materiId =>
+            selesaikanMateri({ materiId, pertemuanId })
+          )
+        )
+      } catch {
+        toast.error('Gagal menandai sebagian materi, sesi tetap akan diselesaikan')
+      } finally {
+        setIsSavingProgress(false)
+      }
+    }
+
     updatePertemuan({ materi: materi || undefined, catatan: catatan || undefined })
     selesaiSesi(undefined, {
       onSuccess: () => {
@@ -255,6 +293,74 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
         </div>
       )}
 
+      {/* Progress Kurikulum — hanya saat sesi berlangsung dan ada kurikulum aktif */}
+      {isBerlangsung && kurikulumAktif && kurikulumAktif.total_materi_umum > 0 && (
+        <div className="rounded-xl border border-border bg-card p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold">Materi Kurikulum</h2>
+            <span className="text-xs text-muted-foreground">
+              {kurikulumAktif.total_selesai + newlySelectedMateri.size}/{kurikulumAktif.total_materi_umum} selesai
+            </span>
+          </div>
+
+          {/* Progress bar */}
+          <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary rounded-full transition-all duration-300"
+              style={{
+                width: `${Math.min(
+                  ((kurikulumAktif.total_selesai + newlySelectedMateri.size) / kurikulumAktif.total_materi_umum) * 100,
+                  100
+                )}%`,
+              }}
+            />
+          </div>
+
+          {/* Daftar materi per bab */}
+          <div className="space-y-4">
+            {kurikulumAktif.bab.map((bab) => (
+              <div key={bab.id}>
+                <p className="text-xs font-semibold text-muted-foreground mb-2">
+                  ({bab.kode}) {bab.nama}
+                </p>
+                <ul className="space-y-1">
+                  {bab.materi_umum.map((m) => {
+                    const sudahSelesai = m.sudah_selesai
+                    const dipilih = sudahSelesai || newlySelectedMateri.has(m.id)
+                    return (
+                      <li
+                        key={m.id}
+                        onClick={() => !sudahSelesai && toggleMateri(m.id)}
+                        className={cn(
+                          'flex items-center gap-2.5 px-2 py-1.5 rounded-lg select-none',
+                          sudahSelesai
+                            ? 'opacity-50 cursor-default'
+                            : 'cursor-pointer hover:bg-muted/40'
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            'size-4 rounded border flex items-center justify-center shrink-0 transition-colors',
+                            dipilih
+                              ? 'bg-primary border-primary text-primary-foreground'
+                              : 'border-border'
+                          )}
+                        >
+                          {dipilih && <Check className="size-3" />}
+                        </div>
+                        <span className={cn('text-sm', sudahSelesai && 'line-through')}>
+                          {m.judul}
+                        </span>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Materi & Catatan — read-only saat selesai */}
       {!isBerlangsung && (pertemuan.materi || pertemuan.catatan) && (
         <div className="rounded-xl border border-border bg-card p-4 space-y-3">
@@ -273,6 +379,37 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
           )}
         </div>
       )}
+
+      {/* Materi Kurikulum — read-only di detail sesi */}
+      {!isBerlangsung && kurikulumAktif && (() => {
+        const materiDicatat = kurikulumAktif.bab.flatMap((b) =>
+          b.materi_umum
+            .filter((m) => m.dicatat_di_sesi_ini === true)
+            .map((m) => ({ ...m, babKode: b.kode, babNama: b.nama }))
+        )
+        if (materiDicatat.length === 0) return null
+        return (
+          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold">Materi yang Disampaikan</h2>
+              <span className="text-xs text-muted-foreground">{materiDicatat.length} materi</span>
+            </div>
+            <ul className="space-y-1.5">
+              {materiDicatat.map((m) => (
+                <li key={m.id} className="flex items-center gap-2.5">
+                  <div className="size-4 rounded border border-primary bg-primary text-primary-foreground flex items-center justify-center shrink-0">
+                    <Check className="size-3" />
+                  </div>
+                  <span className="text-sm">{m.judul}</span>
+                  <span className="text-xs text-muted-foreground ml-auto shrink-0">
+                    ({m.babKode}) {m.babNama}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      })()}
 
       {/* Ringkasan (selesai) */}
       {pertemuan.status === 'selesai' && (
@@ -327,12 +464,18 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
             <span className="text-destructive">Alpha: <b>{ringkasan.alpha}</b></span>
           </div>
         </div>
+        {newlySelectedMateri.size > 0 && (
+          <div className="rounded-lg bg-primary/5 border border-primary/20 px-3 py-2.5 text-sm mb-5">
+            <span className="text-primary font-medium">{newlySelectedMateri.size} materi umum</span>
+            <span className="text-muted-foreground"> akan ditandai selesai untuk seluruh murid</span>
+          </div>
+        )}
         <div className="flex gap-3">
           <Button variant="outline" size="lg" onClick={() => setShowKonfirmasi(false)} className="flex-1">
             Kembali
           </Button>
-          <Button size="lg" onClick={handleSelesai} disabled={isSelesai} className="flex-1">
-            {isSelesai ? 'Menyimpan...' : 'Ya, Selesaikan'}
+          <Button size="lg" onClick={handleSelesai} disabled={isSelesai || isSavingProgress} className="flex-1">
+            {isSavingProgress ? 'Menyimpan materi...' : isSelesai ? 'Menyimpan...' : 'Ya, Selesaikan'}
           </Button>
         </div>
       </Modal>

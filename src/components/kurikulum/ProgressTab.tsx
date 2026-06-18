@@ -7,6 +7,7 @@ import {
   useUpdateProgress,
   useProgressBulk,
   useUpdateMateri,
+  useSelesaikanMateriUmum,
 } from '@/hooks/useKurikulum'
 import { Materi, ProgressMateriMurid, StatusProgress } from '@/types/kurikulum'
 import { MuridProgressPanel } from './MuridProgressPanel'
@@ -25,11 +26,13 @@ export function ProgressTab({ kurikulumId }: Props) {
 
   const [editingMetodeId, setEditingMetodeId] = useState<number | null>(null)
   const [metodeInput, setMetodeInput] = useState('')
+  const [markingSelesaiId, setMarkingSelesaiId] = useState<number | null>(null)
 
   const { data, isLoading } = useProgressKelas(kurikulumId)
   const { mutate: updateProgress } = useUpdateProgress(kurikulumId)
   const { mutate: progressBulk } = useProgressBulk(kurikulumId)
   const { mutate: updateMateri, isPending: isSavingMetode } = useUpdateMateri(kurikulumId)
+  const { mutateAsync: selesaikanUmum } = useSelesaikanMateriUmum(kurikulumId)
 
   const materiList: Materi[] = subTab === 'umum'
     ? (data?.materi.umum ?? [])
@@ -63,6 +66,23 @@ export function ProgressTab({ kurikulumId }: Props) {
         onError: () => { toast.error('Gagal menyimpan metode'); setEditingMetodeId(null) },
       }
     )
+  }
+
+  // --- Umum: cek apakah materi sudah selesai dari progress_materi_murid ---
+  const isUmumSelesai = (materiId: number): boolean =>
+    (data?.progress ?? []).some((p) => p.materi_id === materiId && p.status === 'selesai')
+
+  const handleTandaiSelesai = async (materiId: number) => {
+    if (!confirm('Tandai materi ini selesai disampaikan untuk seluruh murid kelas?')) return
+    setMarkingSelesaiId(materiId)
+    try {
+      await selesaikanUmum({ materiId })
+      toast.success('Materi ditandai selesai')
+    } catch {
+      toast.error('Gagal menandai materi')
+    } finally {
+      setMarkingSelesaiId(null)
+    }
   }
 
   // --- Individu: cell click (create jika belum ada record) ---
@@ -100,8 +120,8 @@ export function ProgressTab({ kurikulumId }: Props) {
     {}
   )
 
-  // Umum progress summary
-  const tersampaikan = filteredMateri.filter((m) => !!m.metode).length
+  // Umum progress summary — berdasarkan progress_materi_murid, bukan field metode
+  const tersampaikan = filteredMateri.filter((m) => isUmumSelesai(m.id)).length
   const totalUmum = filteredMateri.length
   const persenUmum = totalUmum > 0 ? Math.round((tersampaikan / totalUmum) * 100) : 0
 
@@ -187,19 +207,25 @@ export function ProgressTab({ kurikulumId }: Props) {
               </div>
               <div className="divide-y divide-border">
                 {group.items.map((m) => {
-                  const sudahDisampaikan = !!m.metode
+                  const sudahDisampaikan = isUmumSelesai(m.id)
+                  const isMarking = markingSelesaiId === m.id
                   const isEditing = editingMetodeId === m.id
                   return (
                     <div key={m.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors">
-                      {/* Status icon */}
-                      <div className={cn(
-                        'size-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold',
-                        sudahDisampaikan
-                          ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400'
-                          : 'bg-muted text-muted-foreground'
-                      )}>
-                        {sudahDisampaikan ? '✓' : '—'}
-                      </div>
+                      {/* Status icon — klik untuk tandai selesai jika belum */}
+                      <button
+                        onClick={() => !sudahDisampaikan && handleTandaiSelesai(m.id)}
+                        disabled={sudahDisampaikan || isMarking}
+                        title={sudahDisampaikan ? 'Sudah disampaikan' : 'Klik untuk tandai selesai untuk seluruh murid'}
+                        className={cn(
+                          'size-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold transition-colors',
+                          sudahDisampaikan
+                            ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 cursor-default'
+                            : 'bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary cursor-pointer'
+                        )}
+                      >
+                        {isMarking ? '…' : sudahDisampaikan ? '✓' : '—'}
+                      </button>
 
                       {/* Materi info */}
                       <div className="flex-1 min-w-0">
@@ -255,8 +281,8 @@ export function ProgressTab({ kurikulumId }: Props) {
           ))}
 
           <p className="text-xs text-muted-foreground">
-            Isi kolom <span className="font-medium">metode</span> untuk menandai materi sudah disampaikan ke kelas
-            (contoh: Ceramah, Nasehat, Hafalan, Diskusi).
+            Klik ikon <span className="font-medium">—</span> untuk menandai materi selesai disampaikan ke seluruh murid.
+            Isi kolom <span className="font-medium">metode</span> sebagai catatan cara penyampaian (opsional, contoh: Ceramah, Diskusi).
           </p>
         </div>
 

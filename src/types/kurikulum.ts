@@ -79,3 +79,27 @@ export interface KurikulumFilters {
   kelas_id?: number
   tahun_ajaran?: string
 }
+
+// Digunakan oleh modul absensi (SesiView) untuk menampilkan checklist materi umum
+export interface MateriUmumAktif {
+  id: number
+  judul: string
+  sudah_selesai: boolean
+  dicatat_di_sesi_ini: boolean | null
+}
+
+export interface BabAktif {
+  id: number
+  kode: string
+  nama: string
+  materi_umum: MateriUmumAktif[]
+}
+
+export interface KurikulumAktifResponse {
+  kurikulum_id: number
+  nama: string
+  tahun_ajaran: string
+  bab: BabAktif[]
+  total_materi_umum: number
+  total_selesai: number
+}

@@ -8,6 +8,7 @@ import {
   ProgressKelasResponse,
   ProgressMuridResponse,
   KurikulumFilters,
+  KurikulumAktifResponse,
 } from '@/types/kurikulum'
 import {
   KurikulumFormData,
@@ -18,6 +19,25 @@ import {
 } from '@/lib/schemas/kurikulum'
 
 // --- Kurikulum ---
+
+export const useKurikulumAktifKelas = (kelasId: number | null, pertemuanId?: number) =>
+  useQuery({
+    queryKey: ['kurikulum-aktif-kelas', kelasId, pertemuanId ?? null],
+    queryFn: async () => {
+      try {
+        const params = pertemuanId ? { pertemuan_id: pertemuanId } : undefined
+        const { data } = await api.get<KurikulumAktifResponse>(
+          `/api/kurikulum/aktif-kelas/${kelasId}`,
+          { params }
+        )
+        return data
+      } catch (error: any) {
+        if (error?.response?.status === 404) return null
+        throw error
+      }
+    },
+    enabled: !!kelasId,
+  })
 
 export const useKurikulumList = (filters: KurikulumFilters = {}) =>
   useQuery({
@@ -156,7 +176,7 @@ export const useReorderMateri = (kurikulumId: number) => {
 export const useSelesaikanMateriUmum = (kurikulumId: number) => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ materiId, pertemuanId }: { materiId: number; pertemuanId: number }) =>
+    mutationFn: ({ materiId, pertemuanId }: { materiId: number; pertemuanId?: number }) =>
       api.post(`/api/materi/${materiId}/selesai-umum`, { pertemuan_id: pertemuanId }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId, 'progress'] }),
