@@ -80,7 +80,7 @@ export default function Sidebar() {
   )
 
   return (
-    <aside className="flex flex-col w-60 min-h-screen border-r border-sidebar-border bg-sidebar px-3 py-5">
+    <aside className="flex flex-col w-60 h-full border-r border-sidebar-border bg-sidebar px-3 py-5 overflow-y-auto">
       <div className="mb-6 px-3">
         <span className="font-heading text-lg font-bold text-sidebar-primary">KBM</span>
         <p className="text-[11px] text-sidebar-foreground/60 mt-0.5">Belajar Mengajar Masjid</p>
