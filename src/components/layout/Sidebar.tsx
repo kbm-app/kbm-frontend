@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useLogout } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, GraduationCap, BookUser, LogOut, UserCircle, School, Layers, CalendarDays, ClipboardList, BookOpen, Wallet } from 'lucide-react'
+import { LayoutDashboard, Users, GraduationCap, BookUser, LogOut, UserCircle, School, Layers, CalendarDays, ClipboardList, BookOpen, Wallet, Megaphone, Bell, Settings } from 'lucide-react'
 
 const navItems = [
   {
@@ -67,6 +67,24 @@ const navItems = [
     label: 'Kas',
     icon: Wallet,
     roles: ['super_admin', 'pengajar'],
+  },
+  {
+    href: '/pengumuman',
+    label: 'Pengumuman',
+    icon: Megaphone,
+    roles: ['super_admin'],
+  },
+  {
+    href: '/notifikasi/log',
+    label: 'Log Notifikasi',
+    icon: Bell,
+    roles: ['super_admin'],
+  },
+  {
+    href: '/settings/wa',
+    label: 'Pengaturan WA',
+    icon: Settings,
+    roles: ['super_admin'],
   },
 ]
 
