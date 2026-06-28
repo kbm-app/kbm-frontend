@@ -5,16 +5,21 @@ import { FileSpreadsheet, FileText, Download, ChevronDown, Loader2 } from 'lucid
 import api from '@/lib/axios'
 
 interface ExportButtonProps {
-  excelUrl: string
-  pdfUrl: string
-  filePrefix?: string   // misal "data-murid" → file: data-murid-20260628.xlsx
+  excelUrl?: string
+  pdfUrl?: string
+  filePrefix?: string
   disabled?: boolean
+  label?: string
 }
 
-export function ExportButton({ excelUrl, pdfUrl, filePrefix, disabled }: ExportButtonProps) {
+export function ExportButton({ excelUrl, pdfUrl, filePrefix, disabled, label = 'Export' }: ExportButtonProps) {
   const [open, setOpen]       = useState(false)
   const [loading, setLoading] = useState<'excel' | 'pdf' | null>(null)
   const ref = useRef<HTMLDivElement>(null)
+
+  const hasDropdown = !!(excelUrl && pdfUrl)
+  const singleUrl   = excelUrl ?? pdfUrl
+  const singleType  = excelUrl ? 'excel' : 'pdf'
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -44,17 +49,25 @@ export function ExportButton({ excelUrl, pdfUrl, filePrefix, disabled }: ExportB
       link.click()
       URL.revokeObjectURL(link.href)
     } catch {
-      // silent — tambah toast jika perlu
+      // silent
     } finally {
       setLoading(null)
     }
   }
 
+  if (!excelUrl && !pdfUrl) return null
+
   return (
     <div ref={ref} className="relative">
       <button
         disabled={disabled || loading !== null}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          if (hasDropdown) {
+            setOpen((v) => !v)
+          } else if (singleUrl) {
+            triggerDownload(singleUrl, singleType)
+          }
+        }}
         className="inline-flex items-center gap-1.5 h-9 px-3 text-sm border border-border rounded-lg bg-background hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? (
@@ -62,26 +75,30 @@ export function ExportButton({ excelUrl, pdfUrl, filePrefix, disabled }: ExportB
         ) : (
           <Download className="size-4 text-muted-foreground" />
         )}
-        <span>Export</span>
-        <ChevronDown className="size-3.5 text-muted-foreground" />
+        <span>{label}</span>
+        {hasDropdown && <ChevronDown className="size-3.5 text-muted-foreground" />}
       </button>
 
-      {open && (
+      {hasDropdown && open && (
         <div className="absolute right-0 mt-1 w-44 bg-popover border border-border rounded-lg shadow-lg z-50 py-1 text-sm">
-          <button
-            onClick={() => triggerDownload(excelUrl, 'excel')}
-            className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-muted/50 transition-colors text-left"
-          >
-            <FileSpreadsheet className="size-4 text-green-600 shrink-0" />
-            Export Excel
-          </button>
-          <button
-            onClick={() => triggerDownload(pdfUrl, 'pdf')}
-            className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-muted/50 transition-colors text-left"
-          >
-            <FileText className="size-4 text-red-500 shrink-0" />
-            Export PDF
-          </button>
+          {excelUrl && (
+            <button
+              onClick={() => triggerDownload(excelUrl, 'excel')}
+              className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-muted/50 transition-colors text-left"
+            >
+              <FileSpreadsheet className="size-4 text-green-600 shrink-0" />
+              Export Excel
+            </button>
+          )}
+          {pdfUrl && (
+            <button
+              onClick={() => triggerDownload(pdfUrl, 'pdf')}
+              className="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-muted/50 transition-colors text-left"
+            >
+              <FileText className="size-4 text-red-500 shrink-0" />
+              Export PDF
+            </button>
+          )}
         </div>
       )}
     </div>

@@ -11,6 +11,7 @@ import { formSelectClass } from '@/components/ui/field'
 import { bulanOptions, tahunOptions } from '@/lib/date-options'
 import { cn } from '@/lib/utils'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { ExportButton } from '@/components/ui/export-button'
 import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
 
@@ -69,6 +70,11 @@ export function TransaksiTab({ kelasId, kategoriList, onTambah, onEdit }: Props)
           ))}
         </select>
         <div className="flex-1" />
+        <ExportButton
+          excelUrl={`/api/export/kas?${new URLSearchParams({ kelas_id: String(kelasId), bulan: String(bulan), tahun: String(tahun) }).toString()}`}
+          pdfUrl={`/api/export/kas/pdf?${new URLSearchParams({ kelas_id: String(kelasId), bulan: String(bulan), tahun: String(tahun) }).toString()}`}
+          filePrefix="kas"
+        />
         <Button size="sm" onClick={onTambah}>
           <Plus className="size-3.5 mr-1" />
           Catat Transaksi

@@ -14,6 +14,7 @@ import { AssignPengajarModal } from './AssignPengajarModal'
 import { EnrollMuridModal } from './EnrollMuridModal'
 import { NaikKelasWizard } from './NaikKelasWizard'
 import { Pencil, Trash2, UserPlus, GraduationCap, Users, ArrowUpCircle } from 'lucide-react'
+import { ExportButton } from '@/components/ui/export-button'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { AssignPengajarFormData, EnrollMuridFormData } from '@/lib/schemas/kelas'
@@ -234,7 +235,12 @@ export function KelasDetail({ selected, onEdit, onDelete }: KelasDetailProps) {
       {/* Tab: Murid */}
       {tab === 'murid' && (
         <div className="space-y-3">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            <ExportButton
+              excelUrl={`/api/export/kelas/${selected.id}/roster`}
+              pdfUrl={`/api/export/kelas/${selected.id}/roster/pdf`}
+              filePrefix={`roster-kelas-${selected.nama.toLowerCase().replace(/\s+/g, '-')}`}
+            />
             <Button size="sm" onClick={() => setShowEnrollModal(true)}>
               <UserPlus className="size-4 mr-1.5" />
               Daftarkan Murid

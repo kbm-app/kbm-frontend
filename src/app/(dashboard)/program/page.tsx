@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Eye, Pencil, Trash2, ToggleLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { ExportButton } from '@/components/ui/export-button'
 
 export default function ProgramPage() {
   const [tab, setTab] = useState<Tab>('daftar')
@@ -148,9 +149,17 @@ export default function ProgramPage() {
                 </button>
               ))}
             </div>
-            <span className="ml-auto text-sm text-muted-foreground">
-              {data?.total ?? 0} program
-            </span>
+            <div className="ml-auto flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">{data?.total ?? 0} program</span>
+              <ExportButton
+                excelUrl={`/api/export/program?${new URLSearchParams({
+                  ...(search && { search }),
+                  ...(filterAktif !== undefined && { is_aktif: String(filterAktif) }),
+                }).toString()}`}
+                filePrefix="data-program"
+                label="Export"
+              />
+            </div>
           </div>
 
           {/* Desktop — Tabel */}

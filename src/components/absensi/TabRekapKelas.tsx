@@ -10,6 +10,7 @@ import { bulanOptions, tahunOptions } from '@/lib/date-options'
 import { PageLoading } from '@/components/ui/page-loading'
 import { formSelectClass } from '@/components/ui/field'
 import { TrendingUp } from 'lucide-react'
+import { ExportButton } from '@/components/ui/export-button'
 
 interface Props {
   onSelectMurid: (muridId: number, muridNama: string) => void
@@ -47,6 +48,15 @@ export default function TabRekapKelas({ onSelectMurid }: Props) {
             <option key={t} value={t}>{t}</option>
           ))}
         </select>
+        {kelas && (
+          <div className="ml-auto">
+            <ExportButton
+              excelUrl={`/api/export/absensi/rekap?${new URLSearchParams({ kelas_id: String(kelas.id), bulan: String(bulan), tahun: String(tahun) }).toString()}`}
+              pdfUrl={`/api/export/absensi/rekap/pdf?${new URLSearchParams({ kelas_id: String(kelas.id), bulan: String(bulan), tahun: String(tahun) }).toString()}`}
+              filePrefix={`rekap-absensi-${kelas.nama.toLowerCase().replace(/\s+/g, '-')}`}
+            />
+          </div>
+        )}
       </div>
 
       {!kelas && (

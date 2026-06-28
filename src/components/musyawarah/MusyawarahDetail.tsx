@@ -5,6 +5,7 @@ import { id as localeId } from 'date-fns/locale'
 import { toast } from 'sonner'
 import { RefreshCw, CheckCircle, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ExportButton } from '@/components/ui/export-button'
 import { PageLoading } from '@/components/ui/page-loading'
 import { LaporanKelasCard } from './LaporanKelasCard'
 import { NotulensiList } from './NotulensiList'
@@ -67,18 +68,25 @@ export function MusyawarahDetail({ musyawarahId }: Props) {
           </span>
         </div>
 
-        {!isSelesai && (
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleRegenerate} disabled={isRegenerating}>
-              <RefreshCw className={cn('size-3.5', isRegenerating && 'animate-spin')} />
-              Regenerate Semua
-            </Button>
-            <Button size="sm" onClick={handleSelesai} disabled={isClosing}>
-              <CheckCircle className="size-3.5" />
-              {isClosing ? 'Menutup...' : 'Tutup Musyawarah'}
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <ExportButton
+            pdfUrl={`/api/export/musyawarah/${musyawarahId}/pdf`}
+            filePrefix="notulensi-musyawarah"
+            label="Cetak PDF"
+          />
+          {!isSelesai && (
+            <>
+              <Button variant="outline" size="sm" onClick={handleRegenerate} disabled={isRegenerating}>
+                <RefreshCw className={cn('size-3.5', isRegenerating && 'animate-spin')} />
+                Regenerate Semua
+              </Button>
+              <Button size="sm" onClick={handleSelesai} disabled={isClosing}>
+                <CheckCircle className="size-3.5" />
+                {isClosing ? 'Menutup...' : 'Tutup Musyawarah'}
+              </Button>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Banner notulensi open dari musyawarah sebelumnya */}
