@@ -98,11 +98,11 @@ export default function KasPage() {
       </div>
 
       {/* Tab Bar utama */}
-      <div className="flex border-b border-border">
+      <div className="flex border-b border-border overflow-x-auto">
         <button
           onClick={goBack}
           className={cn(
-            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
             kasTab === 'daftar'
               ? 'border-primary text-primary'
               : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -114,7 +114,7 @@ export default function KasPage() {
           <button
             onClick={() => setKasTab('detail')}
             className={cn(
-              'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+              'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
               kasTab === 'detail'
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -271,7 +271,7 @@ export default function KasPage() {
       {kasTab === 'detail' && selected && (
         <div className="space-y-5">
           {/* Sub-tab bar */}
-          <div className="flex border-b border-border">
+          <div className="flex border-b border-border overflow-x-auto">
             {([
               { key: 'transaksi' as const, label: 'Transaksi' },
               { key: 'catat'     as const, label: catatLabel  },
@@ -284,7 +284,7 @@ export default function KasPage() {
                   setSubTab(key)
                 }}
                 className={cn(
-                  'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+                  'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
                   subTab === key
                     ? 'border-primary text-primary'
                     : 'border-transparent text-muted-foreground hover:text-foreground'

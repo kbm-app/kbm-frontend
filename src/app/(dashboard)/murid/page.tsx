@@ -7,16 +7,17 @@ import { useKelasList } from '@/hooks/useKelas'
 import { Murid, MuridStatus } from '@/types/murid'
 import MuridForm from '@/components/murid/MuridForm'
 import { MuridDetail } from '@/components/murid/MuridDetail'
-import { getMuridColumns, STATUS_LABEL } from '@/components/murid/muridColumns'
+import { getMuridColumns, STATUS_LABEL, STATUS_CLASS } from '@/components/murid/muridColumns'
 import { DeleteDialog } from '@/components/ui/delete-dialog'
 import { Pagination } from '@/components/ui/pagination'
 import { ExportButton } from '@/components/ui/export-button'
 import { ImportButton } from '@/components/ui/import-button'
 import { Tab, Mode } from '@/types/common'
 import { getMuridFotoUrl, toFormData } from '@/lib/murid-utils'
-import { cn } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
 import { toast } from 'sonner'
 import { MuridFormData } from '@/lib/schemas/murid'
+import { Calendar, MapPin } from 'lucide-react'
 
 export default function MuridPage() {
   const [tab, setTab] = useState<Tab>('daftar')
@@ -104,11 +105,11 @@ export default function MuridPage() {
         </p>
       </div>
 
-      <div className="flex border-b border-border">
+      <div className="flex border-b border-border overflow-x-auto">
         <button
           onClick={goBack}
           className={cn(
-            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
             tab === 'daftar'
               ? 'border-primary text-primary'
               : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -119,7 +120,7 @@ export default function MuridPage() {
         <button
           onClick={openCreate}
           className={cn(
-            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
             tab === 'form'
               ? 'border-primary text-primary'
               : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -131,82 +132,153 @@ export default function MuridPage() {
 
       {tab === 'daftar' && (
         <div className="space-y-4">
-          <div className="flex gap-3 flex-wrap">
-            <input
-              type="text"
-              placeholder="Cari nama murid..."
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              className="h-9 border border-border rounded-lg px-3 text-sm bg-background w-64 outline-none focus:border-ring transition-colors"
-            />
-            <select
-              value={status}
-              onChange={(e) => { setStatus(e.target.value as MuridStatus | ''); setPage(1) }}
-              className="h-9 border border-border rounded-lg px-3 text-sm bg-background outline-none focus:border-ring transition-colors"
-            >
-              <option value="">Semua status</option>
-              {(Object.entries(STATUS_LABEL) as [MuridStatus, string][]).map(([value, label]) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </select>
-            <select
-              value={kelasId}
-              onChange={(e) => { setKelasId(e.target.value ? Number(e.target.value) : ''); setPage(1) }}
-              className="h-9 border border-border rounded-lg px-3 text-sm bg-background outline-none focus:border-ring transition-colors"
-            >
-              <option value="">Semua kelas</option>
-              {kelasData?.data.map((k) => (
-                <option key={k.id} value={k.id}>{k.nama}</option>
-              ))}
-            </select>
-            <div className="flex items-center gap-1.5">
+          {/* Filter bar */}
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-wrap gap-2">
               <input
-                type="number"
-                min={0}
-                placeholder="Usia min"
-                value={usiaMin}
-                onChange={(e) => { setUsiaMin(e.target.value); setPage(1) }}
-                className="h-9 w-24 border border-border rounded-lg px-3 text-sm bg-background outline-none focus:border-ring transition-colors"
+                type="text"
+                placeholder="Cari nama murid..."
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+                className="h-9 border border-border rounded-lg px-3 text-sm bg-background flex-1 min-w-40 outline-none focus:border-ring transition-colors"
               />
-              <span className="text-sm text-muted-foreground">–</span>
-              <input
-                type="number"
-                min={0}
-                placeholder="Usia maks"
-                value={usiaMax}
-                onChange={(e) => { setUsiaMax(e.target.value); setPage(1) }}
-                className="h-9 w-24 border border-border rounded-lg px-3 text-sm bg-background outline-none focus:border-ring transition-colors"
-              />
+              <select
+                value={status}
+                onChange={(e) => { setStatus(e.target.value as MuridStatus | ''); setPage(1) }}
+                className="h-9 border border-border rounded-lg px-3 text-sm bg-background outline-none focus:border-ring transition-colors"
+              >
+                <option value="">Semua status</option>
+                {(Object.entries(STATUS_LABEL) as [MuridStatus, string][]).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+              <select
+                value={kelasId}
+                onChange={(e) => { setKelasId(e.target.value ? Number(e.target.value) : ''); setPage(1) }}
+                className="h-9 border border-border rounded-lg px-3 text-sm bg-background outline-none focus:border-ring transition-colors"
+              >
+                <option value="">Semua kelas</option>
+                {kelasData?.data.map((k) => (
+                  <option key={k.id} value={k.id}>{k.nama}</option>
+                ))}
+              </select>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min={0}
+                  placeholder="Usia min"
+                  value={usiaMin}
+                  onChange={(e) => { setUsiaMin(e.target.value); setPage(1) }}
+                  className="h-9 w-24 border border-border rounded-lg px-3 text-sm bg-background outline-none focus:border-ring transition-colors"
+                />
+                <span className="text-sm text-muted-foreground">–</span>
+                <input
+                  type="number"
+                  min={0}
+                  placeholder="Usia maks"
+                  value={usiaMax}
+                  onChange={(e) => { setUsiaMax(e.target.value); setPage(1) }}
+                  className="h-9 w-24 border border-border rounded-lg px-3 text-sm bg-background outline-none focus:border-ring transition-colors"
+                />
+              </div>
             </div>
-            <div className="ml-auto flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">{data?.total ?? 0} murid</span>
-              <ImportButton
-                templateUrl="/api/export/murid/template"
-                uploadUrl="/api/import/murid"
-                label="Import"
-                onSuccess={() => { setPage(1) }}
-              />
-              <ExportButton
-                excelUrl={`/api/export/murid?${new URLSearchParams({
-                  ...(search && { search }),
-                  ...(status && { status }),
-                  ...(kelasId && { kelas_id: String(kelasId) }),
-                  ...(usiaMin && { usia_min: usiaMin }),
-                  ...(usiaMax && { usia_max: usiaMax }),
-                }).toString()}`}
-                pdfUrl={`/api/export/murid/pdf?${new URLSearchParams({
-                  ...(search && { search }),
-                  ...(status && { status }),
-                  ...(kelasId && { kelas_id: String(kelasId) }),
-                  ...(usiaMin && { usia_min: usiaMin }),
-                  ...(usiaMax && { usia_max: usiaMax }),
-                }).toString()}`}
-                filePrefix="data-murid"
-              />
+              <div className="ml-auto flex items-center gap-2">
+                <ImportButton
+                  templateUrl="/api/export/murid/template"
+                  uploadUrl="/api/import/murid"
+                  label="Import"
+                  onSuccess={() => { setPage(1) }}
+                />
+                <ExportButton
+                  excelUrl={`/api/export/murid?${new URLSearchParams({
+                    ...(search && { search }),
+                    ...(status && { status }),
+                    ...(kelasId && { kelas_id: String(kelasId) }),
+                    ...(usiaMin && { usia_min: usiaMin }),
+                    ...(usiaMax && { usia_max: usiaMax }),
+                  }).toString()}`}
+                  pdfUrl={`/api/export/murid/pdf?${new URLSearchParams({
+                    ...(search && { search }),
+                    ...(status && { status }),
+                    ...(kelasId && { kelas_id: String(kelasId) }),
+                    ...(usiaMin && { usia_min: usiaMin }),
+                    ...(usiaMax && { usia_max: usiaMax }),
+                  }).toString()}`}
+                  filePrefix="data-murid"
+                />
+              </div>
             </div>
           </div>
 
-          <DataTable columns={columns} data={data?.data ?? []} isLoading={isLoading} />
+          {/* Desktop — Tabel */}
+          <div className="hidden lg:block">
+            <DataTable columns={columns} data={data?.data ?? []} isLoading={isLoading} />
+          </div>
+
+          {/* Mobile/Tablet — Card Grid */}
+          <div className="lg:hidden">
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-32 rounded-xl border border-border bg-muted/30 animate-pulse" />
+                ))}
+              </div>
+            ) : !data?.data.length ? (
+              <div className="py-16 text-center text-sm text-muted-foreground">
+                Belum ada murid.{' '}
+                <button onClick={openCreate} className="text-primary hover:underline">
+                  Tambah murid pertama
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {data.data.map((m) => {
+                  const kelasNama = m.kelas_aktif?.[0]?.kelas?.nama
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => openDetail(m)}
+                      className="text-left rounded-xl border border-border bg-card p-4 hover:border-primary/50 hover:shadow-sm transition-all space-y-3"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {m.foto_url ? (
+                            <img src={m.foto_url} alt={m.nama} className="size-8 rounded-full object-cover shrink-0" />
+                          ) : (
+                            <div className="size-8 rounded-full bg-muted flex items-center justify-center text-xs font-semibold shrink-0">
+                              {m.nama[0]?.toUpperCase()}
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="font-semibold truncate">{m.nama}</p>
+                            {kelasNama && <p className="text-xs text-muted-foreground">{kelasNama}</p>}
+                          </div>
+                        </div>
+                        <span className={cn('shrink-0 text-xs font-medium px-2 py-0.5 rounded-full', STATUS_CLASS[m.status])}>
+                          {STATUS_LABEL[m.status]}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5 text-xs text-muted-foreground pt-1 border-t border-border">
+                        <span className="flex items-center gap-1.5">
+                          <Calendar className="size-3.5 shrink-0" />
+                          {m.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'} · {formatDate(m.tanggal_lahir)}
+                        </span>
+                        {m.alamat && (
+                          <span className="flex items-center gap-1.5">
+                            <MapPin className="size-3.5 shrink-0" />
+                            <span className="truncate">{m.alamat}</span>
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
 
           <Pagination page={page} lastPage={data?.last_page ?? 1} onPageChange={setPage} />
         </div>

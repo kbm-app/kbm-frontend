@@ -15,6 +15,9 @@ import { ExportButton } from '@/components/ui/export-button'
 import { ImportButton } from '@/components/ui/import-button'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+import { GraduationCap, Mail, Calendar } from 'lucide-react'
+import { StatusBadge } from '@/components/ui/status-badge'
+import { formatDate } from '@/lib/utils'
 
 export default function PengajarPage() {
   const [tab, setTab] = useState<Tab>('daftar')
@@ -99,11 +102,11 @@ export default function PengajarPage() {
         </p>
       </div>
 
-      <div className="flex border-b border-border">
+      <div className="flex border-b border-border overflow-x-auto">
         <button
           onClick={goBack}
           className={cn(
-            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
             tab === 'daftar'
               ? 'border-primary text-primary'
               : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -114,7 +117,7 @@ export default function PengajarPage() {
         <button
           onClick={openCreate}
           className={cn(
-            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
             tab === 'form'
               ? 'border-primary text-primary'
               : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -126,15 +129,15 @@ export default function PengajarPage() {
 
       {tab === 'daftar' && (
         <div className="space-y-4">
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <input
               type="text"
               placeholder="Cari nama atau email..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              className="h-9 border border-border rounded-lg px-3 text-sm bg-background w-72 outline-none focus:border-ring transition-colors"
+              className="h-9 border border-border rounded-lg px-3 text-sm bg-background w-full sm:w-72 outline-none focus:border-ring transition-colors"
             />
-            <div className="ml-auto flex items-center gap-2">
+            <div className="flex items-center gap-2 sm:ml-auto">
               <span className="text-sm text-muted-foreground">{data?.total ?? 0} pengajar</span>
               <ImportButton
                 templateUrl="/api/export/pengajar/template"
@@ -154,7 +157,63 @@ export default function PengajarPage() {
             </div>
           </div>
 
-          <DataTable columns={columns} data={data?.data ?? []} isLoading={isLoading} />
+          {/* Desktop — Tabel */}
+          <div className="hidden lg:block">
+            <DataTable columns={columns} data={data?.data ?? []} isLoading={isLoading} />
+          </div>
+
+          {/* Mobile/Tablet — Card Grid */}
+          <div className="lg:hidden">
+            {isLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-32 rounded-xl border border-border bg-muted/30 animate-pulse" />
+                ))}
+              </div>
+            ) : !data?.data.length ? (
+              <div className="py-16 text-center text-sm text-muted-foreground">
+                Belum ada pengajar.{' '}
+                <button onClick={openCreate} className="text-primary hover:underline">
+                  Tambah pengajar pertama
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {data.data.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => openDetail(p)}
+                    className="text-left rounded-xl border border-border bg-card p-4 hover:border-primary/50 hover:shadow-sm transition-all space-y-3"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="size-8 rounded-full bg-muted flex items-center justify-center text-xs font-semibold shrink-0">
+                          {p.user?.name?.charAt(0).toUpperCase() ?? '?'}
+                        </div>
+                        <span className="font-semibold truncate">{p.user?.name ?? '-'}</span>
+                      </div>
+                      <StatusBadge aktif={p.is_aktif} className="shrink-0" />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1.5">
+                        <Mail className="size-3.5 shrink-0" />
+                        <span className="truncate">{p.user?.email ?? '-'}</span>
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <GraduationCap className="size-3.5 shrink-0" />
+                        {p.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="size-3.5 shrink-0" />
+                        Bergabung {formatDate(p.tanggal_bergabung)}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           <Pagination page={page} lastPage={data?.last_page ?? 1} onPageChange={setPage} />
         </div>

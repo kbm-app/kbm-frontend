@@ -82,11 +82,11 @@ export default function PengumumanPage() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex border-b border-border">
+      <div className="flex border-b border-border overflow-x-auto">
         <button
           onClick={() => setTab('kirim')}
           className={cn(
-            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
             tab === 'kirim'
               ? 'border-primary text-primary'
               : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -97,7 +97,7 @@ export default function PengumumanPage() {
         <button
           onClick={() => setTab('riwayat')}
           className={cn(
-            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
             tab === 'riwayat'
               ? 'border-primary text-primary'
               : 'border-transparent text-muted-foreground hover:text-foreground'

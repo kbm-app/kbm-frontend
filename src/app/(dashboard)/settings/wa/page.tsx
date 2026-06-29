@@ -108,11 +108,11 @@ export default function WaSettingsPage() {
       </div>
 
       {/* Tab bar */}
-      <div className="flex border-b border-border">
+      <div className="flex border-b border-border overflow-x-auto">
         <button
           onClick={() => setTab('status')}
           className={cn(
-            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
             tab === 'status'
               ? 'border-primary text-primary'
               : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -123,7 +123,7 @@ export default function WaSettingsPage() {
         <button
           onClick={() => setTab('konfigurasi')}
           className={cn(
-            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
             tab === 'konfigurasi'
               ? 'border-primary text-primary'
               : 'border-transparent text-muted-foreground hover:text-foreground'

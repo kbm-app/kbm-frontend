@@ -2,10 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useEffect } from 'react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useLogout } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, GraduationCap, BookUser, LogOut, UserCircle, School, Layers, CalendarDays, ClipboardList, BookOpen, Wallet, Megaphone, Bell, Settings, MessagesSquare } from 'lucide-react'
+import { LayoutDashboard, Users, GraduationCap, BookUser, LogOut, UserCircle, School, Layers, CalendarDays, ClipboardList, BookOpen, Wallet, Megaphone, Bell, Settings, MessagesSquare, X } from 'lucide-react'
+import { useSidebar } from './SidebarContext'
 
 const navItems = [
   {
@@ -98,16 +100,43 @@ export default function Sidebar() {
   const pathname = usePathname()
   const user = useAuthStore((s) => s.user)
   const { mutate: logout, isPending } = useLogout()
+  const { isOpen, close } = useSidebar()
+
+  useEffect(() => { close() }, [pathname, close])
 
   const visibleItems = navItems.filter(
     (item) => user && item.roles.includes(user.role)
   )
 
   return (
-    <aside className="flex flex-col w-60 h-full border-r border-sidebar-border bg-sidebar px-3 py-5 overflow-y-auto">
-      <div className="mb-6 px-3">
-        <span className="font-heading text-lg font-bold text-sidebar-primary">KBM</span>
-        <p className="text-[11px] text-sidebar-foreground/60 mt-0.5">Belajar Mengajar Masjid</p>
+    <>
+      {/* Overlay mobile */}
+      {isOpen && (
+        <div
+          className="lg:hidden fixed inset-0 z-40 bg-black/40"
+          onClick={close}
+          aria-hidden="true"
+        />
+      )}
+
+      <aside className={cn(
+        'flex flex-col w-60 border-r border-sidebar-border bg-sidebar px-3 py-5 overflow-y-auto',
+        'fixed inset-y-0 left-0 z-50 h-screen lg:static lg:h-full',
+        'transition-transform duration-200 ease-in-out',
+        isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
+      )}>
+      <div className="mb-6 px-3 flex items-start justify-between">
+        <div>
+          <span className="font-heading text-lg font-bold text-sidebar-primary">KBM</span>
+          <p className="text-[11px] text-sidebar-foreground/60 mt-0.5">Belajar Mengajar Masjid</p>
+        </div>
+        <button
+          onClick={close}
+          aria-label="Tutup menu"
+          className="lg:hidden p-1 rounded-lg hover:bg-sidebar-accent transition-colors text-sidebar-foreground/60 mt-0.5"
+        >
+          <X className="size-4" />
+        </button>
       </div>
 
       <nav className="flex-1 space-y-0.5">
@@ -157,5 +186,6 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+    </>
   )
 }

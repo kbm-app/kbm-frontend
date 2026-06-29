@@ -80,11 +80,11 @@ export default function KelasPage() {
         </p>
       </div>
 
-      <div className="flex border-b border-border">
+      <div className="flex border-b border-border overflow-x-auto">
         <button
           onClick={goBack}
           className={cn(
-            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
             tab === 'daftar'
               ? 'border-primary text-primary'
               : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -95,7 +95,7 @@ export default function KelasPage() {
         <button
           onClick={openCreate}
           className={cn(
-            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
             tab === 'form'
               ? 'border-primary text-primary'
               : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -114,7 +114,7 @@ export default function KelasPage() {
               placeholder="Cari nama kelas..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              className="h-9 border border-border rounded-lg px-3 text-sm bg-background w-64 outline-none focus:border-ring transition-colors"
+              className="h-9 border border-border rounded-lg px-3 text-sm bg-background flex-1 min-w-40 outline-none focus:border-ring transition-colors"
             />
             <div className="flex items-center gap-0 rounded-lg border border-border overflow-hidden text-sm">
               {([
