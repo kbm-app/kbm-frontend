@@ -1,0 +1,44 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      # node_modules/.next excluded — Next.js needs a fresh compile inside the
+      # Docker image, not a copy of this runner's build output.
+      - name: Rsync code to VPS
+        run: |
+          rsync -avz --delete \
+            --exclude='node_modules' \
+            --exclude='.next' \
+            --exclude='.git' \
+            --exclude='.env' \
+            --exclude='.env.local' \
+            --exclude='tsconfig.tsbuildinfo' \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/kbm/kbm-frontend/
+
+      # Next.js requires a compile step, so this is a rebuild, not just a restart.
+      # NEXT_PUBLIC_API_URL is read from deploy/.env on the VPS at build time.
+      - name: Rebuild and restart frontend on VPS
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "cd /var/www/kbm/deploy && docker compose -p kbm --env-file .env up -d --build frontend"
