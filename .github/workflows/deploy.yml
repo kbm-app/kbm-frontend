@@ -11,30 +11,34 @@ concurrency:
 
 jobs:
   deploy:
-    # Self-hosted runner installed directly on the target VPS (see
-    # deploy/DEPLOYMENT.md, step 10). GitHub-hosted runners are blocked by an
-    # account-level billing issue that persists even with a public repo — see
-    # DEPLOYMENT.md for the full story before switching this back.
-    runs-on: [self-hosted, kbm]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # node_modules/.next excluded — Next.js needs a fresh compile inside the
-      # Docker image, not a copy of this checkout's own build output.
-      - name: Sync to deploy directory
+      - name: Set up SSH
         run: |
-          rsync -a --delete \
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      # node_modules/.next excluded — Next.js needs a fresh compile inside the
+      # Docker image, not a copy of this runner's build output.
+      - name: Rsync code to VPS
+        run: |
+          rsync -avz --delete \
             --exclude='node_modules' \
             --exclude='.next' \
             --exclude='.git' \
             --exclude='.env' \
             --exclude='.env.local' \
             --exclude='tsconfig.tsbuildinfo' \
-            ./ /var/www/kbm/kbm-frontend/
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/kbm/kbm-frontend/
 
       # Next.js requires a compile step, so this is a rebuild, not just a restart.
       # NEXT_PUBLIC_API_URL is read from deploy/.env on the VPS at build time.
-      - name: Rebuild and restart frontend
+      - name: Rebuild and restart frontend on VPS
         run: |
-          cd /var/www/kbm/deploy
-          docker compose -p kbm --env-file .env up -d --build frontend
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "cd /var/www/kbm/deploy && docker compose -p kbm --env-file .env up -d --build frontend"
