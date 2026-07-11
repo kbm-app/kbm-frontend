@@ -11,7 +11,10 @@ export function middleware(request: NextRequest) {
   }
 
   const isPublic = PUBLIC_ROUTES.includes(pathname)
-  const hasSession = request.cookies.has('laravel-session')
+  // Must match Laravel's session cookie name: Str::slug(APP_NAME).'-session'
+  // (config/session.php) — with APP_NAME=KBM that's 'kbm-session', not the
+  // Laravel default 'laravel-session'.
+  const hasSession = request.cookies.has('kbm-session')
 
   if (!hasSession && !isPublic) {
     return NextResponse.redirect(new URL('/login', request.url))
