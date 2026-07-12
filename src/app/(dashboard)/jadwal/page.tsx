@@ -266,69 +266,135 @@ function JadwalPageContent() {
                   )}
                 </div>
               ) : (
-                <div className="rounded-xl border border-border overflow-hidden bg-card">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted/40 border-b border-border">
-                      <tr>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Hari</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Jam</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Program</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kelas</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pengajar</th>
-                        <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Berlaku Sampai</th>
-                        {isSuperAdmin && <th className="px-4 py-3" />}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                      {(filterHari
-                        ? [filterHari]
-                        : HARI_ORDER
-                      ).flatMap((hari) =>
-                        (listJadwal ?? [])
-                          .filter((j) => j.hari === hari)
-                          .map((j) => (
-                            <tr key={j.id} className="hover:bg-muted/40 transition-colors">
-                              <td className="px-4 py-3.5 font-medium">{HARI_LABEL[j.hari]}</td>
-                              <td className="px-4 py-3.5 text-muted-foreground whitespace-nowrap">
-                                {j.jam_mulai.slice(0, 5)} – {j.jam_selesai.slice(0, 5)}
-                              </td>
-                              <td className="px-4 py-3.5">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium">{j.program?.nama ?? '-'}</span>
-                                  {j.program && (
-                                    <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full', JENIS_COLOR[j.program.jenis])}>
-                                      {JENIS_LABEL[j.program.jenis]}
-                                    </span>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-4 py-3.5 text-muted-foreground">
-                                {j.kelas?.nama ?? <span className="italic text-xs">Semua kelas</span>}
-                              </td>
-                              <td className="px-4 py-3.5 text-muted-foreground">{j.pengajar?.user?.name ?? '-'}</td>
-                              <td className="px-4 py-3.5 text-muted-foreground">
-                                {j.selesai_berlaku
-                                  ? new Date(j.selesai_berlaku).toLocaleDateString('id-ID')
-                                  : <span className="text-green-600 text-xs font-medium">Masih berlaku</span>}
-                              </td>
-                              {isSuperAdmin && (
+                <>
+                  {/* Desktop — Tabel */}
+                  <div className="hidden lg:block rounded-xl border border-border overflow-hidden bg-card">
+                    <table className="w-full text-sm">
+                      <thead className="bg-muted/40 border-b border-border">
+                        <tr>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Hari</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Jam</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Program</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kelas</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pengajar</th>
+                          <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Berlaku Sampai</th>
+                          {isSuperAdmin && <th className="px-4 py-3" />}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {(filterHari ? [filterHari] : HARI_ORDER).flatMap((hari) =>
+                          (listJadwal ?? [])
+                            .filter((j) => j.hari === hari)
+                            .map((j) => (
+                              <tr key={j.id} className="hover:bg-muted/40 transition-colors">
+                                <td className="px-4 py-3.5 font-medium">{HARI_LABEL[j.hari]}</td>
+                                <td className="px-4 py-3.5 text-muted-foreground whitespace-nowrap">
+                                  {j.jam_mulai.slice(0, 5)} – {j.jam_selesai.slice(0, 5)}
+                                </td>
                                 <td className="px-4 py-3.5">
-                                  <div className="flex items-center justify-end gap-1">
-                                    <button onClick={() => openGanti(j)} className={actionBtnClass} title="Ganti jadwal">
-                                      <Pencil className="size-3.5" />
-                                    </button>
-                                    <button onClick={() => setDeleteTarget(j)} className={deleteBtnClass} title="Hapus jadwal">
-                                      <Trash2 className="size-3.5" />
-                                    </button>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-medium">{j.program?.nama ?? '-'}</span>
+                                    {j.program && (
+                                      <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full', JENIS_COLOR[j.program.jenis])}>
+                                        {JENIS_LABEL[j.program.jenis]}
+                                      </span>
+                                    )}
                                   </div>
                                 </td>
-                              )}
-                            </tr>
-                          ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                                <td className="px-4 py-3.5 text-muted-foreground">
+                                  {j.kelas?.nama ?? <span className="italic text-xs">Semua kelas</span>}
+                                </td>
+                                <td className="px-4 py-3.5 text-muted-foreground">{j.pengajar?.user?.name ?? '-'}</td>
+                                <td className="px-4 py-3.5 text-muted-foreground">
+                                  {j.selesai_berlaku
+                                    ? new Date(j.selesai_berlaku).toLocaleDateString('id-ID')
+                                    : <span className="text-green-600 text-xs font-medium">Masih berlaku</span>}
+                                </td>
+                                {isSuperAdmin && (
+                                  <td className="px-4 py-3.5">
+                                    <div className="flex items-center justify-end gap-1">
+                                      <button onClick={() => openGanti(j)} className={actionBtnClass} title="Ganti jadwal">
+                                        <Pencil className="size-3.5" />
+                                      </button>
+                                      <button onClick={() => setDeleteTarget(j)} className={deleteBtnClass} title="Hapus jadwal">
+                                        <Trash2 className="size-3.5" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                )}
+                              </tr>
+                            ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile/Tablet — Card Grid, dikelompokkan per hari */}
+                  <div className="lg:hidden space-y-5">
+                    {(filterHari ? [filterHari] : HARI_ORDER).map((hari) => {
+                      const jadwalHari = (listJadwal ?? []).filter((j) => j.hari === hari)
+                      if (!jadwalHari.length) return null
+                      return (
+                        <div key={hari}>
+                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-0.5">
+                            {HARI_LABEL[hari]}
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {jadwalHari.map((j) => (
+                              <div
+                                key={j.id}
+                                className="rounded-xl border border-border bg-card p-4 space-y-3"
+                              >
+                                {/* Program + jam */}
+                                <div className="flex items-start justify-between gap-2">
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                      <span className="font-semibold text-sm">{j.program?.nama ?? '-'}</span>
+                                      {j.program && (
+                                        <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0', JENIS_COLOR[j.program.jenis])}>
+                                          {JENIS_LABEL[j.program.jenis]}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                      {j.jam_mulai.slice(0, 5)} – {j.jam_selesai.slice(0, 5)}
+                                    </p>
+                                  </div>
+                                  {isSuperAdmin && (
+                                    <div className="flex items-center gap-1 shrink-0">
+                                      <button onClick={() => openGanti(j)} className={actionBtnClass} title="Ganti jadwal">
+                                        <Pencil className="size-3.5" />
+                                      </button>
+                                      <button onClick={() => setDeleteTarget(j)} className={deleteBtnClass} title="Hapus jadwal">
+                                        <Trash2 className="size-3.5" />
+                                      </button>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Kelas + Pengajar + Berlaku */}
+                                <div className="flex flex-col gap-1 text-xs text-muted-foreground pt-2 border-t border-border">
+                                  <span>
+                                    Kelas: <span className="text-foreground">{j.kelas?.nama ?? <em>Semua kelas</em>}</span>
+                                  </span>
+                                  <span>
+                                    Pengajar: <span className="text-foreground">{j.pengajar?.user?.name ?? '-'}</span>
+                                  </span>
+                                  <span>
+                                    Berlaku:{' '}
+                                    {j.selesai_berlaku
+                                      ? <span className="text-foreground">{new Date(j.selesai_berlaku).toLocaleDateString('id-ID')}</span>
+                                      : <span className="text-green-600 font-medium">Masih berlaku</span>}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </>
               )}
             </>
           )}
