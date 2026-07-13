@@ -60,13 +60,15 @@ jobs:
           ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
 
       # VPS no longer builds anything for the frontend — it just pulls the
-      # image the `build` job already pushed and restarts. kbm-frontend is a
-      # public repo, so the ghcr.io package is public too; no docker login
-      # needed to pull.
+      # image the `build` job already pushed and restarts. The ghcr.io
+      # package defaults to private even though the repo is public (that's
+      # not automatic), so this still needs a login — using this run's own
+      # short-lived GITHUB_TOKEN, not a stored credential.
       - name: Pull image and restart on VPS
         run: |
           ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=10 "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" '
             set -e
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             cd /var/www/kbm/deploy
             docker compose -p kbm --env-file .env pull frontend
             docker compose -p kbm --env-file .env up -d frontend
