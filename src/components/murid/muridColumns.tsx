@@ -1,7 +1,8 @@
 import { ColumnDef } from '@tanstack/react-table'
 import { Murid, MuridStatus, HubunganWali } from '@/types/murid'
 import { cn, formatDate } from '@/lib/utils'
-import { Eye, Pencil, Trash2 } from 'lucide-react'
+import { getMuridDataIssues } from '@/lib/murid-utils'
+import { Eye, Pencil, Trash2, AlertTriangle } from 'lucide-react'
 
 export const STATUS_LABEL: Record<MuridStatus, string> = {
   aktif: 'Aktif',
@@ -39,6 +40,7 @@ export function getMuridColumns({ onDetail, onEdit, onDelete }: MuridColumnsOpts
         const m = row.original
         const fotoUrl = m.foto_url ?? null
         const kelasNama = m.kelas_aktif?.[0]?.kelas?.nama
+        const issues = getMuridDataIssues(m)
         return (
           <div className="flex items-center gap-3">
             {fotoUrl ? (
@@ -56,6 +58,15 @@ export function getMuridColumns({ onDetail, onEdit, onDelete }: MuridColumnsOpts
               <p className="font-medium">{m.nama}</p>
               {kelasNama && (
                 <p className="text-xs text-muted-foreground">{kelasNama}</p>
+              )}
+              {issues.length > 0 && (
+                <p
+                  className="text-xs text-amber-600 flex items-center gap-1 mt-0.5"
+                  title={issues.join(', ')}
+                >
+                  <AlertTriangle className="size-3 shrink-0" />
+                  <span className="truncate">{issues.join(', ')}</span>
+                </p>
               )}
             </div>
           </div>
