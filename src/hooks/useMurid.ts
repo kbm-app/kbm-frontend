@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/axios'
-import { Murid, MuridFilters, WaliMurid } from '@/types/murid'
+import { Murid, MuridDeleteImpact, MuridFilters, WaliMurid } from '@/types/murid'
 import { WaliFormData } from '@/lib/schemas/murid'
 
 interface PaginatedMurid {
@@ -46,6 +46,16 @@ export const useUpdateMurid = (id: number) => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['murid'] }),
   })
 }
+
+export const useMuridDeleteImpact = (id: number, options?: { enabled?: boolean }) =>
+  useQuery({
+    queryKey: ['murid', id, 'dampak-hapus'],
+    queryFn: async () => {
+      const { data } = await api.get<MuridDeleteImpact>(`/api/murid/${id}/dampak-hapus`)
+      return data
+    },
+    enabled: (options?.enabled ?? true) && id > 0,
+  })
 
 export const useDeleteMurid = () => {
   const queryClient = useQueryClient()

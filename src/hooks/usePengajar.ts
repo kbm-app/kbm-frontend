@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/axios'
-import { Pengajar, PengajarFilters } from '@/types/pengajar'
+import { Pengajar, PengajarDeleteImpact, PengajarFilters } from '@/types/pengajar'
 import { PengajarFormData } from '@/lib/schemas/pengajar'
 
 interface PaginatedPengajar {
@@ -45,6 +45,16 @@ export const useUpdatePengajar = (id: number) => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pengajar'] }),
   })
 }
+
+export const usePengajarDeleteImpact = (id: number, options?: { enabled?: boolean }) =>
+  useQuery({
+    queryKey: ['pengajar', id, 'dampak-hapus'],
+    queryFn: async () => {
+      const { data } = await api.get<PengajarDeleteImpact>(`/api/pengajar/${id}/dampak-hapus`)
+      return data
+    },
+    enabled: (options?.enabled ?? true) && id > 0,
+  })
 
 export const useDeletePengajar = () => {
   const queryClient = useQueryClient()

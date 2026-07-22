@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { DataTable } from '@/components/ui/data-table'
-import { usePengajarList, useCreatePengajar, useUpdatePengajar, useDeletePengajar, useTogglePengajarAktif } from '@/hooks/usePengajar'
+import { usePengajarList, useCreatePengajar, useUpdatePengajar, useDeletePengajar, useTogglePengajarAktif, usePengajarDeleteImpact } from '@/hooks/usePengajar'
 import { Pengajar } from '@/types/pengajar'
 import { PengajarFormData } from '@/lib/schemas/pengajar'
 import PengajarForm from '@/components/pengajar/PengajarForm'
@@ -32,6 +32,10 @@ export default function PengajarPage() {
   const { mutate: updatePengajar, isPending: isUpdating } = useUpdatePengajar(selected?.id ?? 0)
   const { mutate: deletePengajar, isPending: isDeleting } = useDeletePengajar()
   const { mutate: toggleAktif, isPending: isToggling } = useTogglePengajarAktif()
+  const { data: deleteImpact, isLoading: isLoadingImpact } = usePengajarDeleteImpact(
+    deleteTarget?.id ?? 0,
+    { enabled: deleteTarget !== null }
+  )
 
   const openCreate = () => { setMode('tambah'); setSelected(null); setTab('form') }
   const openEdit = (p: Pengajar) => { setMode('edit'); setSelected(p); setTab('form') }
@@ -258,7 +262,26 @@ export default function PengajarPage() {
         description="Data pengajar tidak dapat dikembalikan setelah dihapus."
         onConfirm={confirmDelete}
         isLoading={isDeleting}
-      />
+      >
+        {isLoadingImpact ? (
+          <p className="text-xs text-muted-foreground text-center">Memeriksa data terkait...</p>
+        ) : deleteImpact && (
+          deleteImpact.kelas_aktif.length > 0 ||
+          deleteImpact.riwayat_kelas > 0 ||
+          deleteImpact.absensi > 0
+        ) && (
+          <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-xs text-muted-foreground space-y-1">
+            <p className="font-medium text-foreground">Data berikut akan ikut terhapus permanen:</p>
+            <ul className="list-disc list-inside space-y-0.5">
+              {deleteImpact.kelas_aktif.length > 0 && (
+                <li>Dilepas dari kelas aktif: {deleteImpact.kelas_aktif.join(', ')}</li>
+              )}
+              {deleteImpact.riwayat_kelas > 0 && <li>{deleteImpact.riwayat_kelas} riwayat penugasan kelas</li>}
+              {deleteImpact.absensi > 0 && <li>{deleteImpact.absensi} riwayat absensi</li>}
+            </ul>
+          </div>
+        )}
+      </DeleteDialog>
     </div>
   )
 }

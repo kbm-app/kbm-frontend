@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { DataTable } from '@/components/ui/data-table'
-import { useMuridList, useCreateMurid, useUpdateMurid, useDeleteMurid, useMuridDetail } from '@/hooks/useMurid'
+import { useMuridList, useCreateMurid, useUpdateMurid, useDeleteMurid, useMuridDetail, useMuridDeleteImpact } from '@/hooks/useMurid'
 import { useKelasList } from '@/hooks/useKelas'
 import { Murid, MuridStatus } from '@/types/murid'
 import MuridForm from '@/components/murid/MuridForm'
@@ -46,6 +46,10 @@ export default function MuridPage() {
   const { data: muridDetail, isLoading: isLoadingDetail } = useMuridDetail(
     selected?.id ?? 0,
     { enabled: tab === 'form' && (mode === 'detail' || mode === 'edit') }
+  )
+  const { data: deleteImpact, isLoading: isLoadingImpact } = useMuridDeleteImpact(
+    deleteTarget?.id ?? 0,
+    { enabled: deleteTarget !== null }
   )
 
   const openCreate = () => { setMode('tambah'); setSelected(null); setTab('form') }
@@ -335,7 +339,32 @@ export default function MuridPage() {
         description="Data murid tidak dapat dikembalikan setelah dihapus."
         onConfirm={confirmDelete}
         isLoading={isDeleting}
-      />
+      >
+        {isLoadingImpact ? (
+          <p className="text-xs text-muted-foreground text-center">Memeriksa data terkait...</p>
+        ) : deleteImpact && (
+          deleteImpact.kelas_aktif.length > 0 ||
+          deleteImpact.riwayat_kelas > 0 ||
+          deleteImpact.wali_murid > 0 ||
+          deleteImpact.absensi > 0 ||
+          deleteImpact.progress_materi > 0 ||
+          deleteImpact.transaksi_kas > 0
+        ) && (
+          <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-xs text-muted-foreground space-y-1">
+            <p className="font-medium text-foreground">Data berikut akan ikut terhapus permanen:</p>
+            <ul className="list-disc list-inside space-y-0.5">
+              {deleteImpact.kelas_aktif.length > 0 && (
+                <li>Dikeluarkan dari kelas aktif: {deleteImpact.kelas_aktif.join(', ')}</li>
+              )}
+              {deleteImpact.riwayat_kelas > 0 && <li>{deleteImpact.riwayat_kelas} riwayat kelas</li>}
+              {deleteImpact.wali_murid > 0 && <li>{deleteImpact.wali_murid} data wali murid</li>}
+              {deleteImpact.absensi > 0 && <li>{deleteImpact.absensi} riwayat absensi</li>}
+              {deleteImpact.progress_materi > 0 && <li>{deleteImpact.progress_materi} progress materi</li>}
+              {deleteImpact.transaksi_kas > 0 && <li>{deleteImpact.transaksi_kas} transaksi kas</li>}
+            </ul>
+          </div>
+        )}
+      </DeleteDialog>
     </div>
   )
 }

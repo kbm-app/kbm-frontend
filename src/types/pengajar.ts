@@ -15,6 +15,12 @@ export interface Pengajar {
   user?: User
 }
 
+export interface PengajarDeleteImpact {
+  kelas_aktif: string[]
+  riwayat_kelas: number
+  absensi: number
+}
+
 export interface PengajarFilters {
   search?: string
   is_aktif?: boolean

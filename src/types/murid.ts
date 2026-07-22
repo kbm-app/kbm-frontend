@@ -36,6 +36,15 @@ export interface Murid {
   kelas_aktif?: MuridKelas[]
 }
 
+export interface MuridDeleteImpact {
+  kelas_aktif: string[]
+  riwayat_kelas: number
+  wali_murid: number
+  absensi: number
+  progress_materi: number
+  transaksi_kas: number
+}
+
 export interface MuridFilters {
   search?: string
   status?: MuridStatus

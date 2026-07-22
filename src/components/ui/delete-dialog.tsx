@@ -10,6 +10,7 @@ interface DeleteDialogProps {
   onOpenChange: (open: boolean) => void
   title: string
   description?: string
+  children?: React.ReactNode
   onConfirm: () => void
   isLoading?: boolean
 }
@@ -19,6 +20,7 @@ export function DeleteDialog({
   onOpenChange,
   title,
   description = 'Tindakan ini tidak dapat dibatalkan.',
+  children,
   onConfirm,
   isLoading,
 }: DeleteDialogProps) {
@@ -54,6 +56,8 @@ export function DeleteDialog({
               {description}
             </Dialog.Description>
           </div>
+
+          {children && <div className="mt-4">{children}</div>}
 
           <div className="mt-6 flex gap-3">
             <Button
