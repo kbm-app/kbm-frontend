@@ -173,32 +173,51 @@ export function ProgramDetail({ selected, onEdit, onDelete, onTambahJadwal }: Pr
               </CardContent>
             </Card>
           ) : (
-            <div className="rounded-xl border border-border overflow-x-auto bg-card">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/40 border-b border-border">
-                  <tr>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nama Kelas</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {kelasList.map((pk) => (
-                    <tr key={pk.id} className="hover:bg-muted/40 transition-colors">
-                      <td className="px-4 py-3.5 font-medium">{pk.kelas?.nama ?? '-'}</td>
-                      <td className="px-4 py-3.5 text-right">
-                        <button
-                          onClick={() => setDeleteKelasId(pk.kelas_id)}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                          title="Lepas kelas"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </button>
-                      </td>
+            <>
+              {/* Desktop — Tabel */}
+              <div className="hidden lg:block rounded-xl border border-border overflow-x-auto bg-card">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/40 border-b border-border">
+                    <tr>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nama Kelas</th>
+                      <th className="px-4 py-3" />
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {kelasList.map((pk) => (
+                      <tr key={pk.id} className="hover:bg-muted/40 transition-colors">
+                        <td className="px-4 py-3.5 font-medium">{pk.kelas?.nama ?? '-'}</td>
+                        <td className="px-4 py-3.5 text-right">
+                          <button
+                            onClick={() => setDeleteKelasId(pk.kelas_id)}
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                            title="Lepas kelas"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile/Tablet — Cards */}
+              <div className="lg:hidden rounded-xl border border-border bg-card divide-y divide-border overflow-hidden">
+                {kelasList.map((pk) => (
+                  <div key={pk.id} className="flex items-center justify-between gap-2 px-4 py-3">
+                    <span className="font-medium">{pk.kelas?.nama ?? '-'}</span>
+                    <button
+                      onClick={() => setDeleteKelasId(pk.kelas_id)}
+                      className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                      title="Lepas kelas"
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}
@@ -225,38 +244,66 @@ export function ProgramDetail({ selected, onEdit, onDelete, onTambahJadwal }: Pr
               </CardContent>
             </Card>
           ) : (
-            <div className="rounded-xl border border-border overflow-x-auto bg-card">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/40 border-b border-border">
-                  <tr>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Hari</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Jam</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kelas</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pengajar</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {jadwalList.map((j) => (
-                    <tr key={j.id} className="hover:bg-muted/40 transition-colors">
-                      <td className="px-4 py-3.5 font-medium">{HARI_LABEL[j.hari]}</td>
-                      <td className="px-4 py-3.5 text-muted-foreground">{j.jam_mulai.slice(0, 5)} – {j.jam_selesai.slice(0, 5)}</td>
-                      <td className="px-4 py-3.5 text-muted-foreground">{j.kelas?.nama ?? <span className="italic text-xs">Semua kelas</span>}</td>
-                      <td className="px-4 py-3.5 text-muted-foreground">{j.pengajar?.user?.name ?? '-'}</td>
-                      <td className="px-4 py-3.5 text-right">
-                        <button
-                          onClick={() => setDeleteJadwalId(j.id)}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                          title="Hapus jadwal"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </button>
-                      </td>
+            <>
+              {/* Desktop — Tabel */}
+              <div className="hidden lg:block rounded-xl border border-border overflow-x-auto bg-card">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/40 border-b border-border">
+                    <tr>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Hari</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Jam</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kelas</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pengajar</th>
+                      <th className="px-4 py-3" />
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {jadwalList.map((j) => (
+                      <tr key={j.id} className="hover:bg-muted/40 transition-colors">
+                        <td className="px-4 py-3.5 font-medium">{HARI_LABEL[j.hari]}</td>
+                        <td className="px-4 py-3.5 text-muted-foreground">{j.jam_mulai.slice(0, 5)} – {j.jam_selesai.slice(0, 5)}</td>
+                        <td className="px-4 py-3.5 text-muted-foreground">{j.kelas?.nama ?? <span className="italic text-xs">Semua kelas</span>}</td>
+                        <td className="px-4 py-3.5 text-muted-foreground">{j.pengajar?.user?.name ?? '-'}</td>
+                        <td className="px-4 py-3.5 text-right">
+                          <button
+                            onClick={() => setDeleteJadwalId(j.id)}
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                            title="Hapus jadwal"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile/Tablet — Cards */}
+              <div className="lg:hidden space-y-3">
+                {jadwalList.map((j) => (
+                  <div key={j.id} className="rounded-xl border border-border bg-card p-4 space-y-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <span className="font-medium">{HARI_LABEL[j.hari]}</span>
+                        <span className="text-muted-foreground"> · {j.jam_mulai.slice(0, 5)} – {j.jam_selesai.slice(0, 5)}</span>
+                      </div>
+                      <button
+                        onClick={() => setDeleteJadwalId(j.id)}
+                        className="p-1.5 -m-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                        title="Hapus jadwal"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
+                    <div className="text-sm text-muted-foreground space-y-0.5">
+                      <p>Kelas: {j.kelas?.nama ?? <span className="italic">Semua kelas</span>}</p>
+                      <p>Pengajar: {j.pengajar?.user?.name ?? '-'}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}

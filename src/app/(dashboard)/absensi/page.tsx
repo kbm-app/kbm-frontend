@@ -224,26 +224,36 @@ export default function AbsensiPage() {
               Tidak ada riwayat pertemuan untuk bulan ini.
             </div>
           ) : (
-            <div className="rounded-xl border border-border overflow-x-auto bg-card">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/40 border-b border-border">
-                  <tr>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tanggal</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kelas</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Program</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Hadir</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Alpha</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {riwayatFiltered.map((p) => (
-                    <RiwayatRow key={p.id} pertemuan={p} onDetail={() => detailSesi(p.id)} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <>
+              {/* Mobile & tablet: card grid */}
+              <div className="grid gap-4 sm:grid-cols-2 lg:hidden">
+                {riwayatFiltered.map((p) => (
+                  <RiwayatCard key={p.id} pertemuan={p} onDetail={() => detailSesi(p.id)} />
+                ))}
+              </div>
+
+              {/* Desktop: tabel */}
+              <div className="hidden lg:block rounded-xl border border-border overflow-x-auto bg-card">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/40 border-b border-border">
+                    <tr>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tanggal</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kelas</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Program</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Hadir</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Alpha</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {riwayatFiltered.map((p) => (
+                      <RiwayatRow key={p.id} pertemuan={p} onDetail={() => detailSesi(p.id)} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -345,5 +355,38 @@ function RiwayatRow({ pertemuan, onDetail }: { pertemuan: Pertemuan; onDetail: (
         </button>
       </td>
     </tr>
+  )
+}
+
+function RiwayatCard({ pertemuan, onDetail }: { pertemuan: Pertemuan; onDetail: () => void }) {
+  const STATUS_CONFIG = {
+    berlangsung: { label: 'Berlangsung', color: 'bg-amber-100 text-amber-700', icon: <PlayCircle className="size-3" /> },
+    selesai:     { label: 'Selesai',     color: 'bg-green-100 text-green-700',  icon: <CheckCircle className="size-3" /> },
+    dibatalkan:  { label: 'Dibatalkan',  color: 'bg-destructive/10 text-destructive', icon: <XCircle className="size-3" /> },
+  }
+  const cfg = STATUS_CONFIG[pertemuan.status]
+
+  return (
+    <button
+      onClick={onDetail}
+      className="text-left rounded-xl border border-border bg-card p-4 space-y-2.5 hover:border-primary/50 hover:shadow-sm transition-all"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="font-semibold">{pertemuan.kelas?.nama ?? '-'}</p>
+          <p className="text-xs text-muted-foreground">{pertemuan.program?.nama ?? '-'}</p>
+        </div>
+        <span className={cn('inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium shrink-0', cfg.color)}>
+          {cfg.icon} {cfg.label}
+        </span>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        {format(new Date(pertemuan.tanggal), 'EEE, d MMM yyyy', { locale: localeId })}
+      </p>
+      <div className="flex items-center gap-4 text-sm">
+        <span className="text-green-700 font-medium">Hadir: {pertemuan.total_hadir ?? '-'}</span>
+        <span className="text-destructive font-medium">Alpha: {pertemuan.total_alpha ?? '-'}</span>
+      </div>
+    </button>
   )
 }

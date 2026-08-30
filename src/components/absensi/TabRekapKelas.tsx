@@ -84,33 +84,49 @@ export default function TabRekapKelas({ onSelectMurid }: Props) {
               Tidak ada data pertemuan untuk bulan ini.
             </div>
           ) : (
-            <div className="rounded-xl border border-border overflow-x-auto bg-card">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/40 border-b border-border">
-                  <tr>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">#</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Murid</th>
-                    <th className="text-center px-3 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Hadir</th>
-                    <th className="text-center px-3 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Terlambat</th>
-                    <th className="text-center px-3 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Izin</th>
-                    <th className="text-center px-3 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Sakit</th>
-                    <th className="text-center px-3 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Alpha</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">%</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {rekap.data.map((item, idx) => (
-                    <RekapRow
-                      key={item.murid_id}
-                      rank={idx + 1}
-                      item={item}
-                      isTop={idx === 0}
-                      onSelect={() => onSelectMurid(item.murid_id, item.nama)}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <>
+              {/* Desktop — Tabel */}
+              <div className="hidden lg:block rounded-xl border border-border overflow-x-auto bg-card">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/40 border-b border-border">
+                    <tr>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">#</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Murid</th>
+                      <th className="text-center px-3 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Hadir</th>
+                      <th className="text-center px-3 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Terlambat</th>
+                      <th className="text-center px-3 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Izin</th>
+                      <th className="text-center px-3 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Sakit</th>
+                      <th className="text-center px-3 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Alpha</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">%</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {rekap.data.map((item, idx) => (
+                      <RekapRow
+                        key={item.murid_id}
+                        rank={idx + 1}
+                        item={item}
+                        isTop={idx === 0}
+                        onSelect={() => onSelectMurid(item.murid_id, item.nama)}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile/Tablet — Cards */}
+              <div className="lg:hidden space-y-3">
+                {rekap.data.map((item, idx) => (
+                  <RekapCard
+                    key={item.murid_id}
+                    rank={idx + 1}
+                    item={item}
+                    isTop={idx === 0}
+                    onSelect={() => onSelectMurid(item.murid_id, item.nama)}
+                  />
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}
@@ -159,5 +175,63 @@ function RekapRow({
         </div>
       </td>
     </tr>
+  )
+}
+
+function RekapCard({
+  rank,
+  item,
+  isTop,
+  onSelect,
+}: {
+  rank: number
+  item: RekapMuridItem
+  isTop: boolean
+  onSelect: () => void
+}) {
+  const persen = item.persentase
+  const colorText = persen >= 80 ? 'text-green-700' : persen >= 60 ? 'text-amber-700' : 'text-destructive'
+  const colorBar  = persen >= 80 ? 'bg-green-500'  : persen >= 60 ? 'bg-amber-500'  : 'bg-destructive'
+
+  return (
+    <div className={cn('rounded-xl border border-border bg-card p-4 space-y-3', isTop && 'bg-green-50/40')}>
+      <button onClick={onSelect} className="flex items-center gap-1.5 text-left w-full">
+        <span className="text-xs text-muted-foreground font-medium shrink-0">{rank}.</span>
+        <span className={cn('font-medium hover:text-primary hover:underline truncate', isTop && 'text-green-700')}>
+          {item.nama}
+        </span>
+        {isTop && <span className="text-xs text-green-600 shrink-0">★</span>}
+      </button>
+
+      <div className="grid grid-cols-5 gap-1 text-center text-xs">
+        <div>
+          <p className="font-semibold text-green-700">{item.hadir}</p>
+          <p className="text-muted-foreground">Hadir</p>
+        </div>
+        <div>
+          <p className="font-semibold text-amber-700">{item.terlambat}</p>
+          <p className="text-muted-foreground">Telat</p>
+        </div>
+        <div>
+          <p className="font-semibold text-muted-foreground">{item.izin}</p>
+          <p className="text-muted-foreground">Izin</p>
+        </div>
+        <div>
+          <p className="font-semibold text-muted-foreground">{item.sakit}</p>
+          <p className="text-muted-foreground">Sakit</p>
+        </div>
+        <div>
+          <p className="font-semibold text-destructive">{item.alpha}</p>
+          <p className="text-muted-foreground">Alpha</p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
+          <div className={cn('h-full rounded-full transition-all', colorBar)} style={{ width: `${persen}%` }} />
+        </div>
+        <span className={cn('text-xs font-semibold w-10 text-right shrink-0', colorText)}>{persen}%</span>
+      </div>
+    </div>
   )
 }

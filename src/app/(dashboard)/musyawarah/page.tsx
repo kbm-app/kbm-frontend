@@ -108,65 +108,105 @@ export default function MusyawarahPage() {
               </p>
             </div>
           ) : (
-            <div className="rounded-xl border border-border overflow-x-auto bg-card">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/40 border-b border-border">
-                  <tr>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Periode</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tanggal Pelaksanaan</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kelas</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Notulensi</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {list.map((m) => (
-                    <tr
-                      key={m.id}
-                      className="hover:bg-muted/40 transition-colors cursor-pointer"
-                      onClick={() => openDetail(m)}
-                    >
-                      <td className="px-4 py-3.5 font-medium">
-                        {BULAN_LABEL[m.bulan]} {m.tahun}
-                      </td>
-                      <td className="px-4 py-3.5 text-muted-foreground">
-                        {format(new Date(m.tanggal), 'EEE, d MMM yyyy', { locale: localeId })}
-                      </td>
-                      <td className="px-4 py-3.5 text-center text-muted-foreground">
-                        {m.laporan_count ?? 0}
-                      </td>
-                      <td className="px-4 py-3.5 text-center text-muted-foreground">
-                        {m.notulensi_count ?? 0}
-                      </td>
-                      <td className="px-4 py-3.5 text-center">
-                        <StatusBadge status={m.status} />
-                      </td>
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                          {m.status === 'draft' && (
-                            <button
-                              onClick={() => setDeleting(m)}
-                              className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                              title="Hapus"
-                            >
-                              <Trash2 className="size-3.5" />
-                            </button>
-                          )}
-                          <button
-                            onClick={() => openDetail(m)}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                            title="Buka"
-                          >
-                            <ChevronRight className="size-4" />
-                          </button>
-                        </div>
-                      </td>
+            <>
+              {/* Desktop — Tabel */}
+              <div className="hidden lg:block rounded-xl border border-border overflow-x-auto bg-card">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/40 border-b border-border">
+                    <tr>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Periode</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tanggal Pelaksanaan</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kelas</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Notulensi</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-3" />
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {list.map((m) => (
+                      <tr
+                        key={m.id}
+                        className="hover:bg-muted/40 transition-colors cursor-pointer"
+                        onClick={() => openDetail(m)}
+                      >
+                        <td className="px-4 py-3.5 font-medium">
+                          {BULAN_LABEL[m.bulan]} {m.tahun}
+                        </td>
+                        <td className="px-4 py-3.5 text-muted-foreground">
+                          {format(new Date(m.tanggal), 'EEE, d MMM yyyy', { locale: localeId })}
+                        </td>
+                        <td className="px-4 py-3.5 text-center text-muted-foreground">
+                          {m.laporan_count ?? 0}
+                        </td>
+                        <td className="px-4 py-3.5 text-center text-muted-foreground">
+                          {m.notulensi_count ?? 0}
+                        </td>
+                        <td className="px-4 py-3.5 text-center">
+                          <StatusBadge status={m.status} />
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                            {m.status === 'draft' && (
+                              <button
+                                onClick={() => setDeleting(m)}
+                                className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                title="Hapus"
+                              >
+                                <Trash2 className="size-3.5" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => openDetail(m)}
+                              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                              title="Buka"
+                            >
+                              <ChevronRight className="size-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile/Tablet — Cards */}
+              <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {list.map((m) => (
+                  <div
+                    key={m.id}
+                    onClick={() => openDetail(m)}
+                    className="cursor-pointer rounded-xl border border-border bg-card p-4 hover:border-primary/50 hover:shadow-sm transition-all space-y-2.5"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold">{BULAN_LABEL[m.bulan]} {m.tahun}</span>
+                      <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        {m.status === 'draft' && (
+                          <button
+                            onClick={() => setDeleting(m)}
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                            title="Hapus"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        )}
+                        <ChevronRight className="size-4 text-muted-foreground" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(m.tanggal), 'EEE, d MMM yyyy', { locale: localeId })}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <span>Kelas: {m.laporan_count ?? 0}</span>
+                        <span>Notulensi: {m.notulensi_count ?? 0}</span>
+                      </div>
+                      <StatusBadge status={m.status} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}

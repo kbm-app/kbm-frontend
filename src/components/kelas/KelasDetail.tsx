@@ -191,43 +191,73 @@ export function KelasDetail({ selected, onEdit, onDelete }: KelasDetailProps) {
               </CardContent>
             </Card>
           ) : (
-            <div className="rounded-xl border border-border overflow-x-auto bg-card">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/40 border-b border-border">
-                  <tr>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nama</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Peran</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tahun Ajaran</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {pengajarList.map((kg) => (
-                    <tr key={kg.id} className="hover:bg-muted/40 transition-colors">
-                      <td className="px-4 py-3.5 font-medium">{kg.pengajar?.user?.name ?? '-'}</td>
-                      <td className="px-4 py-3.5">
-                        <span className={cn(
-                          'text-xs font-medium px-2 py-0.5 rounded-full',
-                          kg.peran === 'utama' ? 'bg-blue-100 text-blue-700' : 'bg-zinc-100 text-zinc-600'
-                        )}>
-                          {kg.peran === 'utama' ? 'Utama' : 'Asisten'}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3.5 text-muted-foreground">{kg.tahun_ajaran}</td>
-                      <td className="px-4 py-3.5 text-right">
-                        <button
-                          onClick={() => setDeletePengajarId(kg.pengajar_id)}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                          title="Lepas pengajar"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </button>
-                      </td>
+            <>
+              {/* Desktop — Tabel */}
+              <div className="hidden lg:block rounded-xl border border-border overflow-x-auto bg-card">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/40 border-b border-border">
+                    <tr>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nama</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Peran</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tahun Ajaran</th>
+                      <th className="px-4 py-3" />
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {pengajarList.map((kg) => (
+                      <tr key={kg.id} className="hover:bg-muted/40 transition-colors">
+                        <td className="px-4 py-3.5 font-medium">{kg.pengajar?.user?.name ?? '-'}</td>
+                        <td className="px-4 py-3.5">
+                          <span className={cn(
+                            'text-xs font-medium px-2 py-0.5 rounded-full',
+                            kg.peran === 'utama' ? 'bg-blue-100 text-blue-700' : 'bg-zinc-100 text-zinc-600'
+                          )}>
+                            {kg.peran === 'utama' ? 'Utama' : 'Asisten'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 text-muted-foreground">{kg.tahun_ajaran}</td>
+                        <td className="px-4 py-3.5 text-right">
+                          <button
+                            onClick={() => setDeletePengajarId(kg.pengajar_id)}
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                            title="Lepas pengajar"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile/Tablet — Cards */}
+              <div className="lg:hidden space-y-3">
+                {pengajarList.map((kg) => (
+                  <div key={kg.id} className="rounded-xl border border-border bg-card p-4 space-y-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-medium">{kg.pengajar?.user?.name ?? '-'}</span>
+                      <button
+                        onClick={() => setDeletePengajarId(kg.pengajar_id)}
+                        className="p-1.5 -m-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                        title="Lepas pengajar"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className={cn(
+                        'text-xs font-medium px-2 py-0.5 rounded-full',
+                        kg.peran === 'utama' ? 'bg-blue-100 text-blue-700' : 'bg-zinc-100 text-zinc-600'
+                      )}>
+                        {kg.peran === 'utama' ? 'Utama' : 'Asisten'}
+                      </span>
+                      <span className="text-muted-foreground">{kg.tahun_ajaran}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}
@@ -259,43 +289,72 @@ export function KelasDetail({ selected, onEdit, onDelete }: KelasDetailProps) {
               </CardContent>
             </Card>
           ) : (
-            <div className="rounded-xl border border-border overflow-x-auto bg-card">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/40 border-b border-border">
-                  <tr>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Murid</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tahun Ajaran</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tgl Masuk</th>
-                    <th className="px-4 py-3" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {muridList.map((mk) => (
-                    <tr key={mk.id} className="hover:bg-muted/40 transition-colors">
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-2.5">
-                          <AvatarInitial name={mk.murid?.nama ?? '?'} size="lg" />
-                          <span className="font-medium">{mk.murid?.nama ?? '-'}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3.5 text-muted-foreground">{mk.tahun_ajaran}</td>
-                      <td className="px-4 py-3.5 text-muted-foreground">
-                        {mk.tanggal_masuk ? new Date(mk.tanggal_masuk).toLocaleDateString('id-ID') : '-'}
-                      </td>
-                      <td className="px-4 py-3.5 text-right">
-                        <button
-                          onClick={() => setDeleteMuridId(mk.murid_id)}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                          title="Keluarkan murid"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </button>
-                      </td>
+            <>
+              {/* Desktop — Tabel */}
+              <div className="hidden lg:block rounded-xl border border-border overflow-x-auto bg-card">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/40 border-b border-border">
+                    <tr>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Murid</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tahun Ajaran</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tgl Masuk</th>
+                      <th className="px-4 py-3" />
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {muridList.map((mk) => (
+                      <tr key={mk.id} className="hover:bg-muted/40 transition-colors">
+                        <td className="px-4 py-3.5">
+                          <div className="flex items-center gap-2.5">
+                            <AvatarInitial name={mk.murid?.nama ?? '?'} size="lg" />
+                            <span className="font-medium">{mk.murid?.nama ?? '-'}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5 text-muted-foreground">{mk.tahun_ajaran}</td>
+                        <td className="px-4 py-3.5 text-muted-foreground">
+                          {mk.tanggal_masuk ? new Date(mk.tanggal_masuk).toLocaleDateString('id-ID') : '-'}
+                        </td>
+                        <td className="px-4 py-3.5 text-right">
+                          <button
+                            onClick={() => setDeleteMuridId(mk.murid_id)}
+                            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                            title="Keluarkan murid"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile/Tablet — Cards */}
+              <div className="lg:hidden space-y-3">
+                {muridList.map((mk) => (
+                  <div key={mk.id} className="rounded-xl border border-border bg-card p-4 space-y-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <AvatarInitial name={mk.murid?.nama ?? '?'} size="lg" />
+                        <span className="font-medium truncate">{mk.murid?.nama ?? '-'}</span>
+                      </div>
+                      <button
+                        onClick={() => setDeleteMuridId(mk.murid_id)}
+                        className="p-1.5 -m-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                        title="Keluarkan murid"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <span>{mk.tahun_ajaran}</span>
+                      <span>·</span>
+                      <span>Masuk {mk.tanggal_masuk ? new Date(mk.tanggal_masuk).toLocaleDateString('id-ID') : '-'}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}

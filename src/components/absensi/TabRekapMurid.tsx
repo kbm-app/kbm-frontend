@@ -95,22 +95,32 @@ export default function TabRekapMurid({ initialMurid }: Props) {
               Tidak ada data absensi untuk murid ini di bulan yang dipilih.
             </div>
           ) : (
-            <div className="rounded-xl border border-border overflow-x-auto bg-card">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/40 border-b border-border">
-                  <tr>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pertemuan</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Keterangan</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {rekap.data.map((item, idx) => (
-                    <AbsensiRow key={item.id} idx={idx + 1} item={item} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <>
+              {/* Desktop — Tabel */}
+              <div className="hidden lg:block rounded-xl border border-border overflow-x-auto bg-card">
+                <table className="w-full text-sm">
+                  <thead className="bg-muted/40 border-b border-border">
+                    <tr>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pertemuan</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Keterangan</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {rekap.data.map((item, idx) => (
+                      <AbsensiRow key={item.id} idx={idx + 1} item={item} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile/Tablet — Cards */}
+              <div className="lg:hidden space-y-2">
+                {rekap.data.map((item, idx) => (
+                  <AbsensiCard key={item.id} idx={idx + 1} item={item} />
+                ))}
+              </div>
+            </>
           )}
         </div>
       )}
@@ -134,5 +144,26 @@ function AbsensiRow({ idx, item }: { idx: number; item: AbsensiMurid }) {
       </td>
       <td className="px-4 py-3 text-sm text-muted-foreground">{item.keterangan ?? '-'}</td>
     </tr>
+  )
+}
+
+function AbsensiCard({ idx, item }: { idx: number; item: AbsensiMurid }) {
+  const colorClass = STATUS_COLOR[item.status] ?? 'text-muted-foreground bg-muted'
+  const tanggal = item.pertemuan?.tanggal
+    ? format(new Date(item.pertemuan.tanggal), 'EEE, d MMM yyyy', { locale: localeId })
+    : `Pertemuan #${idx}`
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 space-y-1.5">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm text-muted-foreground">{tanggal}</span>
+        <span className={cn('inline-block text-xs font-medium px-2 py-0.5 rounded-full shrink-0', colorClass)}>
+          {STATUS_LABEL[item.status] ?? item.status}
+        </span>
+      </div>
+      {item.keterangan && (
+        <p className="text-sm text-muted-foreground">{item.keterangan}</p>
+      )}
+    </div>
   )
 }

@@ -92,87 +92,153 @@ export function TransaksiTab({ kelasId, kategoriList, onTambah, onEdit }: Props)
           </button>
         </div>
       ) : (
-        <div className="rounded-xl border border-border overflow-x-auto bg-card">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/40 border-b border-border">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tanggal</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Keterangan</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kategori</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Masuk</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Keluar</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {transaksi.map((t) => {
-                const isPemasukan = t.kategori?.jenis === 'pemasukan'
-                const isToday     = t.tanggal === today
-                return (
-                  <tr
-                    key={t.id}
-                    className={cn(
-                      'transition-colors',
-                      isPemasukan ? 'bg-green-50/40 hover:bg-green-50/70' : 'bg-red-50/40 hover:bg-red-50/70'
-                    )}
-                  >
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                      {format(new Date(t.tanggal), 'dd MMM', { locale: localeId })}
-                    </td>
-                    <td className="px-4 py-3 max-w-xs">
-                      <span className="line-clamp-1">
-                        {t.keterangan || (t.murid ? t.murid.nama : '—')}
-                      </span>
-                      {t.murid && t.keterangan && (
-                        <span className="block text-xs text-muted-foreground">{t.murid.nama}</span>
+        <>
+          {/* Desktop — Tabel */}
+          <div className="hidden lg:block rounded-xl border border-border overflow-x-auto bg-card">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/40 border-b border-border">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tanggal</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Keterangan</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Kategori</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Masuk</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Keluar</th>
+                  <th className="px-4 py-3" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {transaksi.map((t) => {
+                  const isPemasukan = t.kategori?.jenis === 'pemasukan'
+                  const isToday     = t.tanggal === today
+                  return (
+                    <tr
+                      key={t.id}
+                      className={cn(
+                        'transition-colors',
+                        isPemasukan ? 'bg-green-50/40 hover:bg-green-50/70' : 'bg-red-50/40 hover:bg-red-50/70'
                       )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={cn(
-                        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
-                        isPemasukan ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                    >
+                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                        {format(new Date(t.tanggal), 'dd MMM', { locale: localeId })}
+                      </td>
+                      <td className="px-4 py-3 max-w-xs">
+                        <span className="line-clamp-1">
+                          {t.keterangan || (t.murid ? t.murid.nama : '—')}
+                        </span>
+                        {t.murid && t.keterangan && (
+                          <span className="block text-xs text-muted-foreground">{t.murid.nama}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={cn(
+                          'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+                          isPemasukan ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        )}>
+                          {t.kategori?.nama ?? '—'}
+                        </span>
+                      </td>
+                      <td className={cn(
+                        'px-4 py-3 text-right font-medium',
+                        isPemasukan ? 'text-green-700' : 'text-muted-foreground/30'
                       )}>
-                        {t.kategori?.nama ?? '—'}
-                      </span>
-                    </td>
-                    <td className={cn(
-                      'px-4 py-3 text-right font-medium',
-                      isPemasukan ? 'text-green-700' : 'text-muted-foreground/30'
-                    )}>
-                      {isPemasukan ? rupiah(t.jumlah) : '—'}
-                    </td>
-                    <td className={cn(
-                      'px-4 py-3 text-right font-medium',
-                      !isPemasukan ? 'text-red-600' : 'text-muted-foreground/30'
-                    )}>
-                      {!isPemasukan ? rupiah(t.jumlah) : '—'}
-                    </td>
-                    <td className="px-3 py-2">
-                      {isToday && (
-                        <div className="flex items-center gap-1 justify-end">
-                          <button
-                            onClick={() => onEdit(t)}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                            title="Edit"
-                          >
-                            <Pencil className="size-3.5" />
-                          </button>
-                          <button
-                            onClick={() => setDeleteTarget(t)}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                            title="Hapus"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
-                        </div>
+                        {isPemasukan ? rupiah(t.jumlah) : '—'}
+                      </td>
+                      <td className={cn(
+                        'px-4 py-3 text-right font-medium',
+                        !isPemasukan ? 'text-red-600' : 'text-muted-foreground/30'
+                      )}>
+                        {!isPemasukan ? rupiah(t.jumlah) : '—'}
+                      </td>
+                      <td className="px-3 py-2">
+                        {isToday && (
+                          <div className="flex items-center gap-1 justify-end">
+                            <button
+                              onClick={() => onEdit(t)}
+                              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                              title="Edit"
+                            >
+                              <Pencil className="size-3.5" />
+                            </button>
+                            <button
+                              onClick={() => setDeleteTarget(t)}
+                              className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                              title="Hapus"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile/Tablet — Cards */}
+          <div className="lg:hidden space-y-3">
+            {transaksi.map((t) => {
+              const isPemasukan = t.kategori?.jenis === 'pemasukan'
+              const isToday     = t.tanggal === today
+              return (
+                <div
+                  key={t.id}
+                  className={cn(
+                    'rounded-xl border border-border p-4 space-y-2.5',
+                    isPemasukan ? 'bg-green-50/40' : 'bg-red-50/40'
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(t.tanggal), 'dd MMM yyyy', { locale: localeId })}
+                      </p>
+                      <p className="font-medium truncate">
+                        {t.keterangan || (t.murid ? t.murid.nama : '—')}
+                      </p>
+                      {t.murid && t.keterangan && (
+                        <p className="text-xs text-muted-foreground truncate">{t.murid.nama}</p>
                       )}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                    {isToday && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => onEdit(t)}
+                          className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                          title="Edit"
+                        >
+                          <Pencil className="size-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget(t)}
+                          className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                          title="Hapus"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={cn(
+                      'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium shrink-0',
+                      isPemasukan ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                    )}>
+                      {t.kategori?.nama ?? '—'}
+                    </span>
+                    <span className={cn(
+                      'font-semibold',
+                      isPemasukan ? 'text-green-700' : 'text-red-600'
+                    )}>
+                      {isPemasukan ? '+' : '-'}{rupiah(t.jumlah)}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </>
       )}
 
       <DeleteDialog
