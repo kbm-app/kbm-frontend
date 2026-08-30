@@ -95,7 +95,7 @@ export default function TabRekapMurid({ initialMurid }: Props) {
               Tidak ada data absensi untuk murid ini di bulan yang dipilih.
             </div>
           ) : (
-            <div className="rounded-xl border border-border overflow-hidden bg-card">
+            <div className="rounded-xl border border-border overflow-x-auto bg-card">
               <table className="w-full text-sm">
                 <thead className="bg-muted/40 border-b border-border">
                   <tr>
