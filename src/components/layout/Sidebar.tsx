@@ -8,92 +8,23 @@ import { useLogout } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import { LayoutDashboard, Users, GraduationCap, BookUser, LogOut, UserCircle, School, Layers, CalendarDays, ClipboardList, BookOpen, Wallet, Megaphone, Bell, Settings, MessagesSquare, X } from 'lucide-react'
 import { useSidebar } from './SidebarContext'
+import { ROUTE_ROLES } from '@/config/access'
 
 const navItems = [
-  {
-    href: '/dashboard',
-    label: 'Dashboard',
-    icon: LayoutDashboard,
-    roles: ['super_admin', 'pengajar', 'murid', 'wali_murid'],
-  },
-  {
-    href: '/users',
-    label: 'Pengguna',
-    icon: Users,
-    roles: ['super_admin'],
-  },
-  {
-    href: '/pengajar',
-    label: 'Pengajar',
-    icon: GraduationCap,
-    roles: ['super_admin', 'pengajar'],
-  },
-  {
-    href: '/murid',
-    label: 'Murid',
-    icon: BookUser,
-    roles: ['super_admin', 'pengajar'],
-  },
-  {
-    href: '/kelas',
-    label: 'Kelas',
-    icon: School,
-    roles: ['super_admin', 'pengajar'],
-  },
-  {
-    href: '/program',
-    label: 'Program',
-    icon: Layers,
-    roles: ['super_admin', 'pengajar'],
-  },
-  {
-    href: '/jadwal',
-    label: 'Jadwal',
-    icon: CalendarDays,
-    roles: ['super_admin', 'pengajar'],
-  },
-  {
-    href: '/absensi',
-    label: 'Absensi',
-    icon: ClipboardList,
-    roles: ['super_admin', 'pengajar'],
-  },
-  {
-    href: '/kurikulum',
-    label: 'Kurikulum',
-    icon: BookOpen,
-    roles: ['super_admin', 'pengajar'],
-  },
-  {
-    href: '/kas',
-    label: 'Kas',
-    icon: Wallet,
-    roles: ['super_admin', 'pengajar'],
-  },
-  {
-    href: '/musyawarah',
-    label: 'Musyawarah',
-    icon: MessagesSquare,
-    roles: ['super_admin'],
-  },
-  {
-    href: '/pengumuman',
-    label: 'Pengumuman',
-    icon: Megaphone,
-    roles: ['super_admin'],
-  },
-  {
-    href: '/notifikasi/log',
-    label: 'Log Notifikasi',
-    icon: Bell,
-    roles: ['super_admin'],
-  },
-  {
-    href: '/settings/wa',
-    label: 'Pengaturan WA',
-    icon: Settings,
-    roles: ['super_admin'],
-  },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/users', label: 'Pengguna', icon: Users },
+  { href: '/pengajar', label: 'Pengajar', icon: GraduationCap },
+  { href: '/murid', label: 'Murid', icon: BookUser },
+  { href: '/kelas', label: 'Kelas', icon: School },
+  { href: '/program', label: 'Program', icon: Layers },
+  { href: '/jadwal', label: 'Jadwal', icon: CalendarDays },
+  { href: '/absensi', label: 'Absensi', icon: ClipboardList },
+  { href: '/kurikulum', label: 'Kurikulum', icon: BookOpen },
+  { href: '/kas', label: 'Kas', icon: Wallet },
+  { href: '/musyawarah', label: 'Musyawarah', icon: MessagesSquare },
+  { href: '/pengumuman', label: 'Pengumuman', icon: Megaphone },
+  { href: '/notifikasi/log', label: 'Log Notifikasi', icon: Bell },
+  { href: '/settings/wa', label: 'Pengaturan WA', icon: Settings },
 ]
 
 export default function Sidebar() {
@@ -105,7 +36,7 @@ export default function Sidebar() {
   useEffect(() => { close() }, [pathname, close])
 
   const visibleItems = navItems.filter(
-    (item) => user && item.roles.includes(user.role)
+    (item) => user && ROUTE_ROLES[item.href]?.includes(user.role)
   )
 
   return (
