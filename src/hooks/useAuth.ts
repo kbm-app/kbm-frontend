@@ -67,6 +67,23 @@ export const useUpdateProfile = () => {
   })
 }
 
+export const useSetPassword = () => {
+  const router = useRouter()
+
+  return useMutation({
+    mutationFn: async (payload: {
+      token: string
+      email: string
+      password: string
+      password_confirmation: string
+    }) => {
+      await api.get('/sanctum/csrf-cookie')
+      return api.post('/api/auth/set-password', payload)
+    },
+    onSuccess: () => router.push('/login'),
+  })
+}
+
 export const useChangePassword = () =>
   useMutation({
     mutationFn: (payload: {

@@ -64,14 +64,6 @@ export default function UserForm({
               <Input placeholder="08xxxxxxxxxx" {...register('phone')} />
             </Field>
 
-            {!isEdit && (
-              <div className="col-span-2">
-                <Field label="Password" error={errors.password?.message}>
-                  <Input type="password" placeholder="Minimal 8 karakter" {...register('password')} />
-                </Field>
-              </div>
-            )}
-
             <div className="col-span-2">
               <Field label="Role" error={errors.role?.message}>
                 <select {...register('role')} className={formSelectClass}>

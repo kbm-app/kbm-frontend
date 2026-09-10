@@ -41,7 +41,6 @@ export const useCreateUser = () => {
       name: string
       email: string
       phone?: string
-      password: string
       role: UserRole
     }) => api.post<{ user: User }>('/api/users', payload),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
