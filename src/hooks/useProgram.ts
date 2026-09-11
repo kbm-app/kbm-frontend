@@ -68,7 +68,7 @@ export const useAssignKelasProgram = (programId: number) => {
   return useMutation({
     mutationFn: (kelasId: number) =>
       api.post<{ program_kelas: ProgramKelas }>(`/api/program/${programId}/kelas`, { kelas_id: kelasId }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['program', programId] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['program'] }),
   })
 }
 
@@ -76,6 +76,6 @@ export const useLepasKelasProgram = (programId: number) => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (kelasId: number) => api.delete(`/api/program/${programId}/kelas/${kelasId}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['program', programId] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['program'] }),
   })
 }

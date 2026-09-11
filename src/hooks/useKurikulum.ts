@@ -103,7 +103,10 @@ export const useCreateBab = (kurikulumId: number) => {
   return useMutation({
     mutationFn: (payload: BabKurikulumFormData) =>
       api.post<{ bab: BabKurikulum }>(`/api/kurikulum/${kurikulumId}/bab`, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kurikulum'] })
+      queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId] })
+    },
   })
 }
 
@@ -112,7 +115,10 @@ export const useUpdateBab = (kurikulumId: number) => {
   return useMutation({
     mutationFn: ({ id, ...payload }: BabKurikulumFormData & { id: number }) =>
       api.put<{ bab: BabKurikulum }>(`/api/bab-kurikulum/${id}`, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kurikulum'] })
+      queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId] })
+    },
   })
 }
 
@@ -120,7 +126,10 @@ export const useDeleteBab = (kurikulumId: number) => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: number) => api.delete(`/api/bab-kurikulum/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kurikulum'] })
+      queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId] })
+    },
   })
 }
 
@@ -129,7 +138,10 @@ export const useReorderBab = (kurikulumId: number) => {
   return useMutation({
     mutationFn: (items: { id: number; urutan: number }[]) =>
       api.post(`/api/kurikulum/${kurikulumId}/bab/urutan`, { items }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kurikulum'] })
+      queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId] })
+    },
   })
 }
 
@@ -140,7 +152,10 @@ export const useCreateMateri = (kurikulumId: number) => {
   return useMutation({
     mutationFn: ({ babId, ...payload }: MateriFormData & { babId: number }) =>
       api.post<{ materi: Materi }>(`/api/bab-kurikulum/${babId}/materi`, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kurikulum'] })
+      queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId] })
+    },
   })
 }
 
@@ -149,7 +164,10 @@ export const useUpdateMateri = (kurikulumId: number) => {
   return useMutation({
     mutationFn: ({ id, ...payload }: Partial<MateriFormData> & { id: number }) =>
       api.put<{ materi: Materi }>(`/api/materi/${id}`, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kurikulum'] })
+      queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId] })
+    },
   })
 }
 
@@ -158,6 +176,7 @@ export const useDeleteMateri = (kurikulumId: number) => {
   return useMutation({
     mutationFn: (id: number) => api.delete(`/api/materi/${id}`),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kurikulum'] })
       queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId] })
       queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId, 'progress'] })
     },
@@ -169,7 +188,10 @@ export const useReorderMateri = (kurikulumId: number) => {
   return useMutation({
     mutationFn: (items: { id: number; urutan: number }[]) =>
       api.post(`/api/kurikulum/${kurikulumId}/materi/urutan`, { items }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kurikulum'] })
+      queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId] })
+    },
   })
 }
 

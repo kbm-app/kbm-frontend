@@ -94,7 +94,10 @@ export const useUpdateLaporan = (musyawarahId: number) => {
         `/api/musyawarah/${musyawarahId}/laporan/${laporanId}`,
         payload
       ),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['musyawarah', musyawarahId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['musyawarah'] })
+      queryClient.invalidateQueries({ queryKey: ['musyawarah', musyawarahId] })
+    },
   })
 }
 
@@ -105,7 +108,10 @@ export const useRegenerateLaporan = (musyawarahId: number) => {
       api.post<{ laporan: LaporanMusyawarah }>(
         `/api/musyawarah/${musyawarahId}/laporan/${laporanId}/regenerate`
       ),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['musyawarah', musyawarahId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['musyawarah'] })
+      queryClient.invalidateQueries({ queryKey: ['musyawarah', musyawarahId] })
+    },
   })
 }
 
@@ -119,7 +125,10 @@ export const useStoreNotulensi = (musyawarahId: number) => {
         `/api/musyawarah/${musyawarahId}/notulensi`,
         payload
       ),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['musyawarah', musyawarahId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['musyawarah'] })
+      queryClient.invalidateQueries({ queryKey: ['musyawarah', musyawarahId] })
+    },
   })
 }
 
@@ -131,7 +140,10 @@ export const useUpdateNotulensi = (musyawarahId: number) => {
         `/api/musyawarah/${musyawarahId}/notulensi/${notulensiId}`,
         payload
       ),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['musyawarah', musyawarahId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['musyawarah'] })
+      queryClient.invalidateQueries({ queryKey: ['musyawarah', musyawarahId] })
+    },
   })
 }
 
@@ -140,6 +152,9 @@ export const useDeleteNotulensi = (musyawarahId: number) => {
   return useMutation({
     mutationFn: (notulensiId: number) =>
       api.delete(`/api/musyawarah/${musyawarahId}/notulensi/${notulensiId}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['musyawarah', musyawarahId] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['musyawarah'] })
+      queryClient.invalidateQueries({ queryKey: ['musyawarah', musyawarahId] })
+    },
   })
 }

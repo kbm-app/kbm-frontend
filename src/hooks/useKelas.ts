@@ -84,7 +84,7 @@ export const useAssignPengajar = (kelasId: number) => {
       api.post<{ kelas_guru: KelasGuru }>(`/api/kelas/${kelasId}/pengajar`, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kelas', kelasId, 'pengajar'] })
-      queryClient.invalidateQueries({ queryKey: ['kelas', kelasId] })
+      queryClient.invalidateQueries({ queryKey: ['kelas'] })
     },
   })
 }
@@ -96,7 +96,7 @@ export const useLepaskanPengajar = (kelasId: number) => {
       api.delete(`/api/kelas/${kelasId}/pengajar/${pengajarId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kelas', kelasId, 'pengajar'] })
-      queryClient.invalidateQueries({ queryKey: ['kelas', kelasId] })
+      queryClient.invalidateQueries({ queryKey: ['kelas'] })
     },
   })
 }
@@ -108,7 +108,7 @@ export const useEnrollMurid = (kelasId: number) => {
       api.post<{ murid_kelas: MuridKelas }>(`/api/kelas/${kelasId}/murid`, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kelas', kelasId, 'murid'] })
-      queryClient.invalidateQueries({ queryKey: ['kelas', kelasId] })
+      queryClient.invalidateQueries({ queryKey: ['kelas'] })
       queryClient.invalidateQueries({ queryKey: ['murid'] })
     },
   })
@@ -121,7 +121,7 @@ export const useKeluarkanMurid = (kelasId: number) => {
       api.delete(`/api/kelas/${kelasId}/murid/${muridId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kelas', kelasId, 'murid'] })
-      queryClient.invalidateQueries({ queryKey: ['kelas', kelasId] })
+      queryClient.invalidateQueries({ queryKey: ['kelas'] })
       queryClient.invalidateQueries({ queryKey: ['murid'] })
     },
   })
