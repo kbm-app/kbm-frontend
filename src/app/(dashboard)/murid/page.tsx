@@ -18,8 +18,10 @@ import { cn, formatDate } from '@/lib/utils'
 import { toast } from 'sonner'
 import { MuridFormData } from '@/lib/schemas/murid'
 import { Calendar, MapPin } from 'lucide-react'
+import { useIsSuperAdmin } from '@/hooks/useAuth'
 
 export default function MuridPage() {
+  const isSuperAdmin = useIsSuperAdmin()
   const [tab, setTab] = useState<Tab>('daftar')
   const [mode, setMode] = useState<Mode>('tambah')
   const [selected, setSelected] = useState<Murid | null>(null)
@@ -98,6 +100,7 @@ export default function MuridPage() {
     onDetail: openDetail,
     onEdit: openEdit,
     onDelete: handleDelete,
+    canManage: isSuperAdmin,
   })
 
   return (
@@ -121,17 +124,19 @@ export default function MuridPage() {
         >
           Daftar Murid
         </button>
-        <button
-          onClick={openCreate}
-          className={cn(
-            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
-            tab === 'form'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          )}
-        >
-          {tabLabel ?? 'Tambah Murid'}
-        </button>
+        {(isSuperAdmin || tab === 'form') && (
+          <button
+            onClick={isSuperAdmin ? openCreate : undefined}
+            className={cn(
+              'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
+              tab === 'form'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {tabLabel ?? 'Tambah Murid'}
+          </button>
+        )}
       </div>
 
       {tab === 'daftar' && (
@@ -189,12 +194,14 @@ export default function MuridPage() {
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">{data?.total ?? 0} murid</span>
               <div className="ml-auto flex items-center gap-2">
-                <ImportButton
-                  templateUrl="/api/export/murid/template"
-                  uploadUrl="/api/import/murid"
-                  label="Import"
-                  onSuccess={() => { setPage(1) }}
-                />
+                {isSuperAdmin && (
+                  <ImportButton
+                    templateUrl="/api/export/murid/template"
+                    uploadUrl="/api/import/murid"
+                    label="Import"
+                    onSuccess={() => { setPage(1) }}
+                  />
+                )}
                 <ExportButton
                   excelUrl={`/api/export/murid?${new URLSearchParams({
                     ...(search && { search }),
@@ -232,9 +239,11 @@ export default function MuridPage() {
             ) : !data?.data.length ? (
               <div className="py-16 text-center text-sm text-muted-foreground">
                 Belum ada murid.{' '}
-                <button onClick={openCreate} className="text-primary hover:underline">
-                  Tambah murid pertama
-                </button>
+                {isSuperAdmin && (
+                  <button onClick={openCreate} className="text-primary hover:underline">
+                    Tambah murid pertama
+                  </button>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -329,6 +338,7 @@ export default function MuridPage() {
           isLoadingDetail={isLoadingDetail}
           onEdit={openEdit}
           onDelete={handleDelete}
+          canManage={isSuperAdmin}
         />
       )}
 

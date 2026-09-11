@@ -15,27 +15,30 @@ interface PengajarDetailProps {
   onToggle: () => void
   onEdit: (p: Pengajar) => void
   onDelete: (p: Pengajar) => void
+  canManage: boolean
 }
 
-export function PengajarDetail({ selected, isToggling, onToggle, onEdit, onDelete }: PengajarDetailProps) {
+export function PengajarDetail({ selected, isToggling, onToggle, onEdit, onDelete, canManage }: PengajarDetailProps) {
   return (
     <div className="space-y-4">
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" size="sm" disabled={isToggling} onClick={onToggle}>
-          {selected.is_aktif
-            ? <><ToggleRight className="size-4 mr-1.5 text-green-600" />Nonaktifkan</>
-            : <><ToggleLeft className="size-4 mr-1.5 text-zinc-400" />Aktifkan</>
-          }
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => onEdit(selected)}>
-          <Pencil className="size-4 mr-1.5" />
-          Edit
-        </Button>
-        <Button variant="destructive" size="sm" onClick={() => onDelete(selected)}>
-          <Trash2 className="size-4 mr-1.5" />
-          Hapus
-        </Button>
-      </div>
+      {canManage && (
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="sm" disabled={isToggling} onClick={onToggle}>
+            {selected.is_aktif
+              ? <><ToggleRight className="size-4 mr-1.5 text-green-600" />Nonaktifkan</>
+              : <><ToggleLeft className="size-4 mr-1.5 text-zinc-400" />Aktifkan</>
+            }
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => onEdit(selected)}>
+            <Pencil className="size-4 mr-1.5" />
+            Edit
+          </Button>
+          <Button variant="destructive" size="sm" onClick={() => onDelete(selected)}>
+            <Trash2 className="size-4 mr-1.5" />
+            Hapus
+          </Button>
+        </div>
+      )}
 
       <Card>
         <CardHeader>

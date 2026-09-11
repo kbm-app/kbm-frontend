@@ -19,10 +19,12 @@ import { ArrowLeft, BookOpen, Copy, Pencil, Trash2 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { duplikatKurikulumSchema } from '@/lib/schemas/kurikulum'
+import { useIsSuperAdmin } from '@/hooks/useAuth'
 
 type Tab = 'materi' | 'progress'
 
 export default function KurikulumDetailPage() {
+  const isSuperAdmin = useIsSuperAdmin()
   const { id } = useParams<{ id: string }>()
   const kurikulumId = Number(id)
   const router = useRouter()
@@ -101,24 +103,26 @@ export default function KurikulumDetailPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <Button variant="outline" size="sm" onClick={() => setModalDuplikat(true)}>
-              <Copy className="size-3.5 mr-1.5" />
-              Duplikat
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setModalEdit(true)}>
-              <Pencil className="size-3.5 mr-1.5" />
-              Edit
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/30"
-              onClick={() => setModalDelete(true)}
-            >
-              <Trash2 className="size-3.5" />
-            </Button>
-          </div>
+          {isSuperAdmin && (
+            <div className="flex items-center gap-2 shrink-0">
+              <Button variant="outline" size="sm" onClick={() => setModalDuplikat(true)}>
+                <Copy className="size-3.5 mr-1.5" />
+                Duplikat
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setModalEdit(true)}>
+                <Pencil className="size-3.5 mr-1.5" />
+                Edit
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/30"
+                onClick={() => setModalDelete(true)}
+              >
+                <Trash2 className="size-3.5" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 

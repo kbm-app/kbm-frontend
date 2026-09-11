@@ -18,8 +18,10 @@ import { toast } from 'sonner'
 import { GraduationCap, Mail, Calendar } from 'lucide-react'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { formatDate } from '@/lib/utils'
+import { useIsSuperAdmin } from '@/hooks/useAuth'
 
 export default function PengajarPage() {
+  const isSuperAdmin = useIsSuperAdmin()
   const [tab, setTab] = useState<Tab>('daftar')
   const [mode, setMode] = useState<Mode>('tambah')
   const [selected, setSelected] = useState<Pengajar | null>(null)
@@ -95,6 +97,7 @@ export default function PengajarPage() {
     onDetail: openDetail,
     onEdit: openEdit,
     onDelete: handleDelete,
+    canManage: isSuperAdmin,
   })
 
   return (
@@ -118,17 +121,19 @@ export default function PengajarPage() {
         >
           Daftar Pengajar
         </button>
-        <button
-          onClick={openCreate}
-          className={cn(
-            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
-            tab === 'form'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          )}
-        >
-          {tabLabel ?? 'Tambah Pengajar'}
-        </button>
+        {(isSuperAdmin || tab === 'form') && (
+          <button
+            onClick={isSuperAdmin ? openCreate : undefined}
+            className={cn(
+              'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
+              tab === 'form'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {tabLabel ?? 'Tambah Pengajar'}
+          </button>
+        )}
       </div>
 
       {tab === 'daftar' && (
@@ -143,12 +148,14 @@ export default function PengajarPage() {
             />
             <div className="flex items-center gap-2 sm:ml-auto">
               <span className="text-sm text-muted-foreground">{data?.total ?? 0} pengajar</span>
-              <ImportButton
-                templateUrl="/api/export/pengajar/template"
-                uploadUrl="/api/import/pengajar"
-                label="Import"
-                onSuccess={() => { setPage(1) }}
-              />
+              {isSuperAdmin && (
+                <ImportButton
+                  templateUrl="/api/export/pengajar/template"
+                  uploadUrl="/api/import/pengajar"
+                  label="Import"
+                  onSuccess={() => { setPage(1) }}
+                />
+              )}
               <ExportButton
                 excelUrl={`/api/export/pengajar?${new URLSearchParams({
                   ...(search && { search }),
@@ -177,9 +184,11 @@ export default function PengajarPage() {
             ) : !data?.data.length ? (
               <div className="py-16 text-center text-sm text-muted-foreground">
                 Belum ada pengajar.{' '}
-                <button onClick={openCreate} className="text-primary hover:underline">
-                  Tambah pengajar pertama
-                </button>
+                {isSuperAdmin && (
+                  <button onClick={openCreate} className="text-primary hover:underline">
+                    Tambah pengajar pertama
+                  </button>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -252,6 +261,7 @@ export default function PengajarPage() {
           onToggle={handleToggle}
           onEdit={openEdit}
           onDelete={handleDelete}
+          canManage={isSuperAdmin}
         />
       )}
 

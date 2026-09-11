@@ -8,9 +8,10 @@ interface PengajarColumnsOpts {
   onDetail: (p: Pengajar) => void
   onEdit: (p: Pengajar) => void
   onDelete: (p: Pengajar) => void
+  canManage: boolean
 }
 
-export function getPengajarColumns({ onDetail, onEdit, onDelete }: PengajarColumnsOpts): ColumnDef<Pengajar>[] {
+export function getPengajarColumns({ onDetail, onEdit, onDelete, canManage }: PengajarColumnsOpts): ColumnDef<Pengajar>[] {
   return [
     {
       accessorKey: 'user.name',
@@ -57,20 +58,24 @@ export function getPengajarColumns({ onDetail, onEdit, onDelete }: PengajarColum
             >
               <Eye className="size-3.5" />
             </button>
-            <button
-              onClick={() => onEdit(p)}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              title="Edit"
-            >
-              <Pencil className="size-3.5" />
-            </button>
-            <button
-              onClick={() => onDelete(p)}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-              title="Hapus"
-            >
-              <Trash2 className="size-3.5" />
-            </button>
+            {canManage && (
+              <>
+                <button
+                  onClick={() => onEdit(p)}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  title="Edit"
+                >
+                  <Pencil className="size-3.5" />
+                </button>
+                <button
+                  onClick={() => onDelete(p)}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  title="Hapus"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              </>
+            )}
           </div>
         )
       },

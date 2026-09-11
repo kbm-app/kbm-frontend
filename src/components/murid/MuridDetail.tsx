@@ -15,23 +15,26 @@ interface MuridDetailProps {
   isLoadingDetail: boolean
   onEdit: (m: Murid) => void
   onDelete: (m: Murid) => void
+  canManage: boolean
 }
 
-export function MuridDetail({ selected, muridDetail, isLoadingDetail, onEdit, onDelete }: MuridDetailProps) {
+export function MuridDetail({ selected, muridDetail, isLoadingDetail, onEdit, onDelete, canManage }: MuridDetailProps) {
   const fotoUrl = muridDetail?.foto_url ?? selected.foto_url
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={() => onEdit(selected)}>
-          <Pencil className="size-4 mr-1.5" />
-          Edit
-        </Button>
-        <Button variant="destructive" size="sm" onClick={() => onDelete(selected)}>
-          <Trash2 className="size-4 mr-1.5" />
-          Hapus
-        </Button>
-      </div>
+      {canManage && (
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={() => onEdit(selected)}>
+            <Pencil className="size-4 mr-1.5" />
+            Edit
+          </Button>
+          <Button variant="destructive" size="sm" onClick={() => onDelete(selected)}>
+            <Trash2 className="size-4 mr-1.5" />
+            Hapus
+          </Button>
+        </div>
+      )}
 
       {/* Profil */}
       <Card>

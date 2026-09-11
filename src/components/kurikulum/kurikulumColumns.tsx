@@ -7,9 +7,10 @@ interface KurikulumColumnsOpts {
   onEdit: (k: Kurikulum) => void
   onDelete: (k: Kurikulum) => void
   onDuplikat: (k: Kurikulum) => void
+  canManage: boolean
 }
 
-export function getKurikulumColumns({ onDetail, onEdit, onDelete, onDuplikat }: KurikulumColumnsOpts): ColumnDef<Kurikulum>[] {
+export function getKurikulumColumns({ onDetail, onEdit, onDelete, onDuplikat, canManage }: KurikulumColumnsOpts): ColumnDef<Kurikulum>[] {
   return [
     {
       accessorKey: 'nama',
@@ -55,27 +56,31 @@ export function getKurikulumColumns({ onDetail, onEdit, onDelete, onDuplikat }: 
             >
               <Eye className="size-3.5" />
             </button>
-            <button
-              onClick={() => onDuplikat(k)}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              title="Duplikat ke tahun ajaran baru"
-            >
-              <Copy className="size-3.5" />
-            </button>
-            <button
-              onClick={() => onEdit(k)}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              title="Edit"
-            >
-              <Pencil className="size-3.5" />
-            </button>
-            <button
-              onClick={() => onDelete(k)}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-              title="Hapus"
-            >
-              <Trash2 className="size-3.5" />
-            </button>
+            {canManage && (
+              <>
+                <button
+                  onClick={() => onDuplikat(k)}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  title="Duplikat ke tahun ajaran baru"
+                >
+                  <Copy className="size-3.5" />
+                </button>
+                <button
+                  onClick={() => onEdit(k)}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  title="Edit"
+                >
+                  <Pencil className="size-3.5" />
+                </button>
+                <button
+                  onClick={() => onDelete(k)}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  title="Hapus"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              </>
+            )}
           </div>
         )
       },

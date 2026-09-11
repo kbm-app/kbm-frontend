@@ -13,8 +13,10 @@ import { Tab, Mode } from '@/types/common'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { Users, GraduationCap, Eye, Pencil, Trash2 } from 'lucide-react'
+import { useIsSuperAdmin } from '@/hooks/useAuth'
 
 export default function KelasPage() {
+  const isSuperAdmin = useIsSuperAdmin()
   const [tab, setTab] = useState<Tab>('daftar')
   const [mode, setMode] = useState<Mode>('tambah')
   const [selected, setSelected] = useState<Kelas | null>(null)
@@ -92,17 +94,19 @@ export default function KelasPage() {
         >
           Daftar Kelas
         </button>
-        <button
-          onClick={openCreate}
-          className={cn(
-            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
-            tab === 'form'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          )}
-        >
-          {tabLabel ?? 'Tambah Kelas'}
-        </button>
+        {(isSuperAdmin || tab === 'form') && (
+          <button
+            onClick={isSuperAdmin ? openCreate : undefined}
+            className={cn(
+              'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
+              tab === 'form'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {tabLabel ?? 'Tambah Kelas'}
+          </button>
+        )}
       </div>
 
       {tab === 'daftar' && (
@@ -167,9 +171,11 @@ export default function KelasPage() {
                   <tr>
                     <td colSpan={5} className="px-4 py-12 text-center text-sm text-muted-foreground">
                       Belum ada kelas.{' '}
-                      <button onClick={openCreate} className="text-primary hover:underline">
-                        Tambah kelas pertama
-                      </button>
+                      {isSuperAdmin && (
+                        <button onClick={openCreate} className="text-primary hover:underline">
+                          Tambah kelas pertama
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ) : (
@@ -201,12 +207,16 @@ export default function KelasPage() {
                             <button onClick={() => openDetail(kelas)} className={actionBtnClass} title="Detail">
                               <Eye className="size-3.5" />
                             </button>
-                            <button onClick={() => openEdit(kelas)} className={actionBtnClass} title="Edit">
-                              <Pencil className="size-3.5" />
-                            </button>
-                            <button onClick={() => setDeleteTarget(kelas)} className={deleteBtnClass} title="Hapus">
-                              <Trash2 className="size-3.5" />
-                            </button>
+                            {isSuperAdmin && (
+                              <>
+                                <button onClick={() => openEdit(kelas)} className={actionBtnClass} title="Edit">
+                                  <Pencil className="size-3.5" />
+                                </button>
+                                <button onClick={() => setDeleteTarget(kelas)} className={deleteBtnClass} title="Hapus">
+                                  <Trash2 className="size-3.5" />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -228,9 +238,11 @@ export default function KelasPage() {
             ) : !data?.data.length ? (
               <div className="py-16 text-center text-sm text-muted-foreground">
                 Belum ada kelas.{' '}
-                <button onClick={openCreate} className="text-primary hover:underline">
-                  Tambah kelas pertama
-                </button>
+                {isSuperAdmin && (
+                  <button onClick={openCreate} className="text-primary hover:underline">
+                    Tambah kelas pertama
+                  </button>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -299,6 +311,7 @@ export default function KelasPage() {
           selected={selected}
           onEdit={openEdit}
           onDelete={(k) => setDeleteTarget(k)}
+          canManage={isSuperAdmin}
         />
       )}
 

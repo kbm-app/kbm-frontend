@@ -90,6 +90,8 @@ export const useChangePassword = () =>
     }) => api.put('/api/auth/password', payload),
   })
 
+export const useIsSuperAdmin = () => useAuthStore((s) => s.user?.role === 'super_admin')
+
 export const useUploadAvatar = () => {
   const queryClient = useQueryClient()
 

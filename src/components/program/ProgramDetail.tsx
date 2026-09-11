@@ -28,9 +28,10 @@ interface ProgramDetailProps {
   onEdit: (p: Program) => void
   onDelete: (p: Program) => void
   onTambahJadwal: () => void
+  canManage: boolean
 }
 
-export function ProgramDetail({ selected, onEdit, onDelete, onTambahJadwal }: ProgramDetailProps) {
+export function ProgramDetail({ selected, onEdit, onDelete, onTambahJadwal, canManage }: ProgramDetailProps) {
   const [tab, setTab] = useState<DetailTab>('info')
   const [kelasIdToAdd, setKelasIdToAdd] = useState<string>('')
   const [deleteKelasId, setDeleteKelasId] = useState<number | null>(null)
@@ -80,16 +81,18 @@ export function ProgramDetail({ selected, onEdit, onDelete, onTambahJadwal }: Pr
   return (
     <div className="space-y-4">
       {/* Action bar */}
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={() => onEdit(selected)}>
-          <Pencil className="size-4 mr-1.5" />
-          Edit
-        </Button>
-        <Button variant="destructive" size="sm" onClick={() => onDelete(selected)}>
-          <Trash2 className="size-4 mr-1.5" />
-          Hapus
-        </Button>
-      </div>
+      {canManage && (
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={() => onEdit(selected)}>
+            <Pencil className="size-4 mr-1.5" />
+            Edit
+          </Button>
+          <Button variant="destructive" size="sm" onClick={() => onDelete(selected)}>
+            <Trash2 className="size-4 mr-1.5" />
+            Hapus
+          </Button>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="flex border-b border-border">
@@ -144,22 +147,24 @@ export function ProgramDetail({ selected, onEdit, onDelete, onTambahJadwal }: Pr
       {/* Tab: Kelas */}
       {tab === 'kelas' && (
         <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <select
-              value={kelasIdToAdd}
-              onChange={(e) => setKelasIdToAdd(e.target.value)}
-              className={cn(formSelectClass, 'flex-1 max-w-xs')}
-            >
-              <option value="">-- Pilih kelas --</option>
-              {kelasTersedia.map((k) => (
-                <option key={k.id} value={k.id}>{k.nama}</option>
-              ))}
-            </select>
-            <Button size="sm" onClick={handleAssignKelas} disabled={!kelasIdToAdd || isAssigning}>
-              <Plus className="size-4 mr-1.5" />
-              Tambah
-            </Button>
-          </div>
+          {canManage && (
+            <div className="flex items-center gap-2">
+              <select
+                value={kelasIdToAdd}
+                onChange={(e) => setKelasIdToAdd(e.target.value)}
+                className={cn(formSelectClass, 'flex-1 max-w-xs')}
+              >
+                <option value="">-- Pilih kelas --</option>
+                {kelasTersedia.map((k) => (
+                  <option key={k.id} value={k.id}>{k.nama}</option>
+                ))}
+              </select>
+              <Button size="sm" onClick={handleAssignKelas} disabled={!kelasIdToAdd || isAssigning}>
+                <Plus className="size-4 mr-1.5" />
+                Tambah
+              </Button>
+            </div>
+          )}
 
           {isLoading ? (
             <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
@@ -188,13 +193,15 @@ export function ProgramDetail({ selected, onEdit, onDelete, onTambahJadwal }: Pr
                       <tr key={pk.id} className="hover:bg-muted/40 transition-colors">
                         <td className="px-4 py-3.5 font-medium">{pk.kelas?.nama ?? '-'}</td>
                         <td className="px-4 py-3.5 text-right">
-                          <button
-                            onClick={() => setDeleteKelasId(pk.kelas_id)}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                            title="Lepas kelas"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
+                          {canManage && (
+                            <button
+                              onClick={() => setDeleteKelasId(pk.kelas_id)}
+                              className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                              title="Lepas kelas"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -207,13 +214,15 @@ export function ProgramDetail({ selected, onEdit, onDelete, onTambahJadwal }: Pr
                 {kelasList.map((pk) => (
                   <div key={pk.id} className="flex items-center justify-between gap-2 px-4 py-3">
                     <span className="font-medium">{pk.kelas?.nama ?? '-'}</span>
-                    <button
-                      onClick={() => setDeleteKelasId(pk.kelas_id)}
-                      className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
-                      title="Lepas kelas"
-                    >
-                      <Trash2 className="size-3.5" />
-                    </button>
+                    {canManage && (
+                      <button
+                        onClick={() => setDeleteKelasId(pk.kelas_id)}
+                        className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                        title="Lepas kelas"
+                      >
+                        <Trash2 className="size-3.5" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -225,12 +234,14 @@ export function ProgramDetail({ selected, onEdit, onDelete, onTambahJadwal }: Pr
       {/* Tab: Jadwal */}
       {tab === 'jadwal' && (
         <div className="space-y-3">
-          <div className="flex justify-end">
-            <Button size="sm" onClick={onTambahJadwal}>
-              <Plus className="size-4 mr-1.5" />
-              Tambah Jadwal
-            </Button>
-          </div>
+          {canManage && (
+            <div className="flex justify-end">
+              <Button size="sm" onClick={onTambahJadwal}>
+                <Plus className="size-4 mr-1.5" />
+                Tambah Jadwal
+              </Button>
+            </div>
+          )}
 
           {isLoading ? (
             <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
@@ -265,13 +276,15 @@ export function ProgramDetail({ selected, onEdit, onDelete, onTambahJadwal }: Pr
                         <td className="px-4 py-3.5 text-muted-foreground">{j.kelas?.nama ?? <span className="italic text-xs">Semua kelas</span>}</td>
                         <td className="px-4 py-3.5 text-muted-foreground">{j.pengajar?.user?.name ?? '-'}</td>
                         <td className="px-4 py-3.5 text-right">
-                          <button
-                            onClick={() => setDeleteJadwalId(j.id)}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                            title="Hapus jadwal"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
+                          {canManage && (
+                            <button
+                              onClick={() => setDeleteJadwalId(j.id)}
+                              className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                              title="Hapus jadwal"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -288,13 +301,15 @@ export function ProgramDetail({ selected, onEdit, onDelete, onTambahJadwal }: Pr
                         <span className="font-medium">{HARI_LABEL[j.hari]}</span>
                         <span className="text-muted-foreground"> · {j.jam_mulai.slice(0, 5)} – {j.jam_selesai.slice(0, 5)}</span>
                       </div>
-                      <button
-                        onClick={() => setDeleteJadwalId(j.id)}
-                        className="p-1.5 -m-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
-                        title="Hapus jadwal"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
+                      {canManage && (
+                        <button
+                          onClick={() => setDeleteJadwalId(j.id)}
+                          className="p-1.5 -m-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                          title="Hapus jadwal"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      )}
                     </div>
                     <div className="text-sm text-muted-foreground space-y-0.5">
                       <p>Kelas: {j.kelas?.nama ?? <span className="italic">Semua kelas</span>}</p>

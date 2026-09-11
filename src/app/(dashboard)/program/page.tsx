@@ -15,8 +15,10 @@ import { toast } from 'sonner'
 import { Eye, Pencil, Trash2, ToggleLeft } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { ExportButton } from '@/components/ui/export-button'
+import { useIsSuperAdmin } from '@/hooks/useAuth'
 
 export default function ProgramPage() {
+  const isSuperAdmin = useIsSuperAdmin()
   const [tab, setTab] = useState<Tab>('daftar')
   const [mode, setMode] = useState<Mode>('tambah')
   const [selected, setSelected] = useState<Program | null>(null)
@@ -105,17 +107,19 @@ export default function ProgramPage() {
         >
           Daftar Program
         </button>
-        <button
-          onClick={openCreate}
-          className={cn(
-            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
-            tab === 'form'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          )}
-        >
-          {tabLabel ?? 'Tambah Program'}
-        </button>
+        {(isSuperAdmin || tab === 'form') && (
+          <button
+            onClick={isSuperAdmin ? openCreate : undefined}
+            className={cn(
+              'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
+              tab === 'form'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {tabLabel ?? 'Tambah Program'}
+          </button>
+        )}
       </div>
 
       {tab === 'daftar' && (
@@ -189,9 +193,11 @@ export default function ProgramPage() {
                   <tr>
                     <td colSpan={6} className="px-4 py-12 text-center text-sm text-muted-foreground">
                       Belum ada program.{' '}
-                      <button onClick={openCreate} className="text-primary hover:underline">
-                        Tambah program pertama
-                      </button>
+                      {isSuperAdmin && (
+                        <button onClick={openCreate} className="text-primary hover:underline">
+                          Tambah program pertama
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ) : (
@@ -218,15 +224,19 @@ export default function ProgramPage() {
                           <button onClick={() => openDetail(program)} className={actionBtnClass} title="Detail">
                             <Eye className="size-3.5" />
                           </button>
-                          <button onClick={() => openEdit(program)} className={actionBtnClass} title="Edit">
-                            <Pencil className="size-3.5" />
-                          </button>
-                          <button onClick={(e) => handleToggle(program, e)} className={actionBtnClass} title="Toggle aktif">
-                            <ToggleLeft className="size-3.5" />
-                          </button>
-                          <button onClick={() => setDeleteTarget(program)} className={deleteBtnClass} title="Hapus">
-                            <Trash2 className="size-3.5" />
-                          </button>
+                          {isSuperAdmin && (
+                            <>
+                              <button onClick={() => openEdit(program)} className={actionBtnClass} title="Edit">
+                                <Pencil className="size-3.5" />
+                              </button>
+                              <button onClick={(e) => handleToggle(program, e)} className={actionBtnClass} title="Toggle aktif">
+                                <ToggleLeft className="size-3.5" />
+                              </button>
+                              <button onClick={() => setDeleteTarget(program)} className={deleteBtnClass} title="Hapus">
+                                <Trash2 className="size-3.5" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -247,9 +257,11 @@ export default function ProgramPage() {
             ) : !data?.data.length ? (
               <div className="py-16 text-center text-sm text-muted-foreground">
                 Belum ada program.{' '}
-                <button onClick={openCreate} className="text-primary hover:underline">
-                  Tambah program pertama
-                </button>
+                {isSuperAdmin && (
+                  <button onClick={openCreate} className="text-primary hover:underline">
+                    Tambah program pertama
+                  </button>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -313,6 +325,7 @@ export default function ProgramPage() {
           onEdit={openEdit}
           onDelete={(p) => setDeleteTarget(p)}
           onTambahJadwal={() => router.push('/jadwal?tambah=1')}
+          canManage={isSuperAdmin}
         />
       )}
 

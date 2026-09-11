@@ -19,6 +19,7 @@ export const ROUTE_ROLES: Record<string, UserRole[]> = {
   '/absensi': ['super_admin', 'pengajar'],
   '/kurikulum': ['super_admin', 'pengajar'],
   '/kas': ['super_admin', 'pengajar'],
+  '/kas/kategori': ['super_admin'],
   '/musyawarah': ['super_admin'],
   '/pengumuman': ['super_admin'],
   '/notifikasi/log': ['super_admin'],

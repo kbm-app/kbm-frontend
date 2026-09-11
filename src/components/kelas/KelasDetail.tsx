@@ -25,9 +25,10 @@ interface KelasDetailProps {
   selected: Kelas
   onEdit: (k: Kelas) => void
   onDelete: (k: Kelas) => void
+  canManage: boolean
 }
 
-export function KelasDetail({ selected, onEdit, onDelete }: KelasDetailProps) {
+export function KelasDetail({ selected, onEdit, onDelete, canManage }: KelasDetailProps) {
   const [tab, setTab] = useState<DetailTab>('info')
   const [showWizard, setShowWizard] = useState(false)
   const [showAssignModal, setShowAssignModal] = useState(false)
@@ -99,20 +100,22 @@ export function KelasDetail({ selected, onEdit, onDelete }: KelasDetailProps) {
   return (
     <div className="space-y-4">
       {/* Action bar */}
-      <div className="flex justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={() => setShowWizard(true)}>
-          <ArrowUpCircle className="size-4 mr-1.5" />
-          Naik Kelas
-        </Button>
-        <Button variant="outline" size="sm" onClick={() => onEdit(selected)}>
-          <Pencil className="size-4 mr-1.5" />
-          Edit
-        </Button>
-        <Button variant="destructive" size="sm" onClick={() => onDelete(selected)}>
-          <Trash2 className="size-4 mr-1.5" />
-          Hapus
-        </Button>
-      </div>
+      {canManage && (
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowWizard(true)}>
+            <ArrowUpCircle className="size-4 mr-1.5" />
+            Naik Kelas
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => onEdit(selected)}>
+            <Pencil className="size-4 mr-1.5" />
+            Edit
+          </Button>
+          <Button variant="destructive" size="sm" onClick={() => onDelete(selected)}>
+            <Trash2 className="size-4 mr-1.5" />
+            Hapus
+          </Button>
+        </div>
+      )}
 
       {/* Inner tabs */}
       <div className="flex border-b border-border">
@@ -172,12 +175,14 @@ export function KelasDetail({ selected, onEdit, onDelete }: KelasDetailProps) {
       {/* Tab: Pengajar */}
       {tab === 'pengajar' && (
         <div className="space-y-3">
-          <div className="flex justify-end">
-            <Button size="sm" onClick={() => setShowAssignModal(true)}>
-              <UserPlus className="size-4 mr-1.5" />
-              Tugaskan Pengajar
-            </Button>
-          </div>
+          {canManage && (
+            <div className="flex justify-end">
+              <Button size="sm" onClick={() => setShowAssignModal(true)}>
+                <UserPlus className="size-4 mr-1.5" />
+                Tugaskan Pengajar
+              </Button>
+            </div>
+          )}
 
           {isLoadingPengajar ? (
             <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground">
@@ -217,13 +222,15 @@ export function KelasDetail({ selected, onEdit, onDelete }: KelasDetailProps) {
                         </td>
                         <td className="px-4 py-3.5 text-muted-foreground">{kg.tahun_ajaran}</td>
                         <td className="px-4 py-3.5 text-right">
-                          <button
-                            onClick={() => setDeletePengajarId(kg.pengajar_id)}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                            title="Lepas pengajar"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
+                          {canManage && (
+                            <button
+                              onClick={() => setDeletePengajarId(kg.pengajar_id)}
+                              className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                              title="Lepas pengajar"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -237,13 +244,15 @@ export function KelasDetail({ selected, onEdit, onDelete }: KelasDetailProps) {
                   <div key={kg.id} className="rounded-xl border border-border bg-card p-4 space-y-2.5">
                     <div className="flex items-start justify-between gap-2">
                       <span className="font-medium">{kg.pengajar?.user?.name ?? '-'}</span>
-                      <button
-                        onClick={() => setDeletePengajarId(kg.pengajar_id)}
-                        className="p-1.5 -m-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
-                        title="Lepas pengajar"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
+                      {canManage && (
+                        <button
+                          onClick={() => setDeletePengajarId(kg.pengajar_id)}
+                          className="p-1.5 -m-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                          title="Lepas pengajar"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <span className={cn(
@@ -271,10 +280,12 @@ export function KelasDetail({ selected, onEdit, onDelete }: KelasDetailProps) {
               pdfUrl={`/api/export/kelas/${selected.id}/roster/pdf`}
               filePrefix={`roster-kelas-${selected.nama.toLowerCase().replace(/\s+/g, '-')}`}
             />
-            <Button size="sm" onClick={() => setShowEnrollModal(true)}>
-              <UserPlus className="size-4 mr-1.5" />
-              Daftarkan Murid
-            </Button>
+            {canManage && (
+              <Button size="sm" onClick={() => setShowEnrollModal(true)}>
+                <UserPlus className="size-4 mr-1.5" />
+                Daftarkan Murid
+              </Button>
+            )}
           </div>
 
           {isLoadingMurid ? (
@@ -315,13 +326,15 @@ export function KelasDetail({ selected, onEdit, onDelete }: KelasDetailProps) {
                           {mk.tanggal_masuk ? new Date(mk.tanggal_masuk).toLocaleDateString('id-ID') : '-'}
                         </td>
                         <td className="px-4 py-3.5 text-right">
-                          <button
-                            onClick={() => setDeleteMuridId(mk.murid_id)}
-                            className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                            title="Keluarkan murid"
-                          >
-                            <Trash2 className="size-3.5" />
-                          </button>
+                          {canManage && (
+                            <button
+                              onClick={() => setDeleteMuridId(mk.murid_id)}
+                              className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                              title="Keluarkan murid"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -338,13 +351,15 @@ export function KelasDetail({ selected, onEdit, onDelete }: KelasDetailProps) {
                         <AvatarInitial name={mk.murid?.nama ?? '?'} size="lg" />
                         <span className="font-medium truncate">{mk.murid?.nama ?? '-'}</span>
                       </div>
-                      <button
-                        onClick={() => setDeleteMuridId(mk.murid_id)}
-                        className="p-1.5 -m-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
-                        title="Keluarkan murid"
-                      >
-                        <Trash2 className="size-3.5" />
-                      </button>
+                      {canManage && (
+                        <button
+                          onClick={() => setDeleteMuridId(mk.murid_id)}
+                          className="p-1.5 -m-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                          title="Keluarkan murid"
+                        >
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      )}
                     </div>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
                       <span>{mk.tahun_ajaran}</span>

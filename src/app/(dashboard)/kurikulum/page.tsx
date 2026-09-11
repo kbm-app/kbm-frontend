@@ -26,8 +26,10 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { duplikatKurikulumSchema } from '@/lib/schemas/kurikulum'
 import { Tab, Mode } from '@/types/common'
+import { useIsSuperAdmin } from '@/hooks/useAuth'
 
 export default function KurikulumPage() {
+  const isSuperAdmin = useIsSuperAdmin()
   const router = useRouter()
 
   const [tab, setTab] = useState<Tab>('daftar')
@@ -88,6 +90,7 @@ export default function KurikulumPage() {
     onEdit: openEdit,
     onDelete: (k) => setDeleteTarget(k),
     onDuplikat: (k) => setDuplikatTarget(k),
+    canManage: isSuperAdmin,
   })
 
   const actionBtn = 'p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors'
@@ -115,17 +118,19 @@ export default function KurikulumPage() {
         >
           Daftar Kurikulum
         </button>
-        <button
-          onClick={openCreate}
-          className={cn(
-            'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
-            tab === 'form'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          )}
-        >
-          {tabLabel ?? 'Tambah Kurikulum'}
-        </button>
+        {(isSuperAdmin || tab === 'form') && (
+          <button
+            onClick={isSuperAdmin ? openCreate : undefined}
+            className={cn(
+              'px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
+              tab === 'form'
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {tabLabel ?? 'Tambah Kurikulum'}
+          </button>
+        )}
       </div>
 
       {tab === 'daftar' && (
@@ -179,9 +184,11 @@ export default function KurikulumPage() {
             ) : !kurikulumList?.length ? (
               <div className="py-20 text-center text-sm text-muted-foreground">
                 Belum ada kurikulum.{' '}
-                <button onClick={openCreate} className="text-primary hover:underline">
-                  Tambah kurikulum pertama
-                </button>
+                {isSuperAdmin && (
+                  <button onClick={openCreate} className="text-primary hover:underline">
+                    Tambah kurikulum pertama
+                  </button>
+                )}
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -212,17 +219,19 @@ export default function KurikulumPage() {
                       </p>
                     </button>
 
-                    <div className="flex items-center justify-end gap-1 border-t border-border pt-2.5">
-                      <button onClick={() => setDuplikatTarget(k)} className={actionBtn} title="Duplikat">
-                        <Copy className="size-3.5" />
-                      </button>
-                      <button onClick={() => openEdit(k)} className={actionBtn} title="Edit">
-                        <Pencil className="size-3.5" />
-                      </button>
-                      <button onClick={() => setDeleteTarget(k)} className={deleteBtn} title="Hapus">
-                        <Trash2 className="size-3.5" />
-                      </button>
-                    </div>
+                    {isSuperAdmin && (
+                      <div className="flex items-center justify-end gap-1 border-t border-border pt-2.5">
+                        <button onClick={() => setDuplikatTarget(k)} className={actionBtn} title="Duplikat">
+                          <Copy className="size-3.5" />
+                        </button>
+                        <button onClick={() => openEdit(k)} className={actionBtn} title="Edit">
+                          <Pencil className="size-3.5" />
+                        </button>
+                        <button onClick={() => setDeleteTarget(k)} className={deleteBtn} title="Hapus">
+                          <Trash2 className="size-3.5" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

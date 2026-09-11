@@ -29,9 +29,10 @@ interface MuridColumnsOpts {
   onDetail: (m: Murid) => void
   onEdit: (m: Murid) => void
   onDelete: (m: Murid) => void
+  canManage: boolean
 }
 
-export function getMuridColumns({ onDetail, onEdit, onDelete }: MuridColumnsOpts): ColumnDef<Murid>[] {
+export function getMuridColumns({ onDetail, onEdit, onDelete, canManage }: MuridColumnsOpts): ColumnDef<Murid>[] {
   return [
     {
       accessorKey: 'nama',
@@ -111,20 +112,24 @@ export function getMuridColumns({ onDetail, onEdit, onDelete }: MuridColumnsOpts
             >
               <Eye className="size-3.5" />
             </button>
-            <button
-              onClick={() => onEdit(m)}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              title="Edit"
-            >
-              <Pencil className="size-3.5" />
-            </button>
-            <button
-              onClick={() => onDelete(m)}
-              className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-              title="Hapus"
-            >
-              <Trash2 className="size-3.5" />
-            </button>
+            {canManage && (
+              <>
+                <button
+                  onClick={() => onEdit(m)}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  title="Edit"
+                >
+                  <Pencil className="size-3.5" />
+                </button>
+                <button
+                  onClick={() => onDelete(m)}
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  title="Hapus"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              </>
+            )}
           </div>
         )
       },
