@@ -2,7 +2,7 @@ import { ColumnDef } from '@tanstack/react-table'
 import { User, UserRole } from '@/types/user'
 import UserStatusToggle from '@/components/users/UserStatusToggle'
 import { cn } from '@/lib/utils'
-import { Eye, Pencil, Trash2 } from 'lucide-react'
+import { Eye, KeyRound, Pencil, Trash2 } from 'lucide-react'
 
 export const ROLE_LABELS: Record<UserRole, string> = {
   super_admin: 'Super Admin',
@@ -23,9 +23,10 @@ interface UserColumnsOpts {
   onDetail: (user: User) => void
   onEdit: (user: User) => void
   onDelete: (user: User) => void
+  onSendResetLink: (user: User) => void
 }
 
-export function getUserColumns({ currentUserId, onDetail, onEdit, onDelete }: UserColumnsOpts): ColumnDef<User>[] {
+export function getUserColumns({ currentUserId, onDetail, onEdit, onDelete, onSendResetLink }: UserColumnsOpts): ColumnDef<User>[] {
   return [
     {
       accessorKey: 'name',
@@ -87,6 +88,15 @@ export function getUserColumns({ currentUserId, onDetail, onEdit, onDelete }: Us
             >
               <Pencil className="size-3.5" />
             </button>
+            {user.id !== currentUserId && (
+              <button
+                onClick={() => onSendResetLink(user)}
+                className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                title="Kirim email reset password"
+              >
+                <KeyRound className="size-3.5" />
+              </button>
+            )}
             {user.id !== currentUserId && (
               <button
                 onClick={() => onDelete(user)}

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { DataTable } from '@/components/ui/data-table'
-import { useUsers, useCreateUser, useUpdateUser, useDeleteUser } from '@/hooks/useUsers'
+import { useUsers, useCreateUser, useUpdateUser, useDeleteUser, useSendResetLink } from '@/hooks/useUsers'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { User, UserRole } from '@/types/user'
 import { CreateUserData, EditUserData } from '@/lib/schemas/user'
@@ -12,9 +12,11 @@ import { getUserColumns, ROLE_LABELS, ROLE_CLASS } from '@/components/users/user
 import { StatusBadge } from '@/components/ui/status-badge'
 import { cn } from '@/lib/utils'
 import { DeleteDialog } from '@/components/ui/delete-dialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Pagination } from '@/components/ui/pagination'
 import { Tab, Mode } from '@/types/common'
 import { toast } from 'sonner'
+import { KeyRound } from 'lucide-react'
 
 export default function UsersPage() {
   const currentUser = useAuthStore((s) => s.user)
@@ -27,6 +29,7 @@ export default function UsersPage() {
   const [page, setPage] = useState(1)
   const [apiErrors, setApiErrors] = useState<Record<string, string[]> | undefined>()
   const [deleteTarget, setDeleteTarget] = useState<User | null>(null)
+  const [resetTarget, setResetTarget] = useState<User | null>(null)
 
   const { data, isLoading } = useUsers({
     search: search || undefined,
@@ -38,6 +41,7 @@ export default function UsersPage() {
   const { mutate: createUser, isPending: isCreating } = useCreateUser()
   const { mutate: updateUser, isPending: isUpdating } = useUpdateUser(selected?.id ?? 0)
   const { mutate: deleteUser, isPending: isDeleting } = useDeleteUser()
+  const { mutate: sendResetLink, isPending: isSendingReset } = useSendResetLink()
 
   if (!currentUser) return <div className="text-sm text-muted-foreground">Memuat...</div>
   if (currentUser.role !== 'super_admin') {
@@ -95,11 +99,28 @@ export default function UsersPage() {
     })
   }
 
+  const handleSendResetLink = (user: User) => setResetTarget(user)
+
+  const confirmSendResetLink = () => {
+    if (!resetTarget) return
+    sendResetLink(resetTarget.id, {
+      onSuccess: () => {
+        toast.success(`Email reset password berhasil dikirim ke ${resetTarget.email}`)
+        setResetTarget(null)
+      },
+      onError: () => {
+        toast.error('Gagal mengirim email reset password')
+        setResetTarget(null)
+      },
+    })
+  }
+
   const columns = getUserColumns({
     currentUserId: currentUser.id,
     onDetail: openDetail,
     onEdit: openEdit,
     onDelete: handleDelete,
+    onSendResetLink: handleSendResetLink,
   })
 
   return (
@@ -261,6 +282,7 @@ export default function UsersPage() {
           currentUserId={currentUser.id}
           onEdit={openEdit}
           onDelete={handleDelete}
+          onSendResetLink={handleSendResetLink}
         />
       )}
 
@@ -271,6 +293,18 @@ export default function UsersPage() {
         description="Akun pengguna ini akan dihapus permanen dan tidak dapat dikembalikan."
         onConfirm={confirmDelete}
         isLoading={isDeleting}
+      />
+
+      <ConfirmDialog
+        open={resetTarget !== null}
+        onOpenChange={(open) => { if (!open) setResetTarget(null) }}
+        title={`Kirim email reset password ke "${resetTarget?.name}"?`}
+        description={`Tautan atur ulang password akan dikirim ke ${resetTarget?.email}.`}
+        icon={KeyRound}
+        confirmLabel="Kirim Email"
+        confirmLoadingLabel="Mengirim..."
+        onConfirm={confirmSendResetLink}
+        isLoading={isSendingReset}
       />
     </div>
   )

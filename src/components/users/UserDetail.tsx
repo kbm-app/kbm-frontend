@@ -7,16 +7,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { Pencil, Trash2 } from 'lucide-react'
+import { KeyRound, Pencil, Trash2 } from 'lucide-react'
 
 interface UserDetailProps {
   selected: User
   currentUserId: number
   onEdit: (user: User) => void
   onDelete: (user: User) => void
+  onSendResetLink: (user: User) => void
 }
 
-export function UserDetail({ selected, currentUserId, onEdit, onDelete }: UserDetailProps) {
+export function UserDetail({ selected, currentUserId, onEdit, onDelete, onSendResetLink }: UserDetailProps) {
   return (
     <div className="space-y-4">
       <div className="flex justify-end gap-2">
@@ -24,6 +25,12 @@ export function UserDetail({ selected, currentUserId, onEdit, onDelete }: UserDe
           <Pencil className="size-4 mr-1.5" />
           Edit
         </Button>
+        {selected.id !== currentUserId && (
+          <Button variant="outline" size="sm" onClick={() => onSendResetLink(selected)}>
+            <KeyRound className="size-4 mr-1.5" />
+            Reset Password
+          </Button>
+        )}
         {selected.id !== currentUserId && (
           <Button variant="destructive" size="sm" onClick={() => onDelete(selected)}>
             <Trash2 className="size-4 mr-1.5" />

@@ -75,3 +75,8 @@ export const useToggleUserActive = () => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['users'] }),
   })
 }
+
+export const useSendResetLink = () =>
+  useMutation({
+    mutationFn: (id: number) => api.post<{ message: string }>(`/api/users/${id}/send-reset-link`),
+  })
