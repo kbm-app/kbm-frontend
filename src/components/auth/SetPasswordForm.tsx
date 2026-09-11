@@ -1,8 +1,10 @@
 'use client'
 
+import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { CheckCircle2 } from 'lucide-react'
 import { useSetPassword } from '@/hooks/useAuth'
 import { Button } from '@/components/ui/button'
 import { inputClass, labelClass, errorClass } from '@/lib/utils'
@@ -23,7 +25,7 @@ interface SetPasswordFormProps {
 }
 
 export default function SetPasswordForm({ token, email }: SetPasswordFormProps) {
-  const { mutate, isPending, error } = useSetPassword()
+  const { mutate, isPending, isSuccess, error } = useSetPassword()
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -33,6 +35,20 @@ export default function SetPasswordForm({ token, email }: SetPasswordFormProps) 
 
   const onSubmit = (values: FormValues) => {
     mutate({ token, email, ...values })
+  }
+
+  if (isSuccess) {
+    return (
+      <div className="flex flex-col items-center text-center gap-3">
+        <CheckCircle2 className="size-10 text-green-600" />
+        <p className="text-sm text-foreground">
+          Password berhasil diatur. Silakan login menggunakan password baru Anda.
+        </p>
+        <Link href="/login" className="w-full">
+          <Button className="w-full">Ke Halaman Login</Button>
+        </Link>
+      </div>
+    )
   }
 
   return (

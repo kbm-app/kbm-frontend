@@ -10,13 +10,16 @@ const api = axios.create({
   },
 })
 
+const PUBLIC_PATHS = ['/login', '/set-password']
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     const isLoginRequest = error.config?.url?.includes('/auth/login')
-    const isOnLoginPage = typeof window !== 'undefined' && window.location.pathname === '/login'
+    const isOnPublicPage =
+      typeof window !== 'undefined' && PUBLIC_PATHS.includes(window.location.pathname)
 
-    if (error.response?.status === 401 && !isLoginRequest && !isOnLoginPage) {
+    if (error.response?.status === 401 && !isLoginRequest && !isOnPublicPage) {
       window.location.href = '/login'
     }
     return Promise.reject(error)
