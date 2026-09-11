@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useForm, useFieldArray } from 'react-hook-form'
+import { useForm, useFieldArray, useWatch, Control, UseFormRegister, UseFormSetValue, FieldErrors } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { muridSchema, MuridFormData } from '@/lib/schemas/murid'
 import { compressImage } from '@/lib/compress-image'
@@ -14,7 +14,7 @@ import { Separator } from '@/components/ui/separator'
 import { Field, formSelectClass } from '@/components/ui/field'
 import { TODAY } from '@/lib/utils'
 import { cn } from '@/lib/utils'
-import { Plus, Trash2, ImageIcon } from 'lucide-react'
+import { Plus, Trash2, ImageIcon, X } from 'lucide-react'
 
 interface MuridFormProps {
   defaultValues?: Partial<MuridFormData>
@@ -38,7 +38,7 @@ export default function MuridForm({ defaultValues, fotoUrl, onSubmit, onCancel, 
   const { fields, append, remove } = useFieldArray({ control, name: 'wali' })
 
   const goToStep2 = async () => {
-    const valid = await trigger(['nama', 'jenis_kelamin', 'tanggal_lahir', 'tanggal_masuk', 'status'])
+    const valid = await trigger(['nama', 'tempat_lahir', 'jenis_kelamin', 'tanggal_lahir', 'tanggal_masuk', 'status'])
     if (valid) setStep(1)
   }
 
@@ -113,6 +113,10 @@ export default function MuridForm({ defaultValues, fotoUrl, onSubmit, onCancel, 
                 </select>
               </Field>
 
+              <Field label="Tempat Lahir" error={errors.tempat_lahir?.message}>
+                <Input placeholder="Kota tempat lahir (opsional)" {...register('tempat_lahir')} />
+              </Field>
+
               <Field label="Tanggal Lahir" error={errors.tanggal_lahir?.message}>
                 <Input type="date" max={TODAY} {...register('tanggal_lahir')} />
               </Field>
@@ -174,62 +178,20 @@ export default function MuridForm({ defaultValues, fotoUrl, onSubmit, onCancel, 
           <Separator />
           <CardContent className="pt-5 space-y-4">
             {fields.map((field, index) => (
-              <div key={field.id} className="border border-border rounded-xl p-4 space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold">Wali #{index + 1}</span>
-                  <button
-                    type="button"
-                    onClick={() => remove(index)}
-                    className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
-                  >
-                    <Trash2 className="size-4" />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-2 gap-x-6 gap-y-4">
-                  <div className="col-span-2">
-                    <Field label="Nama" error={errors.wali?.[index]?.nama?.message}>
-                      <Input {...register(`wali.${index}.nama`)} placeholder="Nama lengkap wali" />
-                    </Field>
-                  </div>
-
-                  <Field label="Hubungan">
-                    <select {...register(`wali.${index}.hubungan`)} className={formSelectClass}>
-                      <option value="ayah">Ayah</option>
-                      <option value="ibu">Ibu</option>
-                      <option value="kakak">Kakak</option>
-                      <option value="wali_lain">Wali Lain</option>
-                    </select>
-                  </Field>
-
-                  <Field label="No. HP" error={errors.wali?.[index]?.phone?.message}>
-                    <Input type="tel" placeholder="08xxxxxxxxxx" {...register(`wali.${index}.phone`)} />
-                  </Field>
-
-                  <div className="col-span-2">
-                    <Field label="Pekerjaan">
-                      <Input placeholder="Pekerjaan wali (opsional)" {...register(`wali.${index}.pekerjaan`)} />
-                    </Field>
-                  </div>
-
-                  <div className="col-span-2 flex items-center gap-2.5">
-                    <input
-                      type="checkbox"
-                      id={`wali-primary-${index}`}
-                      {...register(`wali.${index}.is_primary`)}
-                      className="size-4 rounded border-input accent-primary"
-                    />
-                    <Label htmlFor={`wali-primary-${index}`} className="cursor-pointer">
-                      Jadikan wali utama
-                    </Label>
-                  </div>
-                </div>
-              </div>
+              <WaliCard
+                key={field.id}
+                control={control}
+                register={register}
+                setValue={setValue}
+                errors={errors}
+                index={index}
+                onRemove={() => remove(index)}
+              />
             ))}
 
             <button
               type="button"
-              onClick={() => append({ nama: '', hubungan: 'ayah', phone: '', pekerjaan: '', is_primary: false })}
+              onClick={() => append({ nama: '', hubungan: 'ayah', phones: [''], pekerjaan: '', is_primary: false })}
               className="flex w-full items-center justify-center gap-2 py-3.5 border-2 border-dashed border-border rounded-xl text-sm text-muted-foreground hover:border-primary hover:text-primary transition-colors"
             >
               <Plus className="size-4" />
@@ -248,5 +210,116 @@ export default function MuridForm({ defaultValues, fotoUrl, onSubmit, onCancel, 
         </Card>
       )}
     </form>
+  )
+}
+
+interface WaliCardProps {
+  control: Control<MuridFormData>
+  register: UseFormRegister<MuridFormData>
+  setValue: UseFormSetValue<MuridFormData>
+  errors: FieldErrors<MuridFormData>
+  index: number
+  onRemove: () => void
+}
+
+function WaliCard({ control, register, setValue, errors, index, onRemove }: WaliCardProps) {
+  const phones = useWatch({ control, name: `wali.${index}.phones` }) ?? ['']
+  const waliErrors = errors.wali?.[index]
+
+  const addPhone = () => setValue(`wali.${index}.phones`, [...phones, ''], { shouldValidate: true })
+  const removePhone = (pIndex: number) => {
+    if (phones.length <= 1) return
+    setValue(`wali.${index}.phones`, phones.filter((_, i) => i !== pIndex), { shouldValidate: true })
+  }
+
+  return (
+    <div className="border border-border rounded-xl p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-semibold">Wali #{index + 1}</span>
+        <button
+          type="button"
+          onClick={onRemove}
+          className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+        >
+          <Trash2 className="size-4" />
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+        <div className="col-span-2">
+          <Field label="Nama" error={waliErrors?.nama?.message}>
+            <Input {...register(`wali.${index}.nama`)} placeholder="Nama lengkap wali" />
+          </Field>
+        </div>
+
+        <Field label="Hubungan">
+          <select {...register(`wali.${index}.hubungan`)} className={formSelectClass}>
+            <option value="ayah">Ayah</option>
+            <option value="ibu">Ibu</option>
+            <option value="kakak">Kakak</option>
+            <option value="nenek">Nenek</option>
+            <option value="kakek">Kakek</option>
+            <option value="wali_lain">Wali Lain</option>
+          </select>
+        </Field>
+
+        <div className="col-span-2">
+          <Field label="Pekerjaan">
+            <Input placeholder="Pekerjaan wali (opsional)" {...register(`wali.${index}.pekerjaan`)} />
+          </Field>
+        </div>
+
+        <div className="col-span-2 space-y-2">
+          <Label>No. HP</Label>
+          {phones.map((_, pIndex) => (
+            <div key={pIndex} className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Input
+                  type="tel"
+                  placeholder="08xxxxxxxxxx"
+                  className="flex-1"
+                  {...register(`wali.${index}.phones.${pIndex}`)}
+                />
+                {phones.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removePhone(pIndex)}
+                    className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors shrink-0"
+                  >
+                    <X className="size-4" />
+                  </button>
+                )}
+              </div>
+              {waliErrors?.phones?.[pIndex]?.message && (
+                <p className="text-xs text-destructive">{waliErrors.phones[pIndex]?.message}</p>
+              )}
+            </div>
+          ))}
+          {typeof waliErrors?.phones?.message === 'string' && (
+            <p className="text-xs text-destructive">{waliErrors.phones.message}</p>
+          )}
+          <button
+            type="button"
+            onClick={addPhone}
+            className="flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
+          >
+            <Plus className="size-3" />
+            Tambah nomor HP
+          </button>
+        </div>
+
+        <div className="col-span-2 flex items-center gap-2.5">
+          <input
+            type="checkbox"
+            id={`wali-primary-${index}`}
+            {...register(`wali.${index}.is_primary`)}
+            className="size-4 rounded border-input accent-primary"
+          />
+          <Label htmlFor={`wali-primary-${index}`} className="cursor-pointer">
+            Jadikan wali utama
+          </Label>
+        </div>
+      </div>
+    </div>
   )
 }

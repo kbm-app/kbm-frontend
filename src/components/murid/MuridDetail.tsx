@@ -69,6 +69,7 @@ export function MuridDetail({ selected, muridDetail, isLoadingDetail, onEdit, on
               label="Jenis Kelamin"
               value={selected.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}
             />
+            <DetailRow label="Tempat Lahir" value={selected.tempat_lahir} />
             <DetailRow label="Tanggal Lahir" value={formatDate(selected.tanggal_lahir)} />
             <DetailRow label="Tanggal Masuk" value={formatDate(selected.tanggal_masuk)} />
             <DetailRow label="Status" value={STATUS_LABEL[selected.status]} />
@@ -108,7 +109,7 @@ export function MuridDetail({ selected, muridDetail, isLoadingDetail, onEdit, on
                       )}
                     </div>
                     <DetailRow label="Hubungan" value={HUBUNGAN_LABEL[wali.hubungan]} />
-                    <DetailRow label="No. HP" value={wali.phone} />
+                    <DetailRow label="No. HP" value={wali.phones.join(', ')} />
                     <DetailRow label="Pekerjaan" value={wali.pekerjaan} />
                   </div>
                 </CardContent>

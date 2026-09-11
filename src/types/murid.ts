@@ -2,7 +2,7 @@ import { User } from './user'
 import { MuridKelas } from './kelas'
 
 export type MuridStatus = 'aktif' | 'nonaktif' | 'alumni' | 'pindah'
-export type HubunganWali = 'ayah' | 'ibu' | 'kakak' | 'wali_lain'
+export type HubunganWali = 'ayah' | 'ibu' | 'kakak' | 'nenek' | 'kakek' | 'wali_lain'
 
 export interface WaliMurid {
   id: number
@@ -10,7 +10,7 @@ export interface WaliMurid {
   murid_id: number
   nama: string
   hubungan: HubunganWali
-  phone: string
+  phones: string[]
   pekerjaan: string | null
   is_primary: boolean
   created_at: string
@@ -21,6 +21,7 @@ export interface Murid {
   id: number
   user_id: number | null
   nama: string
+  tempat_lahir: string | null
   jenis_kelamin: 'L' | 'P'
   tanggal_lahir: string
   alamat: string | null

@@ -13,7 +13,7 @@ export function getMuridDataIssues(murid: Murid): string[] {
 
   if (wali.length === 0) {
     issues.push('Belum ada data wali murid')
-  } else if (!wali.some((w) => isValidWaliPhone(w.phone))) {
+  } else if (!wali.some((w) => w.phones.some(isValidWaliPhone))) {
     issues.push('Nomor HP wali tidak valid')
   }
 
@@ -36,7 +36,11 @@ export function toFormData(formData: MuridFormData, method?: string): FormData {
     } else if (key === 'wali' && Array.isArray(value)) {
       value.forEach((wali, i) => {
         Object.entries(wali).forEach(([wKey, wVal]) => {
-          fd.append(`wali[${i}][${wKey}]`, typeof wVal === 'boolean' ? (wVal ? '1' : '0') : String(wVal ?? ''))
+          if (wKey === 'phones' && Array.isArray(wVal)) {
+            wVal.forEach((phone, j) => fd.append(`wali[${i}][phones][${j}]`, String(phone ?? '')))
+          } else {
+            fd.append(`wali[${i}][${wKey}]`, typeof wVal === 'boolean' ? (wVal ? '1' : '0') : String(wVal ?? ''))
+          }
         })
       })
     } else if (value !== undefined && value !== null) {

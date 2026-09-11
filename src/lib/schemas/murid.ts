@@ -9,14 +9,15 @@ const isNotFutureDate = (val: string) => {
 
 export const waliSchema = z.object({
   nama: z.string().min(2, 'Minimal 2 karakter').max(100),
-  hubungan: z.enum(['ayah', 'ibu', 'kakak', 'wali_lain']),
-  phone: z.string().min(10, 'Nomor HP minimal 10 digit').max(20),
+  hubungan: z.enum(['ayah', 'ibu', 'kakak', 'nenek', 'kakek', 'wali_lain']),
+  phones: z.array(z.string().min(10, 'Nomor HP minimal 10 digit').max(20)).min(1, 'Minimal 1 nomor HP'),
   pekerjaan: z.string().max(100).optional(),
   is_primary: z.boolean(),
 })
 
 export const muridSchema = z.object({
   nama: z.string().min(2, 'Minimal 2 karakter').max(100),
+  tempat_lahir: z.string().max(100).optional(),
   jenis_kelamin: z.enum(['L', 'P']),
   tanggal_lahir: z.string()
     .min(1, 'Tanggal lahir wajib diisi')

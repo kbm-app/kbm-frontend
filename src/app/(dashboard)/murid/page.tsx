@@ -311,6 +311,7 @@ export default function MuridPage() {
             fotoUrl={getMuridFotoUrl(muridDetail) ?? getMuridFotoUrl(selected)}
             defaultValues={{
               nama: selected.nama,
+              tempat_lahir: selected.tempat_lahir ?? '',
               jenis_kelamin: selected.jenis_kelamin,
               tanggal_lahir: selected.tanggal_lahir.split('T')[0],
               alamat: selected.alamat ?? '',
@@ -319,7 +320,7 @@ export default function MuridPage() {
               wali: muridDetail?.wali_murid?.map((w) => ({
                 nama: w.nama,
                 hubungan: w.hubungan,
-                phone: w.phone,
+                phones: w.phones,
                 pekerjaan: w.pekerjaan ?? '',
                 is_primary: w.is_primary,
               })) ?? [],

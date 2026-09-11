@@ -22,6 +22,8 @@ export const HUBUNGAN_LABEL: Record<HubunganWali, string> = {
   ayah: 'Ayah',
   ibu: 'Ibu',
   kakak: 'Kakak',
+  nenek: 'Nenek',
+  kakek: 'Kakek',
   wali_lain: 'Wali Lain',
 }
 
