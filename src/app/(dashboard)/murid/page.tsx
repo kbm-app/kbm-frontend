@@ -12,6 +12,7 @@ import { DeleteDialog } from '@/components/ui/delete-dialog'
 import { Pagination } from '@/components/ui/pagination'
 import { ExportButton } from '@/components/ui/export-button'
 import { ImportButton } from '@/components/ui/import-button'
+import { MultiSelect } from '@/components/ui/multi-select'
 import { Tab, Mode } from '@/types/common'
 import { getMuridFotoUrl, toFormData } from '@/lib/murid-utils'
 import { cn, formatDate } from '@/lib/utils'
@@ -28,7 +29,7 @@ export default function MuridPage() {
   const [deleteTarget, setDeleteTarget] = useState<Murid | null>(null)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<MuridStatus | ''>('')
-  const [kelasId, setKelasId] = useState<number | ''>('')
+  const [kelasIds, setKelasIds] = useState<number[]>([])
   const [usiaMin, setUsiaMin] = useState('')
   const [usiaMax, setUsiaMax] = useState('')
   const [page, setPage] = useState(1)
@@ -36,7 +37,7 @@ export default function MuridPage() {
   const { data, isLoading } = useMuridList({
     search,
     status: status || undefined,
-    kelas_id: kelasId || undefined,
+    kelas_id: kelasIds.length ? kelasIds : undefined,
     usia_min: usiaMin ? Number(usiaMin) : undefined,
     usia_max: usiaMax ? Number(usiaMax) : undefined,
     page,
@@ -53,6 +54,16 @@ export default function MuridPage() {
     deleteTarget?.id ?? 0,
     { enabled: deleteTarget !== null }
   )
+
+  const buildExportParams = () => {
+    const params = new URLSearchParams()
+    if (search) params.set('search', search)
+    if (status) params.set('status', status)
+    kelasIds.forEach((id) => params.append('kelas_id[]', String(id)))
+    if (usiaMin) params.set('usia_min', usiaMin)
+    if (usiaMax) params.set('usia_max', usiaMax)
+    return params.toString()
+  }
 
   const openCreate = () => { setMode('tambah'); setSelected(null); setTab('form') }
   const openEdit = (m: Murid) => { setMode('edit'); setSelected(m); setTab('form') }
@@ -161,16 +172,14 @@ export default function MuridPage() {
                   <option key={value} value={value}>{label}</option>
                 ))}
               </select>
-              <select
-                value={kelasId}
-                onChange={(e) => { setKelasId(e.target.value ? Number(e.target.value) : ''); setPage(1) }}
-                className="h-9 border border-border rounded-lg px-3 text-sm bg-background outline-none focus:border-ring transition-colors"
-              >
-                <option value="">Semua kelas</option>
-                {kelasData?.data.map((k) => (
-                  <option key={k.id} value={k.id}>{k.nama}</option>
-                ))}
-              </select>
+              <MultiSelect
+                options={(kelasData?.data ?? []).map((k) => ({ value: k.id, label: k.nama }))}
+                selected={kelasIds}
+                onChange={(values) => { setKelasIds(values); setPage(1) }}
+                placeholder="Semua kelas"
+                allLabel="Semua kelas"
+                className="w-full sm:w-auto"
+              />
               <div className="flex items-center gap-1.5">
                 <input
                   type="number"
@@ -210,20 +219,8 @@ export default function MuridPage() {
                   />
                 )}
                 <ExportButton
-                  excelUrl={`/api/export/murid?${new URLSearchParams({
-                    ...(search && { search }),
-                    ...(status && { status }),
-                    ...(kelasId && { kelas_id: String(kelasId) }),
-                    ...(usiaMin && { usia_min: usiaMin }),
-                    ...(usiaMax && { usia_max: usiaMax }),
-                  }).toString()}`}
-                  pdfUrl={`/api/export/murid/pdf?${new URLSearchParams({
-                    ...(search && { search }),
-                    ...(status && { status }),
-                    ...(kelasId && { kelas_id: String(kelasId) }),
-                    ...(usiaMin && { usia_min: usiaMin }),
-                    ...(usiaMax && { usia_max: usiaMax }),
-                  }).toString()}`}
+                  excelUrl={`/api/export/murid?${buildExportParams()}`}
+                  pdfUrl={`/api/export/murid/pdf?${buildExportParams()}`}
                   filePrefix="data-murid"
                 />
               </div>

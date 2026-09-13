@@ -49,7 +49,7 @@ export interface MuridDeleteImpact {
 export interface MuridFilters {
   search?: string
   status?: MuridStatus
-  kelas_id?: number
+  kelas_id?: number[]
   usia_min?: number
   usia_max?: number
   tanpa_kelas?: boolean

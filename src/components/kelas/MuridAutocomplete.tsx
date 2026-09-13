@@ -33,7 +33,7 @@ export function MuridAutocomplete({
     search: debouncedSearch || undefined,
     status: 'aktif',
     tanpa_kelas: tanpaKelas,
-    kelas_id: kelasId,
+    kelas_id: kelasId ? [kelasId] : undefined,
   })
 
   const lastListRef = useRef<Murid[]>([])
