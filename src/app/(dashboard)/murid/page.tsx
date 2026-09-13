@@ -192,7 +192,14 @@ export default function MuridPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">{data?.total ?? 0} murid</span>
+              <span className="text-sm text-muted-foreground">
+                {data?.total ?? 0} murid
+                {!!data?.total && (
+                  <span className="text-muted-foreground/70">
+                    {' '}· {data.jenis_kelamin_summary.laki_laki} laki-laki · {data.jenis_kelamin_summary.perempuan} perempuan
+                  </span>
+                )}
+              </span>
               <div className="ml-auto flex items-center gap-2">
                 {isSuperAdmin && (
                   <ImportButton

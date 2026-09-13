@@ -8,6 +8,10 @@ interface PaginatedMurid {
   current_page: number
   last_page: number
   total: number
+  jenis_kelamin_summary: {
+    laki_laki: number
+    perempuan: number
+  }
 }
 
 export const useMuridList = (filters: MuridFilters = {}) =>
