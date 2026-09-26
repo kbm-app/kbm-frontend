@@ -1,4 +1,8 @@
-import { StatusProgress } from '@/types/kurikulum'
+import { Kurikulum, StatusProgress } from '@/types/kurikulum'
+
+/** "Kelas 3-1, Kelas 3-2" — nama semua kelas pemakai kurikulum */
+export const namaKelasKurikulum = (k: Pick<Kurikulum, 'kelas'>) =>
+  k.kelas?.map((kelas) => kelas.nama).join(', ') || '—'
 
 export const BULAN_OPTIONS = [
   { value: 'januari',   label: 'Januari' },

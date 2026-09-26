@@ -6,10 +6,10 @@ import {
   useProgressKelas,
   useUpdateProgress,
   useProgressBulk,
-  useUpdateMateri,
   useSelesaikanMateriUmum,
 } from '@/hooks/useKurikulum'
-import { Materi, ProgressMateriMurid, StatusProgress } from '@/types/kurikulum'
+import { Materi, PenyampaianMateri, ProgressMateriMurid, StatusProgress } from '@/types/kurikulum'
+import { Kelas } from '@/types/kelas'
 import { MuridProgressPanel } from './MuridProgressPanel'
 import { cn } from '@/lib/utils'
 import { BULAN_LABEL, STATUS_CONFIG, STATUS_CYCLE } from '@/lib/constants/kurikulum'
@@ -17,10 +17,18 @@ import { Pencil } from 'lucide-react'
 
 interface Props {
   kurikulumId: number
+  /** Kelas pemakai kurikulum; jika lebih dari satu, progress ditampilkan per kelas */
+  kelasList?: Kelas[]
+  /** Kelas yang diajar user — jadi pilihan awal */
+  kelasDiajarIds?: number[]
 }
 
-export function ProgressTab({ kurikulumId }: Props) {
+export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [] }: Props) {
   const [subTab, setSubTab] = useState<'umum' | 'individu'>('umum')
+  const perKelas = kelasList.length > 1
+  const [pilihKelasId, setPilihKelasId] = useState<number | null>(null)
+  const kelasAwalId = kelasList.find((k) => kelasDiajarIds.includes(k.id))?.id ?? kelasList[0]?.id
+  const kelasId = perKelas ? (pilihKelasId ?? kelasAwalId) : undefined
   const [filterBulan, setFilterBulan] = useState<string>('')
   const [selectedMuridId, setSelectedMuridId] = useState<number | null>(null)
 
@@ -28,10 +36,10 @@ export function ProgressTab({ kurikulumId }: Props) {
   const [metodeInput, setMetodeInput] = useState('')
   const [markingSelesaiId, setMarkingSelesaiId] = useState<number | null>(null)
 
-  const { data, isLoading } = useProgressKelas(kurikulumId)
+  const { data, isLoading } = useProgressKelas(kurikulumId, kelasId)
   const { mutate: updateProgress } = useUpdateProgress(kurikulumId)
   const { mutate: progressBulk } = useProgressBulk(kurikulumId)
-  const { mutate: updateMateri, isPending: isSavingMetode } = useUpdateMateri(kurikulumId)
+  const [isSavingMetode, setIsSavingMetode] = useState(false)
   const { mutateAsync: selesaikanUmum } = useSelesaikanMateriUmum(kurikulumId)
 
   const materiList: Materi[] = subTab === 'umum'
@@ -47,36 +55,42 @@ export function ProgressTab({ kurikulumId }: Props) {
   const getProgress = (muridId: number, materiId: number): ProgressMateriMurid | undefined =>
     data?.progress.find((p) => p.murid_id === muridId && p.materi_id === materiId)
 
-  // --- Umum: inline metode edit ---
+  // --- Umum: penyampaian per kelas (target pengajar, bukan per murid) ---
+  const getPenyampaian = (materiId: number): PenyampaianMateri | undefined =>
+    data?.penyampaian.find((p) => p.materi_id === materiId)
+
+  const isUmumSelesai = (materiId: number): boolean => !!getPenyampaian(materiId)
+
+  // Mengisi metode = mencatat materi sudah disampaikan dengan cara tersebut di kelas ini
   const startEditMetode = (m: Materi) => {
     setEditingMetodeId(m.id)
-    setMetodeInput(m.metode ?? '')
+    setMetodeInput(getPenyampaian(m.id)?.metode ?? '')
   }
 
-  const saveMetode = (m: Materi) => {
+  const saveMetode = async (m: Materi) => {
     const trimmed = metodeInput.trim()
-    if (trimmed === (m.metode ?? '')) {
+    const sekarang = getPenyampaian(m.id)
+    if (trimmed === (sekarang?.metode ?? '') || (!trimmed && !sekarang)) {
       setEditingMetodeId(null)
       return
     }
-    updateMateri(
-      { id: m.id, metode: trimmed || undefined },
-      {
-        onSuccess: () => setEditingMetodeId(null),
-        onError: () => { toast.error('Gagal menyimpan metode'); setEditingMetodeId(null) },
-      }
-    )
+    setIsSavingMetode(true)
+    try {
+      await selesaikanUmum({ materiId: m.id, kelasId, metode: trimmed })
+    } catch {
+      toast.error('Gagal menyimpan metode')
+    } finally {
+      setIsSavingMetode(false)
+      setEditingMetodeId(null)
+    }
   }
 
-  // --- Umum: cek apakah materi sudah selesai dari progress_materi_murid ---
-  const isUmumSelesai = (materiId: number): boolean =>
-    (data?.progress ?? []).some((p) => p.materi_id === materiId && p.status === 'selesai')
-
   const handleTandaiSelesai = async (materiId: number) => {
-    if (!confirm('Tandai materi ini selesai disampaikan untuk seluruh murid kelas?')) return
+    const namaKelas = kelasList.find((k) => k.id === kelasId)?.nama
+    if (!confirm(`Tandai materi ini selesai disampaikan${namaKelas ? ` di ${namaKelas}` : ''}?`)) return
     setMarkingSelesaiId(materiId)
     try {
-      await selesaikanUmum({ materiId })
+      await selesaikanUmum({ materiId, kelasId })
       toast.success('Materi ditandai selesai')
     } catch {
       toast.error('Gagal menandai materi')
@@ -129,6 +143,18 @@ export function ProgressTab({ kurikulumId }: Props) {
     <div className="space-y-4">
       {/* Sub-tab + filter */}
       <div className="flex items-center gap-3 flex-wrap">
+        {perKelas && (
+          <select
+            value={kelasId}
+            onChange={(e) => { setPilihKelasId(Number(e.target.value)); setSelectedMuridId(null) }}
+            className="h-8 border border-border rounded-lg px-2.5 text-sm bg-background outline-none focus:border-ring transition-colors"
+          >
+            {kelasList.map((k) => (
+              <option key={k.id} value={k.id}>{k.nama}</option>
+            ))}
+          </select>
+        )}
+
         <div className="flex rounded-lg border border-border overflow-hidden text-sm">
           {(['umum', 'individu'] as const).map((t) => (
             <button
@@ -216,7 +242,7 @@ export function ProgressTab({ kurikulumId }: Props) {
                       <button
                         onClick={() => !sudahDisampaikan && handleTandaiSelesai(m.id)}
                         disabled={sudahDisampaikan || isMarking}
-                        title={sudahDisampaikan ? 'Sudah disampaikan' : 'Klik untuk tandai selesai untuk seluruh murid'}
+                        title={sudahDisampaikan ? 'Sudah disampaikan' : 'Klik untuk tandai sudah disampaikan'}
                         className={cn(
                           'size-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold transition-colors',
                           sudahDisampaikan
@@ -267,7 +293,7 @@ export function ProgressTab({ kurikulumId }: Props) {
                             )}
                           >
                             <span className="flex-1 truncate">
-                              {m.metode || 'Isi metode...'}
+                              {getPenyampaian(m.id)?.metode || 'Isi metode...'}
                             </span>
                             <Pencil className="size-3 opacity-0 group-hover/metode:opacity-60 transition-opacity shrink-0" />
                           </button>

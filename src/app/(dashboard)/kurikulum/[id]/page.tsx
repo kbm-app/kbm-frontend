@@ -7,6 +7,7 @@ import { useKurikulumDetail, useUpdateKurikulum, useDeleteKurikulum, useDuplikat
 import { useKelasList } from '@/hooks/useKelas'
 import { KurikulumFormData, DuplikatKurikulumFormData } from '@/lib/schemas/kurikulum'
 import { Kurikulum } from '@/types/kurikulum'
+import { namaKelasKurikulum } from '@/lib/constants/kurikulum'
 import { BabMateriTab } from '@/components/kurikulum/BabMateriTab'
 import { ProgressTab } from '@/components/kurikulum/ProgressTab'
 import { KurikulumModal } from '@/components/kurikulum/KurikulumModal'
@@ -95,7 +96,7 @@ export default function KurikulumDetailPage() {
             <div className="min-w-0">
               <h1 className="text-xl font-semibold leading-tight">{kurikulum.nama}</h1>
               <p className="text-sm text-muted-foreground mt-0.5">
-                {kurikulum.kelas?.nama} · {kurikulum.tahun_ajaran}
+                {namaKelasKurikulum(kurikulum)} · {kurikulum.tahun_ajaran}
               </p>
               {kurikulum.deskripsi && (
                 <p className="text-sm text-muted-foreground mt-1">{kurikulum.deskripsi}</p>
@@ -152,7 +153,7 @@ export default function KurikulumDetailPage() {
         <BabMateriTab kurikulumId={kurikulumId} babList={babList} />
       )}
       {tab === 'progress' && (
-        <ProgressTab kurikulumId={kurikulumId} />
+        <ProgressTab kurikulumId={kurikulumId} kelasList={kurikulum.kelas} kelasDiajarIds={kurikulum.kelas_diajar_ids} />
       )}
 
       {/* Modal Edit */}

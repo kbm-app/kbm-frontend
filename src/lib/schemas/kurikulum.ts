@@ -6,7 +6,7 @@ const bulanEnum = z.enum([
 ])
 
 export const kurikulumSchema = z.object({
-  kelas_id: z.number().int().positive({ message: 'Kelas wajib dipilih' }),
+  kelas_ids: z.array(z.number().int().positive()).min(1, 'Pilih minimal satu kelas'),
   nama: z.string().min(2, 'Nama minimal 2 karakter').max(200),
   tahun_ajaran: z.string().regex(/^\d{4}\/\d{4}$/, 'Format: YYYY/YYYY'),
   deskripsi: z.string().optional(),

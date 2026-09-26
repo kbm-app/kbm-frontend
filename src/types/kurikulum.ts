@@ -9,13 +9,15 @@ export type TargetBulan =
 
 export interface Kurikulum {
   id: number
-  kelas_id: number
   nama: string
   tahun_ajaran: string
   deskripsi: string | null
   created_at: string
   updated_at: string
-  kelas?: Kelas
+  /** Kelas pemakai kurikulum — bisa lebih dari satu (mis. Kelas 3-1 & 3-2) */
+  kelas?: Kelas[]
+  /** Dari endpoint detail: kelas pemakai kurikulum yang diajar user yang login */
+  kelas_diajar_ids?: number[]
   bab?: BabKurikulum[]
   materi_count?: number
 }
@@ -60,19 +62,33 @@ export interface ProgressMateriMurid {
   updated_at: string
 }
 
+/** Materi umum yang sudah disampaikan pengajar di satu kelas, beserta metodenya */
+export interface PenyampaianMateri {
+  id: number
+  materi_id: number
+  kelas_id: number
+  pertemuan_id: number | null
+  metode: string | null
+  tanggal: string
+}
+
 export interface ProgressKelasResponse {
   murid: Pick<Murid, 'id' | 'nama' | 'jenis_kelamin'>[]
   materi: {
     umum: Materi[]
     individu: Materi[]
   }
+  /** Hanya materi individu */
   progress: ProgressMateriMurid[]
+  /** Materi umum per kelas */
+  penyampaian: PenyampaianMateri[]
 }
 
 export interface ProgressMuridResponse {
   murid: Murid
   materi: Materi[]
   progress: ProgressMateriMurid[]
+  penyampaian: PenyampaianMateri[]
 }
 
 export interface KurikulumFilters {
@@ -86,6 +102,7 @@ export interface MateriUmumAktif {
   judul: string
   sudah_selesai: boolean
   dicatat_di_sesi_ini: boolean | null
+  metode: string | null
 }
 
 export interface BabAktif {

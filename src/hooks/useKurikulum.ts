@@ -198,8 +198,9 @@ export const useReorderMateri = (kurikulumId: number) => {
 export const useSelesaikanMateriUmum = (kurikulumId: number) => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ materiId, pertemuanId }: { materiId: number; pertemuanId?: number }) =>
-      api.post(`/api/materi/${materiId}/selesai-umum`, { pertemuan_id: pertemuanId }),
+    // Catat penyampaian materi umum di satu kelas; `metode` (bila dikirim) mengisi/mengubah cara penyampaiannya
+    mutationFn: ({ materiId, pertemuanId, kelasId, metode }: { materiId: number; pertemuanId?: number; kelasId?: number; metode?: string }) =>
+      api.post(`/api/materi/${materiId}/selesai-umum`, { pertemuan_id: pertemuanId, kelas_id: kelasId, metode }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId, 'progress'] }),
   })
@@ -207,11 +208,14 @@ export const useSelesaikanMateriUmum = (kurikulumId: number) => {
 
 // --- Progress ---
 
-export const useProgressKelas = (kurikulumId: number) =>
+// kelasId: batasi ke satu kelas bila kurikulum dipakai beberapa kelas (mis. Kelas 3-1 & 3-2)
+export const useProgressKelas = (kurikulumId: number, kelasId?: number) =>
   useQuery({
-    queryKey: ['kurikulum', kurikulumId, 'progress'],
+    queryKey: ['kurikulum', kurikulumId, 'progress', 'kelas', kelasId ?? null],
     queryFn: async () => {
-      const { data } = await api.get<ProgressKelasResponse>(`/api/kurikulum/${kurikulumId}/progress`)
+      const { data } = await api.get<ProgressKelasResponse>(`/api/kurikulum/${kurikulumId}/progress`, {
+        params: { kelas_id: kelasId },
+      })
       return data
     },
     enabled: kurikulumId > 0,

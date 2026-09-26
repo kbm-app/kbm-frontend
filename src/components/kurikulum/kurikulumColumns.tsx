@@ -1,5 +1,6 @@
 import { ColumnDef } from '@tanstack/react-table'
 import { Kurikulum } from '@/types/kurikulum'
+import { namaKelasKurikulum } from '@/lib/constants/kurikulum'
 import { Copy, Eye, Pencil, Trash2 } from 'lucide-react'
 
 interface KurikulumColumnsOpts {
@@ -23,7 +24,7 @@ export function getKurikulumColumns({ onDetail, onEdit, onDelete, onDuplikat, ca
       accessorKey: 'kelas',
       header: 'Kelas',
       cell: ({ row }) => (
-        <span className="text-muted-foreground">{row.original.kelas?.nama ?? '—'}</span>
+        <span className="text-muted-foreground">{namaKelasKurikulum(row.original)}</span>
       ),
     },
     {

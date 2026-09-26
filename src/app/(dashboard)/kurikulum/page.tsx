@@ -12,6 +12,7 @@ import {
 } from '@/hooks/useKurikulum'
 import { useKelasList } from '@/hooks/useKelas'
 import { Kurikulum } from '@/types/kurikulum'
+import { namaKelasKurikulum } from '@/lib/constants/kurikulum'
 import { KurikulumFormData, DuplikatKurikulumFormData } from '@/lib/schemas/kurikulum'
 import { KurikulumForm } from '@/components/kurikulum/KurikulumForm'
 import { getKurikulumColumns } from '@/components/kurikulum/kurikulumColumns'
@@ -210,7 +211,7 @@ export default function KurikulumPage() {
                           {k.tahun_ajaran}
                         </span>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1.5">{k.kelas?.nama ?? '—'}</p>
+                      <p className="text-sm text-muted-foreground mt-1.5">{namaKelasKurikulum(k)}</p>
                       {k.deskripsi && (
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{k.deskripsi}</p>
                       )}

@@ -83,7 +83,9 @@ export function MuridProgressPanel({ kurikulumId, muridId, muridNama, onClose }:
                 </p>
                 <div className="space-y-1">
                   {umum.map((m) => {
-                    const sudahDisampaikan = !!m.metode
+                    // Penyampaian di kelas murid ini — metode materi (template '*') bukan penanda
+                    const penyampaian = data?.penyampaian.find((p) => p.materi_id === m.id)
+                    const sudahDisampaikan = !!penyampaian
                     return (
                       <div
                         key={m.id}
@@ -100,9 +102,9 @@ export function MuridProgressPanel({ kurikulumId, muridId, muridNama, onClose }:
                           {m.sub_bab && (
                             <p className="text-xs text-muted-foreground">{m.sub_bab}</p>
                           )}
-                          {m.metode ? (
+                          {sudahDisampaikan ? (
                             <p className="text-xs text-muted-foreground mt-0.5">
-                              Metode: <span className="text-foreground">{m.metode}</span>
+                              Metode: <span className="text-foreground">{penyampaian.metode || '—'}</span>
                             </p>
                           ) : (
                             <p className="text-xs text-muted-foreground/60 mt-0.5 italic">

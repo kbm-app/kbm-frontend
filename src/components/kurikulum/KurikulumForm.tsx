@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Field, formSelectClass } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator'
 import { kurikulumSchema, KurikulumFormData } from '@/lib/schemas/kurikulum'
 import { getCurrentTahunAjaran, getTahunAjaranOptions } from '@/lib/utils'
 import { Kelas } from '@/types/kelas'
+import { KelasCheckboxList } from './KelasCheckboxList'
 import { Kurikulum } from '@/types/kurikulum'
 
 interface Props {
@@ -26,10 +27,10 @@ export function KurikulumForm({ kelasList, defaultValues, onSubmit, isLoading, o
   const isEdit = !!defaultValues
   const tahunOptions = getTahunAjaranOptions(6)
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<KurikulumFormData>({
+  const { register, control, handleSubmit, reset, formState: { errors } } = useForm<KurikulumFormData>({
     resolver: zodResolver(kurikulumSchema),
     defaultValues: {
-      kelas_id: defaultValues?.kelas_id ?? 0,
+      kelas_ids: defaultValues?.kelas?.map((k) => k.id) ?? [],
       nama: defaultValues?.nama ?? '',
       tahun_ajaran: defaultValues?.tahun_ajaran ?? getCurrentTahunAjaran(),
       deskripsi: defaultValues?.deskripsi ?? '',
@@ -38,7 +39,7 @@ export function KurikulumForm({ kelasList, defaultValues, onSubmit, isLoading, o
 
   useEffect(() => {
     reset({
-      kelas_id: defaultValues?.kelas_id ?? 0,
+      kelas_ids: defaultValues?.kelas?.map((k) => k.id) ?? [],
       nama: defaultValues?.nama ?? '',
       tahun_ajaran: defaultValues?.tahun_ajaran ?? getCurrentTahunAjaran(),
       deskripsi: defaultValues?.deskripsi ?? '',
@@ -55,16 +56,14 @@ export function KurikulumForm({ kelasList, defaultValues, onSubmit, isLoading, o
         <CardContent className="pt-5">
           <div className="grid grid-cols-2 gap-x-6 gap-y-4">
             <div className="col-span-2">
-              <Field label="Kelas" error={errors.kelas_id?.message}>
-                <select
-                  {...register('kelas_id', { valueAsNumber: true })}
-                  className={formSelectClass}
-                >
-                  <option value={0}>Pilih kelas...</option>
-                  {kelasList.map((k) => (
-                    <option key={k.id} value={k.id}>{k.nama}</option>
-                  ))}
-                </select>
+              <Field label="Kelas" error={errors.kelas_ids?.message}>
+                <Controller
+                  control={control}
+                  name="kelas_ids"
+                  render={({ field }) => (
+                    <KelasCheckboxList kelasList={kelasList} selected={field.value} onChange={field.onChange} />
+                  )}
+                />
               </Field>
             </div>
 
