@@ -1,4 +1,4 @@
-import { UserRole } from '@/types/user'
+import { JabatanPengurus, User, UserRole } from '@/types/user'
 
 const ALL_ROLES: UserRole[] = ['super_admin', 'pengajar', 'murid', 'wali_murid']
 
@@ -26,16 +26,33 @@ export const ROUTE_ROLES: Record<string, UserRole[]> = {
   '/settings/wa': ['super_admin'],
 }
 
+/**
+ * Extra access for murid who are class officers (pengurus kelas). Holding any listed
+ * jabatan unlocks the route; the backend still limits data to their own class.
+ */
+export const ROUTE_JABATAN: Record<string, JabatanPengurus[]> = {
+  '/kas': ['bendahara'],
+  '/jadwal': ['ketua', 'penerobos'],
+  '/absensi': ['ketua', 'penerobos'],
+  '/kurikulum': ['ketua'],
+}
+
 const ROUTES_BY_SPECIFICITY = Object.keys(ROUTE_ROLES).sort((a, b) => b.length - a.length)
 
+const matchRoute = (pathname: string) =>
+  ROUTES_BY_SPECIFICITY.find((route) => pathname === route || pathname.startsWith(`${route}/`))
+
 /**
- * Returns the allowed roles for a pathname by longest-prefix match
- * (e.g. `/kurikulum/12` matches the `/kurikulum` rule).
- * Returns `null` when no rule covers the path, which callers should treat as "allowed".
+ * Whether the user may open a pathname, by longest-prefix match (e.g. `/kurikulum/12`
+ * matches the `/kurikulum` rule). Paths without a rule are allowed. A murid who is not
+ * allowed by role may still pass through ROUTE_JABATAN if they hold a matching jabatan.
  */
-export function getAllowedRoles(pathname: string): UserRole[] | null {
-  const match = ROUTES_BY_SPECIFICITY.find(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  )
-  return match ? ROUTE_ROLES[match] : null
+export function canAccessRoute(user: User, pathname: string): boolean {
+  const match = matchRoute(pathname)
+  if (!match || ROUTE_ROLES[match].includes(user.role)) return true
+
+  const jabatan = ROUTE_JABATAN[match]
+  return user.role === 'murid'
+    && !!jabatan
+    && !!user.pengurus?.some((p) => jabatan.includes(p.jabatan))
 }

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/axios'
-import { Kelas, KelasFilters, KelasGuru, MuridKelas } from '@/types/kelas'
+import { Kelas, KelasFilters, KelasGuru, KelasPengurus, MuridKelas } from '@/types/kelas'
+import { JabatanPengurus } from '@/types/user'
 import { KelasFormData, AssignPengajarFormData, EnrollMuridFormData, NaikKelasFormData } from '@/lib/schemas/kelas'
 
 interface PaginatedKelas {
@@ -136,5 +137,32 @@ export const useNaikKelas = (kelasId: number) => {
       queryClient.invalidateQueries({ queryKey: ['kelas', kelasId, 'murid'] })
       queryClient.invalidateQueries({ queryKey: ['kelas'] })
     },
+  })
+}
+
+export const useKelasPengurus = (kelasId: number) =>
+  useQuery({
+    queryKey: ['kelas', kelasId, 'pengurus'],
+    queryFn: async () => {
+      const { data } = await api.get<{ data: KelasPengurus[] }>(`/api/kelas/${kelasId}/pengurus`)
+      return data.data
+    },
+    enabled: kelasId > 0,
+  })
+
+export const useAssignPengurus = (kelasId: number) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: { murid_id: number; jabatan: JabatanPengurus }) =>
+      api.post(`/api/kelas/${kelasId}/pengurus`, payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['kelas', kelasId, 'pengurus'] }),
+  })
+}
+
+export const useLepaskanPengurus = (kelasId: number) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (pengurusId: number) => api.delete(`/api/kelas/${kelasId}/pengurus/${pengurusId}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['kelas', kelasId, 'pengurus'] }),
   })
 }

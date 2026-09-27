@@ -20,12 +20,13 @@ import { ArrowLeft, BookOpen, Copy, Pencil, Trash2 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { duplikatKurikulumSchema } from '@/lib/schemas/kurikulum'
-import { useIsSuperAdmin } from '@/hooks/useAuth'
+import { useIsMurid, useIsSuperAdmin } from '@/hooks/useAuth'
 
 type Tab = 'materi' | 'progress'
 
 export default function KurikulumDetailPage() {
   const isSuperAdmin = useIsSuperAdmin()
+  const isMurid = useIsMurid()
   const { id } = useParams<{ id: string }>()
   const kurikulumId = Number(id)
   const router = useRouter()
@@ -90,7 +91,7 @@ export default function KurikulumDetailPage() {
           Daftar Kurikulum
         </button>
 
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
           <div className="flex items-start gap-3 min-w-0">
             <BookOpen className="size-5 text-primary mt-0.5 shrink-0" />
             <div className="min-w-0">
@@ -105,7 +106,7 @@ export default function KurikulumDetailPage() {
           </div>
 
           {isSuperAdmin && (
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 pl-8 sm:pl-0">
               <Button variant="outline" size="sm" onClick={() => setModalDuplikat(true)}>
                 <Copy className="size-3.5 mr-1.5" />
                 Duplikat
@@ -150,10 +151,10 @@ export default function KurikulumDetailPage() {
 
       {/* Tab content */}
       {tab === 'materi' && (
-        <BabMateriTab kurikulumId={kurikulumId} babList={babList} />
+        <BabMateriTab kurikulumId={kurikulumId} babList={babList} readOnly={isMurid} />
       )}
       {tab === 'progress' && (
-        <ProgressTab kurikulumId={kurikulumId} kelasList={kurikulum.kelas} kelasDiajarIds={kurikulum.kelas_diajar_ids} />
+        <ProgressTab kurikulumId={kurikulumId} kelasList={kurikulum.kelas} kelasDiajarIds={kurikulum.kelas_diajar_ids} readOnly={isMurid} />
       )}
 
       {/* Modal Edit */}

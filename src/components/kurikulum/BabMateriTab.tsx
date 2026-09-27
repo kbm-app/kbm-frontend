@@ -22,9 +22,11 @@ import {
 interface Props {
   kurikulumId: number
   babList: BabKurikulum[]
+  /** Sembunyikan semua aksi ubah (dipakai untuk ketua kelas) */
+  readOnly?: boolean
 }
 
-export function BabMateriTab({ kurikulumId, babList }: Props) {
+export function BabMateriTab({ kurikulumId, babList, readOnly = false }: Props) {
   const [openBabs, setOpenBabs] = useState<Set<number>>(new Set(babList.map((b) => b.id)))
 
   const [modalBab, setModalBab] = useState<{ mode: 'tambah' | 'edit'; data?: BabKurikulum } | null>(null)
@@ -94,12 +96,14 @@ export function BabMateriTab({ kurikulumId, babList }: Props) {
       {sortedBab.length === 0 && (
         <div className="py-16 text-center text-sm text-muted-foreground">
           Belum ada bab.{' '}
-          <button
-            onClick={() => setModalBab({ mode: 'tambah' })}
-            className="text-primary hover:underline"
-          >
-            Tambah bab pertama
-          </button>
+          {!readOnly && (
+            <button
+              onClick={() => setModalBab({ mode: 'tambah' })}
+              className="text-primary hover:underline"
+            >
+              Tambah bab pertama
+            </button>
+          )}
         </div>
       )}
 
@@ -121,7 +125,7 @@ export function BabMateriTab({ kurikulumId, babList }: Props) {
                 </span>
               </button>
 
-              <div className="flex items-center gap-1">
+              {!readOnly && <div className="flex items-center gap-1">
                 <button
                   onClick={() => moveBab(bab, 'up')}
                   disabled={babIdx === 0}
@@ -161,7 +165,7 @@ export function BabMateriTab({ kurikulumId, babList }: Props) {
                   <Plus className="size-3 mr-1" />
                   Materi
                 </Button>
-              </div>
+              </div>}
             </div>
 
             {/* Materi list */}
@@ -194,7 +198,7 @@ export function BabMateriTab({ kurikulumId, babList }: Props) {
                         )}
                       </div>
 
-                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                      {!readOnly && <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                         <button
                           onClick={() => moveMateri(materi, sortedMateri, 'up')}
                           disabled={matIdx === 0}
@@ -221,7 +225,7 @@ export function BabMateriTab({ kurikulumId, babList }: Props) {
                         >
                           <Trash2 className="size-3.5" />
                         </button>
-                      </div>
+                      </div>}
                     </div>
                   ))
                 )}
@@ -232,14 +236,16 @@ export function BabMateriTab({ kurikulumId, babList }: Props) {
       })}
 
       {/* Tambah Bab */}
-      <Button
-        variant="outline"
-        className="w-full border-dashed"
-        onClick={() => setModalBab({ mode: 'tambah' })}
-      >
-        <Plus className="size-4 mr-1.5" />
-        Tambah Bab
-      </Button>
+      {!readOnly && (
+        <Button
+          variant="outline"
+          className="w-full border-dashed"
+          onClick={() => setModalBab({ mode: 'tambah' })}
+        >
+          <Plus className="size-4 mr-1.5" />
+          Tambah Bab
+        </Button>
+      )}
 
       {/* Modals */}
       <BabModal

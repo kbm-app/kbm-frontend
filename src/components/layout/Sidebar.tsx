@@ -8,7 +8,7 @@ import { useLogout } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import { LayoutDashboard, Users, GraduationCap, BookUser, LogOut, UserCircle, School, Layers, CalendarDays, ClipboardList, BookOpen, Wallet, Megaphone, Bell, Settings, MessagesSquare, X } from 'lucide-react'
 import { useSidebar } from './SidebarContext'
-import { ROUTE_ROLES } from '@/config/access'
+import { canAccessRoute } from '@/config/access'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -36,7 +36,7 @@ export default function Sidebar() {
   useEffect(() => { close() }, [pathname, close])
 
   const visibleItems = navItems.filter(
-    (item) => user && ROUTE_ROLES[item.href]?.includes(user.role)
+    (item) => user && canAccessRoute(user, item.href)
   )
 
   return (

@@ -92,6 +92,9 @@ export const useChangePassword = () =>
 
 export const useIsSuperAdmin = () => useAuthStore((s) => s.user?.role === 'super_admin')
 
+/** Murid yang mengakses fitur lewat jabatan pengurus (mis. ketua kelas) hanya boleh melihat. */
+export const useIsMurid = () => useAuthStore((s) => s.user?.role === 'murid')
+
 export const useUploadAvatar = () => {
   const queryClient = useQueryClient()
 

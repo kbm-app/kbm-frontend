@@ -10,6 +10,7 @@ import {
   useUpdatePertemuan,
 } from '@/hooks/useAbsensi'
 import { usePengajarList } from '@/hooks/usePengajar'
+import { useIsMurid } from '@/hooks/useAuth'
 import { useKurikulumAktifKelas, useSelesaikanMateriUmum } from '@/hooks/useKurikulum'
 import { StatusAbsensiMurid, StatusAbsensiPengajar, AbsensiMurid } from '@/types/absensi'
 import { STATUS_MURID, STATUS_PENGAJAR } from '@/lib/constants/absensi'
@@ -37,6 +38,7 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
   const { mutate: batalkanSesi, isPending: isBatal } = useBatalkanSesi(pertemuanId)
   const { mutate: updatePertemuan } = useUpdatePertemuan(pertemuanId)
   const { data: pengajarList } = usePengajarList({})
+  const isMurid = useIsMurid()
 
   // Berlangsung: tanpa pertemuanId (progres sesi ini belum tersimpan)
   // Selesai/detail: dengan pertemuanId agar dicatat_di_sesi_ini terisi
@@ -294,7 +296,7 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
       )}
 
       {/* Progress Kurikulum — hanya saat sesi berlangsung dan ada kurikulum aktif */}
-      {isBerlangsung && kurikulumAktif && kurikulumAktif.total_materi_umum > 0 && (
+      {isBerlangsung && !isMurid && kurikulumAktif && kurikulumAktif.total_materi_umum > 0 && (
         <div className="rounded-xl border border-border bg-card p-4 space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold">Materi Kurikulum</h2>
@@ -497,14 +499,16 @@ function AbsensiMuridRow({
 
   return (
     <li className="px-4 py-3 space-y-2">
-      <div className="flex items-center gap-3">
-        <div className="size-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground shrink-0">
-          {absensi.murid?.nama?.charAt(0) ?? '?'}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+        <div className="flex items-center gap-3 min-w-0 sm:flex-1">
+          <div className="size-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground shrink-0">
+            {absensi.murid?.nama?.charAt(0) ?? '?'}
+          </div>
+          <span className="flex-1 min-w-0 text-sm font-medium sm:truncate">
+            {absensi.murid?.nama ?? `Murid #${absensi.murid_id}`}
+          </span>
         </div>
-        <span className="flex-1 text-sm font-medium truncate">
-          {absensi.murid?.nama ?? `Murid #${absensi.murid_id}`}
-        </span>
-        <div className="flex gap-1 shrink-0">
+        <div className="flex gap-1 shrink-0 ml-11 sm:ml-0">
           {STATUS_MURID.map(({ key, label, idle, active }) => (
             <button
               key={key}

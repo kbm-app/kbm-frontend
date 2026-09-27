@@ -68,8 +68,9 @@ export function MusyawarahDetail({ musyawarahId }: Props) {
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="grid grid-cols-2 gap-2 w-full sm:flex sm:items-center sm:w-auto">
           <ExportButton
+            className="[&>button]:w-full [&>button]:h-8 [&>button]:justify-center sm:[&>button]:w-auto"
             pdfUrl={`/api/export/musyawarah/${musyawarahId}/pdf`}
             filePrefix="notulensi-musyawarah"
             label="Cetak PDF"
@@ -80,7 +81,7 @@ export function MusyawarahDetail({ musyawarahId }: Props) {
                 <RefreshCw className={cn('size-3.5', isRegenerating && 'animate-spin')} />
                 Regenerate Semua
               </Button>
-              <Button size="sm" onClick={handleSelesai} disabled={isClosing}>
+              <Button size="sm" onClick={handleSelesai} disabled={isClosing} className="col-span-2">
                 <CheckCircle className="size-3.5" />
                 {isClosing ? 'Menutup...' : 'Tutup Musyawarah'}
               </Button>

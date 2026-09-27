@@ -21,9 +21,11 @@ interface Props {
   kelasList?: Kelas[]
   /** Kelas yang diajar user — jadi pilihan awal */
   kelasDiajarIds?: number[]
+  /** Hanya lihat progres, tanpa menandai/mengubah (dipakai untuk ketua kelas) */
+  readOnly?: boolean
 }
 
-export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [] }: Props) {
+export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], readOnly = false }: Props) {
   const [subTab, setSubTab] = useState<'umum' | 'individu'>('umum')
   const perKelas = kelasList.length > 1
   const [pilihKelasId, setPilihKelasId] = useState<number | null>(null)
@@ -237,23 +239,26 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [] }
                   const isMarking = markingSelesaiId === m.id
                   const isEditing = editingMetodeId === m.id
                   return (
-                    <div key={m.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors">
+                    <div key={m.id} className="flex items-start sm:items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors">
                       {/* Status icon — klik untuk tandai selesai jika belum */}
                       <button
                         onClick={() => !sudahDisampaikan && handleTandaiSelesai(m.id)}
-                        disabled={sudahDisampaikan || isMarking}
-                        title={sudahDisampaikan ? 'Sudah disampaikan' : 'Klik untuk tandai sudah disampaikan'}
+                        disabled={sudahDisampaikan || isMarking || readOnly}
+                        title={sudahDisampaikan ? 'Sudah disampaikan' : readOnly ? 'Belum disampaikan' : 'Klik untuk tandai sudah disampaikan'}
                         className={cn(
-                          'size-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold transition-colors',
+                          'size-6 rounded-full flex items-center justify-center shrink-0 text-xs font-bold transition-colors mt-0.5 sm:mt-0',
                           sudahDisampaikan
                             ? 'bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 cursor-default'
-                            : 'bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary cursor-pointer'
+                            : readOnly
+                              ? 'bg-muted text-muted-foreground cursor-default'
+                              : 'bg-muted text-muted-foreground hover:bg-primary/10 hover:text-primary cursor-pointer'
                         )}
                       >
                         {isMarking ? '…' : sudahDisampaikan ? '✓' : '—'}
                       </button>
 
-                      {/* Materi info */}
+                      {/* Materi info + metode — metode turun ke bawah di mobile */}
+                      <div className="flex-1 min-w-0 flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="text-sm font-medium">{m.judul}</span>
@@ -269,8 +274,12 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [] }
                       </div>
 
                       {/* Metode inline edit */}
-                      <div className="shrink-0 w-40">
-                        {isEditing ? (
+                      <div className="w-full -ml-2 sm:ml-0 sm:w-40 sm:shrink-0">
+                        {readOnly ? (
+                          getPenyampaian(m.id)?.metode && (
+                            <span className="block px-2 text-xs truncate">{getPenyampaian(m.id)?.metode}</span>
+                          )
+                        ) : isEditing ? (
                           <input
                             autoFocus
                             value={metodeInput}
@@ -299,6 +308,7 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [] }
                           </button>
                         )}
                       </div>
+                      </div>
                     </div>
                   )
                 })}
@@ -306,10 +316,10 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [] }
             </div>
           ))}
 
-          <p className="text-xs text-muted-foreground">
+          {!readOnly && <p className="text-xs text-muted-foreground">
             Klik ikon <span className="font-medium">—</span> untuk menandai materi selesai disampaikan ke seluruh murid.
             Isi kolom <span className="font-medium">metode</span> sebagai catatan cara penyampaian (opsional, contoh: Ceramah, Diskusi).
-          </p>
+          </p>}
         </div>
 
       ) : muridList.length === 0 ? (
@@ -358,12 +368,16 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [] }
                 return (
                   <tr key={murid.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-4 py-2.5 sticky left-0 bg-background z-10 border-r border-border">
-                      <button
-                        onClick={() => setSelectedMuridId(murid.id === selectedMuridId ? null : murid.id)}
-                        className="text-left hover:text-primary transition-colors font-medium"
-                      >
-                        {murid.nama}
-                      </button>
+                      {readOnly ? (
+                        <span className="font-medium">{murid.nama}</span>
+                      ) : (
+                        <button
+                          onClick={() => setSelectedMuridId(murid.id === selectedMuridId ? null : murid.id)}
+                          className="text-left hover:text-primary transition-colors font-medium"
+                        >
+                          {murid.nama}
+                        </button>
+                      )}
                     </td>
                     {filteredMateri.map((m) => {
                       const p = getProgress(murid.id, m.id)
@@ -373,12 +387,13 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [] }
                         <td key={m.id} className="px-2 py-2.5 text-center">
                           <button
                             onClick={() => handleCellClick(murid.id, m)}
+                            disabled={readOnly}
                             className={cn(
                               'w-8 h-8 rounded-lg text-sm transition-colors mx-auto flex items-center justify-center',
                               cfg.cellClass,
-                              cfg.btnClass,
+                              !readOnly && cfg.btnClass,
                             )}
-                            title={`Status: ${status} — klik untuk ubah`}
+                            title={readOnly ? `Status: ${status}` : `Status: ${status} — klik untuk ubah`}
                           >
                             {cfg.symbol}
                           </button>

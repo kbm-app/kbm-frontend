@@ -13,13 +13,14 @@ import { AvatarInitial } from '@/components/ui/avatar-initial'
 import { AssignPengajarModal } from './AssignPengajarModal'
 import { EnrollMuridModal } from './EnrollMuridModal'
 import { NaikKelasWizard } from './NaikKelasWizard'
-import { Pencil, Trash2, UserPlus, GraduationCap, Users, ArrowUpCircle } from 'lucide-react'
+import { KelasPengurusTab } from './KelasPengurusTab'
+import { Pencil, Trash2, UserPlus, GraduationCap, Users, ArrowUpCircle, Award } from 'lucide-react'
 import { ExportButton } from '@/components/ui/export-button'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { AssignPengajarFormData, EnrollMuridFormData } from '@/lib/schemas/kelas'
 
-type DetailTab = 'info' | 'pengajar' | 'murid'
+type DetailTab = 'info' | 'pengajar' | 'murid' | 'pengurus'
 
 interface KelasDetailProps {
   selected: Kelas
@@ -118,17 +119,18 @@ export function KelasDetail({ selected, onEdit, onDelete, canManage }: KelasDeta
       )}
 
       {/* Inner tabs */}
-      <div className="flex border-b border-border">
+      <div className="flex border-b border-border overflow-x-auto">
         {([
           { key: 'info', label: 'Info', icon: null },
           { key: 'pengajar', label: 'Pengajar', icon: GraduationCap },
           { key: 'murid', label: 'Murid', icon: Users },
+          { key: 'pengurus', label: 'Pengurus', icon: Award },
         ] as const).map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
             className={cn(
-              'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
+              'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
               tab === key
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -373,6 +375,9 @@ export function KelasDetail({ selected, onEdit, onDelete, canManage }: KelasDeta
           )}
         </div>
       )}
+
+      {/* Tab: Pengurus */}
+      {tab === 'pengurus' && <KelasPengurusTab kelasId={selected.id} canManage={canManage} />}
 
       {/* Modals */}
       <AssignPengajarModal

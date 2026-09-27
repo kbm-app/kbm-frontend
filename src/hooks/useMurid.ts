@@ -94,3 +94,17 @@ export const useDeleteWali = (muridId: number) => {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['murid', muridId] }),
   })
 }
+
+/** Buatkan akun login untuk murid; email atur password dikirim ke alamat ini. */
+export const useBuatAkunMurid = () => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ muridId, email }: { muridId: number; email: string }) =>
+      api.post(`/api/murid/${muridId}/akun`, { email }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kelas'] })
+      queryClient.invalidateQueries({ queryKey: ['murid'] })
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+    },
+  })
+}

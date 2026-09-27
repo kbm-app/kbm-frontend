@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { FileSpreadsheet, FileText, Download, ChevronDown, Loader2 } from 'lucide-react'
 import api from '@/lib/axios'
+import { cn } from '@/lib/utils'
 
 interface ExportButtonProps {
   excelUrl?: string
@@ -10,9 +11,10 @@ interface ExportButtonProps {
   filePrefix?: string
   disabled?: boolean
   label?: string
+  className?: string
 }
 
-export function ExportButton({ excelUrl, pdfUrl, filePrefix, disabled, label = 'Export' }: ExportButtonProps) {
+export function ExportButton({ excelUrl, pdfUrl, filePrefix, disabled, label = 'Export', className }: ExportButtonProps) {
   const [open, setOpen]       = useState(false)
   const [loading, setLoading] = useState<'excel' | 'pdf' | null>(null)
   const ref = useRef<HTMLDivElement>(null)
@@ -58,7 +60,7 @@ export function ExportButton({ excelUrl, pdfUrl, filePrefix, disabled, label = '
   if (!excelUrl && !pdfUrl) return null
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className={cn('relative', className)}>
       <button
         disabled={disabled || loading !== null}
         onClick={() => {
@@ -68,7 +70,7 @@ export function ExportButton({ excelUrl, pdfUrl, filePrefix, disabled, label = '
             triggerDownload(singleUrl, singleType)
           }
         }}
-        className="inline-flex items-center gap-1.5 h-9 px-3 text-sm border border-border rounded-lg bg-background hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="inline-flex items-center gap-1.5 h-9 px-3 text-sm border border-border rounded-lg bg-background whitespace-nowrap hover:bg-muted/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? (
           <Loader2 className="size-4 animate-spin text-muted-foreground" />

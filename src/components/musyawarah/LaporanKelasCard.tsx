@@ -53,27 +53,31 @@ export function LaporanKelasCard({ musyawarahId, laporan, evaluasi, isSelesai }:
       {/* Header — selalu terlihat */}
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-muted/30 transition-colors text-left"
+        className="w-full flex items-start gap-4 px-4 py-3.5 hover:bg-muted/30 transition-colors text-left"
       >
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm">{laporan.kelas?.nama ?? `Kelas #${laporan.kelas_id}`}</p>
-          <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+          <div className="flex items-center gap-x-3 gap-y-1 mt-0.5 flex-wrap">
             <Stat label="Murid" value={`${laporan.snapshot_jumlah_murid} murid`} />
             {kehadiran !== null && (
               <StatDelta label="Kehadiran" value={kehadiran} delta={evaluasi?.delta_kehadiran} unit="%" />
             )}
-            {progressUmum !== null && (
-              <StatDelta label="Progress Materi Umum" value={progressUmum} unit="%" />
-            )}
-            {progressInd !== null && (
-              <StatDelta label="Progress Materi Individu" value={progressInd} unit="%" />
-            )}
-            {progressTotal !== null && (
-              <StatDelta label="Progress Materi Keseluruhan" value={progressTotal} delta={evaluasi?.delta_progress} unit="%" />
-            )}
           </div>
+          {(progressUmum !== null || progressInd !== null || progressTotal !== null) && (
+            <div className="grid grid-cols-3 gap-2 mt-2.5 sm:flex sm:flex-wrap sm:gap-x-3 sm:gap-y-1 sm:mt-0.5">
+              {progressUmum !== null && (
+                <ProgressStat label="Progress Materi Umum" shortLabel="Umum" value={progressUmum} />
+              )}
+              {progressInd !== null && (
+                <ProgressStat label="Progress Materi Individu" shortLabel="Individu" value={progressInd} />
+              )}
+              {progressTotal !== null && (
+                <ProgressStat label="Progress Materi Keseluruhan" shortLabel="Keseluruhan" value={progressTotal} delta={evaluasi?.delta_progress} />
+              )}
+            </div>
+          )}
         </div>
-        {expanded ? <ChevronUp className="size-4 text-muted-foreground shrink-0" /> : <ChevronDown className="size-4 text-muted-foreground shrink-0" />}
+        {expanded ? <ChevronUp className="size-4 text-muted-foreground shrink-0 mt-0.5" /> : <ChevronDown className="size-4 text-muted-foreground shrink-0 mt-0.5" />}
       </button>
 
       {expanded && (
@@ -184,5 +188,25 @@ function StatDelta({ label, value, delta, unit }: { label: string; value: number
         </span>
       )}
     </span>
+  )
+}
+
+// Mobile: tile ringkas (label pendek di atas nilai). sm+: inline seperti StatDelta.
+function ProgressStat({ label, shortLabel, value, delta }: { label: string; shortLabel: string; value: number; delta?: number | null }) {
+  const color = value >= 80 ? 'text-green-600' : value >= 60 ? 'text-amber-600' : 'text-destructive'
+  return (
+    <div className="rounded-lg bg-muted/40 px-2 py-1.5 sm:bg-transparent sm:p-0 sm:flex sm:items-center sm:gap-1 text-xs text-muted-foreground min-w-0">
+      <p className="text-[11px] truncate sm:hidden">{shortLabel}</p>
+      <span className="hidden sm:inline">{label}:</span>
+      <div className="flex items-center gap-1 flex-wrap">
+        <span className={cn('font-semibold text-sm sm:text-xs sm:font-medium', color)}>{value}%</span>
+        {delta !== null && delta !== undefined && (
+          <span className={cn('flex items-center gap-0.5 text-[10px] font-medium', delta >= 0 ? 'text-green-600' : 'text-destructive')}>
+            {delta >= 0 ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
+            {delta >= 0 ? '+' : ''}{delta}%
+          </span>
+        )}
+      </div>
+    </div>
   )
 }

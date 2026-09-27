@@ -1,5 +1,6 @@
 import { Pengajar } from './pengajar'
 import { Murid } from './murid'
+import { JabatanPengurus, User } from './user'
 
 export interface Kelas {
   id: number
@@ -46,4 +47,14 @@ export interface KelasFilters {
   search?: string
   is_aktif?: boolean
   page?: number
+}
+
+export interface KelasPengurus {
+  id: number
+  kelas_id: number
+  murid_id: number
+  jabatan: JabatanPengurus
+  murid?: Pick<Murid, 'id' | 'nama' | 'user_id'> & {
+    user?: Pick<User, 'id' | 'email' | 'is_active'> | null
+  }
 }
