@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { HARI_LABEL } from '@/types/jadwal'
 import { JS_DAY_TO_HARI } from '@/lib/constants/absensi'
+import { cekTanggalSesuaiJadwal } from '@/lib/jadwal'
 
 interface Props {
   onSuccess: (pertemuanId: number) => void
@@ -67,10 +68,13 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
   const jadwalHariIni = jadwalList?.filter((j) => j.hari === hariIni) ?? []
   const jadwalLainnya = jadwalList?.filter((j) => j.hari !== hariIni) ?? []
   const selectedJadwal = jadwalList?.find((j) => j.id === jadwalId)
+  const tanggal = watch('tanggal')
+  const jadwalError = selectedJadwal ? cekTanggalSesuaiJadwal(selectedJadwal, tanggal) : null
 
   const kelasReg = register('kelas_id', { valueAsNumber: true })
 
   const onSubmit = (data: BukaSesiFormData) => {
+    if (jadwalError) return
     bukaSesi(data, {
       onSuccess: (res) => {
         toast.success('Sesi berhasil dibuka')
@@ -79,6 +83,7 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
       onError: (err: any) => {
         const msg =
           err?.response?.data?.errors?.kelas_id?.[0] ??
+          err?.response?.data?.errors?.tanggal?.[0] ??
           err?.response?.data?.message ??
           'Gagal membuka sesi, coba lagi'
         toast.error(msg)
@@ -210,7 +215,7 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
           )}
 
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Tanggal" error={errors.tanggal?.message}>
+            <Field label="Tanggal" error={errors.tanggal?.message ?? jadwalError ?? undefined}>
               <input type="date" {...register('tanggal')} className={inputClass} />
             </Field>
             <Field label="Jam Mulai" error={errors.jam_mulai?.message}>
@@ -237,7 +242,7 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
         >
           Batal
         </button>
-        <Button type="submit" size="lg" disabled={isPending} className="flex-1">
+        <Button type="submit" size="lg" disabled={isPending || !!jadwalError} className="flex-1">
           {isPending ? 'Membuka...' : 'Buka Sesi'}
         </Button>
       </div>
