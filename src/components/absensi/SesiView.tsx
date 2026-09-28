@@ -20,7 +20,7 @@ import { cn } from '@/lib/utils'
 import { Modal } from '@/components/ui/modal'
 import { Button } from '@/components/ui/button'
 import { PageLoading } from '@/components/ui/page-loading'
-import { formSelectClass } from '@/components/ui/field'
+import { Field, formSelectClass } from '@/components/ui/field'
 import { toast } from 'sonner'
 import { Check, CheckCircle } from 'lucide-react'
 
@@ -51,6 +51,8 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
   const [showKonfirmasi, setShowKonfirmasi] = useState(false)
   const [materi, setMateri] = useState('')
   const [catatan, setCatatan] = useState('')
+  const [jamSelesai, setJamSelesai] = useState('')
+  const [jamSelesaiError, setJamSelesaiError] = useState<string | null>(null)
   const [isSavingProgress, setIsSavingProgress] = useState(false)
 
   // Materi umum yang baru dicentang pengajar di sesi ini (belum selesai sebelumnya)
@@ -120,7 +122,31 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
     })
   }
 
+  // Nilai awal jam selesai: jam selesai jadwal, atau jam sekarang jika sesi hari ini.
+  // Tetap bisa diubah karena sesi sering ditutup belakangan.
+  const openKonfirmasi = () => {
+    const hariIni = format(new Date(), 'yyyy-MM-dd')
+    const awal = pertemuan.jadwal?.jam_selesai?.slice(0, 5)
+      ?? (pertemuan.tanggal.slice(0, 10) === hariIni ? format(new Date(), 'HH:mm') : '')
+    setJamSelesai(awal)
+    setJamSelesaiError(null)
+    setShowKonfirmasi(true)
+  }
+
+  const validasiJamSelesai = (): string | null => {
+    if (!jamSelesai) return 'Jam selesai wajib diisi'
+    const jamMulai = pertemuan.jam_mulai.slice(0, 5)
+    if (jamSelesai <= jamMulai) return `Jam selesai harus setelah jam mulai (${jamMulai})`
+    return null
+  }
+
   const handleSelesai = async () => {
+    const errJam = validasiJamSelesai()
+    if (errJam) {
+      setJamSelesaiError(errJam)
+      return
+    }
+
     // Tandai materi yang baru dipilih sebelum sesi ditutup
     if (newlySelectedMateri.size > 0 && kurikulumAktif) {
       setIsSavingProgress(true)
@@ -138,13 +164,18 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
     }
 
     updatePertemuan({ materi: materi || undefined, catatan: catatan || undefined })
-    selesaiSesi(undefined, {
+    selesaiSesi({ jam_selesai: jamSelesai }, {
       onSuccess: () => {
         toast.success('Sesi berhasil diselesaikan')
         setShowKonfirmasi(false)
         onKembali()
       },
       onError: (err: any) => {
+        const errJamServer = err?.response?.data?.errors?.jam_selesai?.[0]
+        if (errJamServer) {
+          setJamSelesaiError(errJamServer)
+          return
+        }
         const msg = err?.response?.data?.errors?.absensi?.[0]
           ?? err?.response?.data?.message
           ?? 'Gagal menutup sesi'
@@ -161,6 +192,9 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
       onError: () => toast.error('Gagal membatalkan sesi'),
     })
   }
+
+  const timeInputClass =
+    'h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50'
 
   const textareaClass =
     'h-auto w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 resize-none'
@@ -442,7 +476,7 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
           </Button>
           <Button
             size="lg"
-            onClick={() => setShowKonfirmasi(true)}
+            onClick={openKonfirmasi}
             disabled={!semuaSudahDiisi}
             className="flex-1"
           >
@@ -465,6 +499,20 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
             <span className="text-purple-700">Sakit: <b>{ringkasan.sakit}</b></span>
             <span className="text-destructive">Alpha: <b>{ringkasan.alpha}</b></span>
           </div>
+        </div>
+        <div className="mb-5">
+          <Field
+            label="Jam Selesai"
+            error={jamSelesaiError ?? undefined}
+            hint={`Sesi dimulai ${pertemuan.jam_mulai.slice(0, 5)} — isi jam sesi benar-benar berakhir`}
+          >
+            <input
+              type="time"
+              value={jamSelesai}
+              onChange={(e) => { setJamSelesai(e.target.value); setJamSelesaiError(null) }}
+              className={timeInputClass}
+            />
+          </Field>
         </div>
         {newlySelectedMateri.size > 0 && (
           <div className="rounded-lg bg-primary/5 border border-primary/20 px-3 py-2.5 text-sm mb-5">

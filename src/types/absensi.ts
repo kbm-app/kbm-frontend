@@ -2,6 +2,7 @@ import { Kelas } from './kelas'
 import { Program } from './program'
 import { Pengajar } from './pengajar'
 import { Murid } from './murid'
+import { Jadwal } from './jadwal'
 
 export type StatusAbsensiMurid = 'hadir' | 'izin' | 'sakit' | 'alpha' | 'terlambat'
 export type StatusAbsensiPengajar = 'hadir' | 'berhalangan' | 'digantikan'
@@ -50,6 +51,7 @@ export interface Pertemuan {
   kelas?: Kelas
   program?: Program
   pengajar?: Pengajar
+  jadwal?: Jadwal | null
   absensi_murid?: AbsensiMurid[]
   absensi_pengajar?: AbsensiPengajar
   total_murid?: number

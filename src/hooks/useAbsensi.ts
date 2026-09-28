@@ -56,7 +56,8 @@ export const useUpdatePertemuan = (id: number) => {
 export const useSelesaiSesi = (id: number) => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: () => api.post<{ pertemuan: Pertemuan }>(`/api/pertemuan/${id}/selesai`),
+    mutationFn: (payload: { jam_selesai: string }) =>
+      api.post<{ pertemuan: Pertemuan }>(`/api/pertemuan/${id}/selesai`, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pertemuan'] })
       queryClient.invalidateQueries({ queryKey: ['pertemuan', id] })
