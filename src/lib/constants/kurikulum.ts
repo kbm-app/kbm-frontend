@@ -23,6 +23,28 @@ export const BULAN_LABEL: Record<string, string> = Object.fromEntries(
   BULAN_OPTIONS.map(({ value, label }) => [value, label])
 )
 
+/** Urutan bulan dalam tahun ajaran (Juli → Juni) */
+export const BULAN_TAHUN_AJARAN = [
+  'juli', 'agustus', 'september', 'oktober', 'november', 'desember',
+  'januari', 'februari', 'maret', 'april', 'mei', 'juni',
+]
+
+/** Nama bulan dari index Date#getMonth() */
+export const BULAN_DARI_INDEX_JS = BULAN_OPTIONS.map((b) => b.value)
+
+/**
+ * Kelompokkan item per target bulan sesuai urutan tahun ajaran; item tanpa bulan
+ * (atau bulan tak dikenal) di kelompok terakhir dengan key null.
+ */
+export function kelompokkanPerBulan<T extends { target_bulan: string | null }>(items: T[]) {
+  const groups = BULAN_TAHUN_AJARAN
+    .map((bulan) => ({ bulan: bulan as string | null, items: items.filter((m) => m.target_bulan === bulan) }))
+    .filter((g) => g.items.length > 0)
+  const lainnya = items.filter((m) => !m.target_bulan || !BULAN_TAHUN_AJARAN.includes(m.target_bulan))
+  if (lainnya.length > 0) groups.push({ bulan: null, items: lainnya })
+  return groups
+}
+
 export const STATUS_CYCLE: StatusProgress[] = ['belum', 'sedang', 'selesai']
 
 export const STATUS_CONFIG: Record<StatusProgress, {

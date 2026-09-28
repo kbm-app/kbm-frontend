@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { materiSchema, MateriFormData } from '@/lib/schemas/kurikulum'
-import { BabKurikulum, Materi } from '@/types/kurikulum'
+import { BabKurikulum, Materi, TargetBulan } from '@/types/kurikulum'
 import { BULAN_OPTIONS } from '@/lib/constants/kurikulum'
 
 interface Props {
@@ -18,11 +18,13 @@ interface Props {
   babList: BabKurikulum[]
   defaultValues?: Materi
   defaultBabId?: number
+  /** Target bulan awal saat menambah materi dari kelompok bulan tertentu */
+  defaultBulan?: TargetBulan
   onSubmit: (data: MateriFormData) => void
   isLoading?: boolean
 }
 
-export function MateriModal({ open, onOpenChange, babList, defaultValues, defaultBabId, onSubmit, isLoading }: Props) {
+export function MateriModal({ open, onOpenChange, babList, defaultValues, defaultBabId, defaultBulan, onSubmit, isLoading }: Props) {
   const isEdit = !!defaultValues
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<MateriFormData>({
@@ -34,7 +36,7 @@ export function MateriModal({ open, onOpenChange, babList, defaultValues, defaul
       kompetensi: defaultValues?.kompetensi ?? '',
       metode: defaultValues?.metode ?? '',
       tipe: defaultValues?.tipe ?? 'umum',
-      target_bulan: defaultValues?.target_bulan ?? undefined,
+      target_bulan: defaultValues?.target_bulan ?? defaultBulan ?? undefined,
     },
   })
 
@@ -47,10 +49,10 @@ export function MateriModal({ open, onOpenChange, babList, defaultValues, defaul
         kompetensi: defaultValues?.kompetensi ?? '',
         metode: defaultValues?.metode ?? '',
         tipe: defaultValues?.tipe ?? 'umum',
-        target_bulan: defaultValues?.target_bulan ?? undefined,
+        target_bulan: defaultValues?.target_bulan ?? defaultBulan ?? undefined,
       })
     }
-  }, [open, defaultValues, defaultBabId])
+  }, [open, defaultValues, defaultBabId, defaultBulan])
 
   return (
     <Modal

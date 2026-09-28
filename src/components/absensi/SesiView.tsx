@@ -14,7 +14,7 @@ import { useIsMurid } from '@/hooks/useAuth'
 import { useKurikulumAktifKelas, useSelesaikanMateriUmum } from '@/hooks/useKurikulum'
 import { StatusAbsensiMurid, StatusAbsensiPengajar, AbsensiMurid } from '@/types/absensi'
 import { STATUS_MURID, STATUS_PENGAJAR } from '@/lib/constants/absensi'
-import { BULAN_LABEL } from '@/lib/constants/kurikulum'
+import { BULAN_DARI_INDEX_JS, BULAN_LABEL, BULAN_TAHUN_AJARAN } from '@/lib/constants/kurikulum'
 import { BabAktif, MateriUmumAktif } from '@/types/kurikulum'
 import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
@@ -619,16 +619,6 @@ function AbsensiMuridRow({
     </li>
   )
 }
-
-// Urutan bulan dalam tahun ajaran (Juli → Juni)
-const BULAN_TAHUN_AJARAN = [
-  'juli', 'agustus', 'september', 'oktober', 'november', 'desember',
-  'januari', 'februari', 'maret', 'april', 'mei', 'juni',
-]
-const BULAN_DARI_INDEX_JS = [
-  'januari', 'februari', 'maret', 'april', 'mei', 'juni',
-  'juli', 'agustus', 'september', 'oktober', 'november', 'desember',
-]
 
 type MateriSection = {
   key: string
