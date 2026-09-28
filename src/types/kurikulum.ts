@@ -100,6 +100,8 @@ export interface KurikulumFilters {
 export interface MateriUmumAktif {
   id: number
   judul: string
+  sub_bab: string | null
+  target_bulan: string | null
   sudah_selesai: boolean
   dicatat_di_sesi_ini: boolean | null
   metode: string | null

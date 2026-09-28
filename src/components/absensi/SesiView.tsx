@@ -14,6 +14,8 @@ import { useIsMurid } from '@/hooks/useAuth'
 import { useKurikulumAktifKelas, useSelesaikanMateriUmum } from '@/hooks/useKurikulum'
 import { StatusAbsensiMurid, StatusAbsensiPengajar, AbsensiMurid } from '@/types/absensi'
 import { STATUS_MURID, STATUS_PENGAJAR } from '@/lib/constants/absensi'
+import { BULAN_LABEL } from '@/lib/constants/kurikulum'
+import { BabAktif, MateriUmumAktif } from '@/types/kurikulum'
 import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
@@ -352,48 +354,72 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
             />
           </div>
 
-          {/* Daftar materi per bab */}
-          <div className="space-y-4">
-            {kurikulumAktif.bab.map((bab) => (
-              <div key={bab.id}>
-                <p className="text-xs font-semibold text-muted-foreground mb-2">
-                  ({bab.kode}) {bab.nama}
+          {/* Daftar materi per bulan — bulan sesi paling atas, lalu bulan-bulan sebelumnya */}
+          {(() => {
+            const sections = susunMateriPerBulan(kurikulumAktif.bab, pertemuan.tanggal)
+            if (sections.length === 0) {
+              return (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  Semua materi sampai bulan ini sudah disampaikan.
                 </p>
-                <ul className="space-y-1">
-                  {bab.materi_umum.map((m) => {
-                    const sudahSelesai = m.sudah_selesai
-                    const dipilih = sudahSelesai || newlySelectedMateri.has(m.id)
-                    return (
-                      <li
-                        key={m.id}
-                        onClick={() => !sudahSelesai && toggleMateri(m.id)}
-                        className={cn(
-                          'flex items-center gap-2.5 px-2 py-1.5 rounded-lg select-none',
-                          sudahSelesai
-                            ? 'opacity-50 cursor-default'
-                            : 'cursor-pointer hover:bg-muted/40'
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            'size-4 rounded border flex items-center justify-center shrink-0 transition-colors',
-                            dipilih
-                              ? 'bg-primary border-primary text-primary-foreground'
-                              : 'border-border'
+              )
+            }
+            return (
+              <div className="space-y-5">
+                {sections.map((section) => {
+                  const belum = section.items.filter((m) => !m.sudah_selesai && !newlySelectedMateri.has(m.id)).length
+                  return (
+                    <div key={section.key}>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <p className="text-xs font-semibold text-muted-foreground">
+                          {section.label}
+                          {section.isBulanSesi && (
+                            <span className="ml-2 text-[10px] font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded-full">
+                              Bulan ini
+                            </span>
                           )}
-                        >
-                          {dipilih && <Check className="size-3" />}
-                        </div>
-                        <span className={cn('text-sm', sudahSelesai && 'line-through')}>
-                          {m.judul}
-                        </span>
-                      </li>
-                    )
-                  })}
-                </ul>
+                        </p>
+                        <span className="text-[11px] text-muted-foreground">{belum} belum</span>
+                      </div>
+                      <ul className="space-y-1">
+                        {section.items.map((m) => {
+                          const sudahSelesai = m.sudah_selesai
+                          const dipilih = sudahSelesai || newlySelectedMateri.has(m.id)
+                          return (
+                            <li
+                              key={m.id}
+                              onClick={() => !sudahSelesai && toggleMateri(m.id)}
+                              className={cn(
+                                'flex items-start gap-2.5 px-2 py-1.5 rounded-lg select-none',
+                                sudahSelesai
+                                  ? 'opacity-50 cursor-default'
+                                  : 'cursor-pointer hover:bg-muted/40'
+                              )}
+                            >
+                              <div
+                                className={cn(
+                                  'size-4 mt-0.5 rounded border flex items-center justify-center shrink-0 transition-colors',
+                                  dipilih
+                                    ? 'bg-primary border-primary text-primary-foreground'
+                                    : 'border-border'
+                                )}
+                              >
+                                {dipilih && <Check className="size-3" />}
+                              </div>
+                              <div className="min-w-0">
+                                <p className={cn('text-sm', sudahSelesai && 'line-through')}>{m.judul}</p>
+                                <p className="text-xs text-muted-foreground">({m.babKode}) {m.babNama}</p>
+                              </div>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    </div>
+                  )
+                })}
               </div>
-            ))}
-          </div>
+            )
+          })()}
         </div>
       )}
 
@@ -592,4 +618,49 @@ function AbsensiMuridRow({
       )}
     </li>
   )
+}
+
+// Urutan bulan dalam tahun ajaran (Juli → Juni)
+const BULAN_TAHUN_AJARAN = [
+  'juli', 'agustus', 'september', 'oktober', 'november', 'desember',
+  'januari', 'februari', 'maret', 'april', 'mei', 'juni',
+]
+const BULAN_DARI_INDEX_JS = [
+  'januari', 'februari', 'maret', 'april', 'mei', 'juni',
+  'juli', 'agustus', 'september', 'oktober', 'november', 'desember',
+]
+
+type MateriSection = {
+  key: string
+  label: string
+  isBulanSesi: boolean
+  items: (MateriUmumAktif & { babKode: string; babNama: string })[]
+}
+
+/**
+ * Kelompokkan materi umum per target bulan: bulan sesi paling atas, lalu mundur ke
+ * awal tahun ajaran. Bulan setelah bulan sesi tidak ditampilkan, dan bulan yang semua
+ * materinya sudah disampaikan disembunyikan. Materi tanpa target bulan di paling bawah.
+ */
+function susunMateriPerBulan(bab: BabAktif[], tanggalSesi: string): MateriSection[] {
+  const semua = bab.flatMap((b) =>
+    b.materi_umum.map((m) => ({ ...m, babKode: b.kode, babNama: b.nama }))
+  )
+  const bulanSesi = BULAN_DARI_INDEX_JS[new Date(`${tanggalSesi.slice(0, 10)}T00:00:00`).getMonth()]
+  const idxSesi = BULAN_TAHUN_AJARAN.indexOf(bulanSesi)
+
+  const sections: MateriSection[] = []
+  for (let i = idxSesi; i >= 0; i--) {
+    const bulan = BULAN_TAHUN_AJARAN[i]
+    const items = semua.filter((m) => m.target_bulan === bulan)
+    if (items.length === 0 || items.every((m) => m.sudah_selesai)) continue
+    sections.push({ key: bulan, label: BULAN_LABEL[bulan], isBulanSesi: i === idxSesi, items })
+  }
+
+  const tanpaBulan = semua.filter((m) => !m.target_bulan)
+  if (tanpaBulan.some((m) => !m.sudah_selesai)) {
+    sections.push({ key: 'tanpa-bulan', label: 'Tanpa target bulan', isBulanSesi: false, items: tanpaBulan })
+  }
+
+  return sections
 }
