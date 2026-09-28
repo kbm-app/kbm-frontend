@@ -12,7 +12,7 @@ import { Materi, PenyampaianMateri, ProgressMateriMurid, StatusProgress } from '
 import { Kelas } from '@/types/kelas'
 import { MuridProgressPanel } from './MuridProgressPanel'
 import { cn } from '@/lib/utils'
-import { BULAN_LABEL, STATUS_CONFIG, STATUS_CYCLE } from '@/lib/constants/kurikulum'
+import { BULAN_DARI_INDEX_JS, BULAN_LABEL, BULAN_TAHUN_AJARAN, STATUS_CONFIG, STATUS_CYCLE } from '@/lib/constants/kurikulum'
 import { Pencil } from 'lucide-react'
 
 interface Props {
@@ -31,7 +31,8 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
   const [pilihKelasId, setPilihKelasId] = useState<number | null>(null)
   const kelasAwalId = kelasList.find((k) => kelasDiajarIds.includes(k.id))?.id ?? kelasList[0]?.id
   const kelasId = perKelas ? (pilihKelasId ?? kelasAwalId) : undefined
-  const [filterBulan, setFilterBulan] = useState<string>('')
+  // Default ke bulan berjalan agar pencapaian bulan ini langsung terlihat
+  const [filterBulan, setFilterBulan] = useState<string>(BULAN_DARI_INDEX_JS[new Date().getMonth()])
   const [selectedMuridId, setSelectedMuridId] = useState<number | null>(null)
 
   const [editingMetodeId, setEditingMetodeId] = useState<number | null>(null)
@@ -119,8 +120,9 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
 
   const selectedMurid = muridList.find((m) => m.id === selectedMuridId)
 
-  const bulanUnik = Array.from(
-    new Set(materiList.map((m) => m.target_bulan).filter(Boolean) as string[])
+  // Pilihan bulan urut tahun ajaran; filter aktif selalu ada di pilihan walau belum ada materinya
+  const bulanUnik = BULAN_TAHUN_AJARAN.filter(
+    (b) => b === filterBulan || materiList.some((m) => m.target_bulan === b)
   )
 
   // Group materi umum by bab
@@ -161,7 +163,7 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
           {(['umum', 'individu'] as const).map((t) => (
             <button
               key={t}
-              onClick={() => { setSubTab(t); setFilterBulan('') }}
+              onClick={() => { setSubTab(t); setSelectedMuridId(null) }}
               className={cn(
                 'px-4 py-1.5 transition-colors',
                 subTab === t ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'
@@ -172,7 +174,7 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
           ))}
         </div>
 
-        {bulanUnik.length > 0 && (
+        {materiList.length > 0 && (
           <select
             value={filterBulan}
             onChange={(e) => setFilterBulan(e.target.value)}
@@ -197,7 +199,8 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
         </div>
       ) : filteredMateri.length === 0 ? (
         <div className="py-16 text-center text-sm text-muted-foreground">
-          Belum ada materi {subTab === 'umum' ? 'umum' : 'individu'}.
+          Belum ada materi {subTab === 'umum' ? 'umum' : 'individu'}
+          {filterBulan && ` untuk bulan ${BULAN_LABEL[filterBulan] ?? filterBulan}`}.
         </div>
       ) : subTab === 'umum' ? (
 
