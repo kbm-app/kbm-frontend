@@ -10,10 +10,15 @@ import {
 } from '@/hooks/useKurikulum'
 import { Materi, PenyampaianMateri, ProgressMateriMurid, StatusProgress } from '@/types/kurikulum'
 import { Kelas } from '@/types/kelas'
-import { MuridProgressPanel } from './MuridProgressPanel'
 import { cn } from '@/lib/utils'
-import { BULAN_DARI_INDEX_JS, BULAN_LABEL, BULAN_TAHUN_AJARAN, STATUS_CONFIG, STATUS_CYCLE } from '@/lib/constants/kurikulum'
-import { Pencil } from 'lucide-react'
+import { BULAN_DARI_INDEX_JS, BULAN_LABEL, BULAN_TAHUN_AJARAN } from '@/lib/constants/kurikulum'
+import { ChevronDown, Pencil } from 'lucide-react'
+
+const STATUS_PILIHAN: { key: StatusProgress; label: string; active: string }[] = [
+  { key: 'belum',   label: 'Belum',   active: 'bg-muted text-foreground' },
+  { key: 'sedang',  label: 'Sedang',  active: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300' },
+  { key: 'selesai', label: 'Selesai', active: 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300' },
+]
 
 interface Props {
   kurikulumId: number
@@ -33,7 +38,7 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
   const kelasId = perKelas ? (pilihKelasId ?? kelasAwalId) : undefined
   // Default ke bulan berjalan agar pencapaian bulan ini langsung terlihat
   const [filterBulan, setFilterBulan] = useState<string>(BULAN_DARI_INDEX_JS[new Date().getMonth()])
-  const [selectedMuridId, setSelectedMuridId] = useState<number | null>(null)
+  const [openMuridIds, setOpenMuridIds] = useState<Set<number>>(new Set())
 
   const [editingMetodeId, setEditingMetodeId] = useState<number | null>(null)
   const [metodeInput, setMetodeInput] = useState('')
@@ -102,23 +107,29 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
     }
   }
 
-  // --- Individu: cell click (create jika belum ada record) ---
-  const handleCellClick = (muridId: number, materi: Materi) => {
+  // --- Individu: set status langsung (buat record jika belum ada) ---
+  const setStatus = (muridId: number, materi: Materi, status: StatusProgress) => {
     const p = getProgress(muridId, materi.id)
     if (p) {
-      const nextStatus = STATUS_CYCLE[(STATUS_CYCLE.indexOf(p.status) + 1) % STATUS_CYCLE.length]
-      updateProgress({ id: p.id, status: nextStatus }, {
+      if (p.status === status) return
+      updateProgress({ id: p.id, status }, {
         onError: () => toast.error('Gagal memperbarui progress'),
       })
-    } else {
+    } else if (status !== 'belum') {
       progressBulk(
-        [{ materi_id: materi.id, murid_id: muridId, status: 'selesai' }],
+        [{ materi_id: materi.id, murid_id: muridId, status }],
         { onError: () => toast.error('Gagal menyimpan progress') }
       )
     }
   }
 
-  const selectedMurid = muridList.find((m) => m.id === selectedMuridId)
+  const toggleMurid = (id: number) =>
+    setOpenMuridIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
 
   // Pilihan bulan urut tahun ajaran; filter aktif selalu ada di pilihan walau belum ada materinya
   const bulanUnik = BULAN_TAHUN_AJARAN.filter(
@@ -150,7 +161,7 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
         {perKelas && (
           <select
             value={kelasId}
-            onChange={(e) => { setPilihKelasId(Number(e.target.value)); setSelectedMuridId(null) }}
+            onChange={(e) => { setPilihKelasId(Number(e.target.value)); setOpenMuridIds(new Set()) }}
             className="h-8 border border-border rounded-lg px-2.5 text-sm bg-background outline-none focus:border-ring transition-colors"
           >
             {kelasList.map((k) => (
@@ -163,7 +174,7 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
           {(['umum', 'individu'] as const).map((t) => (
             <button
               key={t}
-              onClick={() => { setSubTab(t); setSelectedMuridId(null) }}
+              onClick={() => { setSubTab(t); setOpenMuridIds(new Set()) }}
               className={cn(
                 'px-4 py-1.5 transition-colors',
                 subTab === t ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'
@@ -331,114 +342,98 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
         </div>
       ) : (
 
-        /* ── MATERI INDIVIDU: matrix murid × materi ── */
-        <div className="overflow-x-auto rounded-xl border border-border">
-          <table className="w-full text-sm border-collapse">
-            <thead className="bg-muted/40 border-b border-border">
-              <tr>
-                <th className="text-left px-4 py-2.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider sticky left-0 bg-muted/40 z-10 min-w-36">
-                  Nama Murid
-                </th>
-                {filteredMateri.map((m) => (
-                  <th key={m.id} className="px-2 py-2.5 text-center min-w-16 max-w-20">
-                    <div className="flex flex-col items-center gap-0.5">
-                      <span
-                        className="text-xs font-medium text-foreground line-clamp-2 text-center leading-tight max-w-16"
-                        title={m.judul}
-                      >
-                        {m.judul.length > 20 ? m.judul.slice(0, 18) + '…' : m.judul}
-                      </span>
-                      {m.target_bulan && (
-                        <span className="text-[9px] text-muted-foreground">{BULAN_LABEL[m.target_bulan]}</span>
-                      )}
+        /* ── MATERI INDIVIDU: accordion per murid, isi mengikuti filter bulan ── */
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>
+              {muridList.filter((murid) => filteredMateri.every((m) => getProgress(murid.id, m.id)?.status === 'selesai')).length}
+              {' '}dari {muridList.length} murid menyelesaikan semua materi
+              {filterBulan ? ` bulan ${BULAN_LABEL[filterBulan] ?? filterBulan}` : ''}
+            </span>
+            <button
+              onClick={() => setOpenMuridIds(
+                openMuridIds.size === muridList.length ? new Set() : new Set(muridList.map((m) => m.id))
+              )}
+              className="text-primary hover:underline shrink-0 ml-2"
+            >
+              {openMuridIds.size === muridList.length ? 'Tutup semua' : 'Buka semua'}
+            </button>
+          </div>
+
+          <div className="rounded-xl border border-border bg-card divide-y divide-border overflow-hidden">
+            {muridList.map((murid) => {
+              const selesai = filteredMateri.filter((m) => getProgress(murid.id, m.id)?.status === 'selesai').length
+              const sedang = filteredMateri.filter((m) => getProgress(murid.id, m.id)?.status === 'sedang').length
+              const persen = filteredMateri.length > 0 ? Math.round((selesai / filteredMateri.length) * 100) : 0
+              const isOpen = openMuridIds.has(murid.id)
+
+              return (
+                <div key={murid.id}>
+                  <button
+                    onClick={() => toggleMurid(murid.id)}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 transition-colors"
+                  >
+                    <ChevronDown className={cn('size-4 shrink-0 text-muted-foreground transition-transform', !isOpen && '-rotate-90')} />
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-medium truncate">{murid.nama}</span>
+                        <span className="text-xs text-muted-foreground tabular-nums shrink-0">
+                          {selesai}/{filteredMateri.length}
+                          {sedang > 0 && <span className="text-yellow-600"> · {sedang} sedang</span>}
+                        </span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div
+                          className={cn('h-full rounded-full transition-all', persen === 100 ? 'bg-green-500' : 'bg-primary')}
+                          style={{ width: `${persen}%` }}
+                        />
+                      </div>
                     </div>
-                  </th>
-                ))}
-                <th className="px-3 py-2.5 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider min-w-16">
-                  Total
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {muridList.map((murid) => {
-                const selesai = filteredMateri.filter(
-                  (m) => getProgress(murid.id, m.id)?.status === 'selesai'
-                ).length
-                const persen = filteredMateri.length > 0
-                  ? Math.round((selesai / filteredMateri.length) * 100)
-                  : 0
+                  </button>
 
-                return (
-                  <tr key={murid.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-2.5 sticky left-0 bg-background z-10 border-r border-border">
-                      {readOnly ? (
-                        <span className="font-medium">{murid.nama}</span>
-                      ) : (
-                        <button
-                          onClick={() => setSelectedMuridId(murid.id === selectedMuridId ? null : murid.id)}
-                          className="text-left hover:text-primary transition-colors font-medium"
-                        >
-                          {murid.nama}
-                        </button>
-                      )}
-                    </td>
-                    {filteredMateri.map((m) => {
-                      const p = getProgress(murid.id, m.id)
-                      const status: StatusProgress = p?.status ?? 'belum'
-                      const cfg = STATUS_CONFIG[status]
-                      return (
-                        <td key={m.id} className="px-2 py-2.5 text-center">
-                          <button
-                            onClick={() => handleCellClick(murid.id, m)}
-                            disabled={readOnly}
-                            className={cn(
-                              'w-8 h-8 rounded-lg text-sm transition-colors mx-auto flex items-center justify-center',
-                              cfg.cellClass,
-                              !readOnly && cfg.btnClass,
+                  {isOpen && (
+                    <ul className="border-t border-border bg-muted/10 divide-y divide-border">
+                      {filteredMateri.map((m) => {
+                        const status: StatusProgress = getProgress(murid.id, m.id)?.status ?? 'belum'
+                        return (
+                          <li key={m.id} className="flex flex-col gap-2 px-4 py-3 pl-11 sm:flex-row sm:items-center sm:gap-3">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm">{m.judul}</p>
+                              <p className="text-xs text-muted-foreground">
+                                ({m.bab?.kode ?? '?'}) {m.bab?.nama}
+                                {m.sub_bab && ` · ${m.sub_bab}`}
+                                {!filterBulan && m.target_bulan && ` · ${BULAN_LABEL[m.target_bulan]}`}
+                              </p>
+                            </div>
+                            {readOnly ? (
+                              <span className={cn('self-start sm:self-center text-xs font-medium px-2 py-0.5 rounded-full', STATUS_PILIHAN.find((s) => s.key === status)?.active)}>
+                                {STATUS_PILIHAN.find((s) => s.key === status)?.label}
+                              </span>
+                            ) : (
+                              <div className="flex self-start sm:self-center rounded-lg border border-border overflow-hidden text-xs shrink-0">
+                                {STATUS_PILIHAN.map((opt) => (
+                                  <button
+                                    key={opt.key}
+                                    onClick={() => setStatus(murid.id, m, opt.key)}
+                                    className={cn(
+                                      'px-2.5 py-1.5 transition-colors border-l border-border first:border-l-0',
+                                      status === opt.key ? cn(opt.active, 'font-semibold') : 'text-muted-foreground hover:bg-muted'
+                                    )}
+                                  >
+                                    {opt.label}
+                                  </button>
+                                ))}
+                              </div>
                             )}
-                            title={readOnly ? `Status: ${status}` : `Status: ${status} — klik untuk ubah`}
-                          >
-                            {cfg.symbol}
-                          </button>
-                        </td>
-                      )
-                    })}
-                    <td className="px-3 py-2.5 text-center">
-                      <span className={cn(
-                        'text-xs font-semibold tabular-nums',
-                        persen === 100 ? 'text-green-600' : persen >= 50 ? 'text-yellow-600' : 'text-muted-foreground'
-                      )}>
-                        {persen}%
-                      </span>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Slide-over panel — hanya untuk individu */}
-      {subTab === 'individu' && selectedMuridId && selectedMurid && (
-        <>
-          <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setSelectedMuridId(null)} />
-          <MuridProgressPanel
-            kurikulumId={kurikulumId}
-            muridId={selectedMuridId}
-            muridNama={selectedMurid.nama}
-            onClose={() => setSelectedMuridId(null)}
-          />
-        </>
-      )}
-
-      {/* Legend */}
-      {subTab === 'individu' && (
-        <div className="flex items-center gap-5 text-xs text-muted-foreground">
-          <span><span className="text-green-600 font-bold">✓</span> Selesai</span>
-          <span><span className="text-yellow-600 font-bold">○</span> Sedang</span>
-          <span><span className="font-bold">—</span> Belum</span>
-          <span className="italic">Klik nama murid → detail progress</span>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
     </div>

@@ -1,4 +1,4 @@
-import { Kurikulum, StatusProgress } from '@/types/kurikulum'
+import { Kurikulum } from '@/types/kurikulum'
 
 /** "Kelas 3-1, Kelas 3-2" — nama semua kelas pemakai kurikulum */
 export const namaKelasKurikulum = (k: Pick<Kurikulum, 'kelas'>) =>
@@ -43,17 +43,4 @@ export function kelompokkanPerBulan<T extends { target_bulan: string | null }>(i
   const lainnya = items.filter((m) => !m.target_bulan || !BULAN_TAHUN_AJARAN.includes(m.target_bulan))
   if (lainnya.length > 0) groups.push({ bulan: null, items: lainnya })
   return groups
-}
-
-export const STATUS_CYCLE: StatusProgress[] = ['belum', 'sedang', 'selesai']
-
-export const STATUS_CONFIG: Record<StatusProgress, {
-  symbol: string
-  color: string
-  cellClass: string
-  btnClass: string
-}> = {
-  belum:   { symbol: '—', color: 'text-muted-foreground',  cellClass: 'text-muted-foreground',                      btnClass: 'hover:bg-muted' },
-  sedang:  { symbol: '○', color: 'text-yellow-600',        cellClass: 'text-yellow-600 dark:text-yellow-400',       btnClass: 'hover:bg-yellow-50 dark:hover:bg-yellow-950' },
-  selesai: { symbol: '✓', color: 'text-green-600',         cellClass: 'text-green-600 dark:text-green-400 font-bold', btnClass: 'hover:bg-green-50 dark:hover:bg-green-950' },
 }
