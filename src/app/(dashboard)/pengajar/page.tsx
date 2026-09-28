@@ -269,7 +269,7 @@ export default function PengajarPage() {
         open={deleteTarget !== null}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
         title={`Hapus pengajar "${deleteTarget?.user?.name}"?`}
-        description="Data pengajar tidak dapat dikembalikan setelah dihapus."
+        description="Pengajar akan disembunyikan dan tidak bisa login lagi. Riwayat pertemuan & absensinya tetap tersimpan."
         onConfirm={confirmDelete}
         isLoading={isDeleting}
       >
@@ -280,15 +280,22 @@ export default function PengajarPage() {
           deleteImpact.riwayat_kelas > 0 ||
           deleteImpact.absensi > 0
         ) && (
-          <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-xs text-muted-foreground space-y-1">
-            <p className="font-medium text-foreground">Data berikut akan ikut terhapus permanen:</p>
-            <ul className="list-disc list-inside space-y-0.5">
-              {deleteImpact.kelas_aktif.length > 0 && (
-                <li>Dilepas dari kelas aktif: {deleteImpact.kelas_aktif.join(', ')}</li>
-              )}
-              {deleteImpact.riwayat_kelas > 0 && <li>{deleteImpact.riwayat_kelas} riwayat penugasan kelas</li>}
-              {deleteImpact.absensi > 0 && <li>{deleteImpact.absensi} riwayat absensi</li>}
-            </ul>
+          <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground space-y-1">
+            {deleteImpact.kelas_aktif.length > 0 && (
+              <p>
+                <span className="font-medium text-foreground">Dilepas dari kelas & jadwal:</span>{' '}
+                {deleteImpact.kelas_aktif.join(', ')}
+              </p>
+            )}
+            {(deleteImpact.riwayat_kelas > 0 || deleteImpact.absensi > 0) && (
+              <p>
+                <span className="font-medium text-foreground">Tetap tersimpan:</span>{' '}
+                {[
+                  deleteImpact.riwayat_kelas > 0 && `${deleteImpact.riwayat_kelas} riwayat penugasan kelas`,
+                  deleteImpact.absensi > 0 && `${deleteImpact.absensi} riwayat absensi`,
+                ].filter(Boolean).join(', ')}
+              </p>
+            )}
           </div>
         )}
       </DeleteDialog>

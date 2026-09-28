@@ -290,7 +290,7 @@ export default function UsersPage() {
         open={deleteTarget !== null}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
         title={`Hapus pengguna "${deleteTarget?.name}"?`}
-        description="Akun pengguna ini akan dihapus permanen dan tidak dapat dikembalikan."
+        description="Akun akan disembunyikan dan tidak bisa login lagi. Jika akun ini pengajar, riwayat pertemuan & absensinya tetap tersimpan. Email akun tidak bisa dipakai untuk akun baru."
         onConfirm={confirmDelete}
         isLoading={isDeleting}
       />

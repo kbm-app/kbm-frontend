@@ -351,7 +351,7 @@ export default function MuridPage() {
         open={deleteTarget !== null}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null) }}
         title={`Hapus murid "${deleteTarget?.nama}"?`}
-        description="Data murid tidak dapat dikembalikan setelah dihapus."
+        description="Murid akan disembunyikan dan dikeluarkan dari kelas. Riwayat absensi, progress, kas, dan data wali tetap tersimpan."
         onConfirm={confirmDelete}
         isLoading={isDeleting}
       >
@@ -365,12 +365,15 @@ export default function MuridPage() {
           deleteImpact.progress_materi > 0 ||
           deleteImpact.transaksi_kas > 0
         ) && (
-          <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-xs text-muted-foreground space-y-1">
-            <p className="font-medium text-foreground">Data berikut akan ikut terhapus permanen:</p>
+          <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground space-y-1">
+            {deleteImpact.kelas_aktif.length > 0 && (
+              <p>
+                <span className="font-medium text-foreground">Dikeluarkan dari kelas aktif:</span>{' '}
+                {deleteImpact.kelas_aktif.join(', ')}
+              </p>
+            )}
+            <p className="font-medium text-foreground">Tetap tersimpan:</p>
             <ul className="list-disc list-inside space-y-0.5">
-              {deleteImpact.kelas_aktif.length > 0 && (
-                <li>Dikeluarkan dari kelas aktif: {deleteImpact.kelas_aktif.join(', ')}</li>
-              )}
               {deleteImpact.riwayat_kelas > 0 && <li>{deleteImpact.riwayat_kelas} riwayat kelas</li>}
               {deleteImpact.wali_murid > 0 && <li>{deleteImpact.wali_murid} data wali murid</li>}
               {deleteImpact.absensi > 0 && <li>{deleteImpact.absensi} riwayat absensi</li>}
