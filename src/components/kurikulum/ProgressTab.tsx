@@ -14,12 +14,7 @@ import { cn } from '@/lib/utils'
 import { BULAN_DARI_INDEX_JS, BULAN_LABEL, BULAN_TAHUN_AJARAN } from '@/lib/constants/kurikulum'
 import { CheckCircle, ChevronDown, Pencil } from 'lucide-react'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-
-const STATUS_PILIHAN: { key: StatusProgress; label: string; active: string }[] = [
-  { key: 'belum',   label: 'Belum',   active: 'bg-muted text-foreground' },
-  { key: 'sedang',  label: 'Sedang',  active: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950 dark:text-yellow-300' },
-  { key: 'selesai', label: 'Selesai', active: 'bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300' },
-]
+import { StatusProgressToggle } from './StatusProgressToggle'
 
 interface Props {
   kurikulumId: number
@@ -408,26 +403,12 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
                                 {!filterBulan && m.target_bulan && ` · ${BULAN_LABEL[m.target_bulan]}`}
                               </p>
                             </div>
-                            {readOnly ? (
-                              <span className={cn('self-start sm:self-center text-xs font-medium px-2 py-0.5 rounded-full', STATUS_PILIHAN.find((s) => s.key === status)?.active)}>
-                                {STATUS_PILIHAN.find((s) => s.key === status)?.label}
-                              </span>
-                            ) : (
-                              <div className="flex self-start sm:self-center rounded-lg border border-border overflow-hidden text-xs shrink-0">
-                                {STATUS_PILIHAN.map((opt) => (
-                                  <button
-                                    key={opt.key}
-                                    onClick={() => setStatus(murid.id, m, opt.key)}
-                                    className={cn(
-                                      'px-2.5 py-1.5 transition-colors border-l border-border first:border-l-0',
-                                      status === opt.key ? cn(opt.active, 'font-semibold') : 'text-muted-foreground hover:bg-muted'
-                                    )}
-                                  >
-                                    {opt.label}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
+                            <StatusProgressToggle
+                              value={status}
+                              onChange={(st) => setStatus(murid.id, m, st)}
+                              readOnly={readOnly}
+                              className="self-start sm:self-center"
+                            />
                           </li>
                         )
                       })}

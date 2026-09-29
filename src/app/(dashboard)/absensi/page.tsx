@@ -11,7 +11,7 @@ import { bulanOptions, tahunOptions } from '@/lib/date-options'
 import { PageLoading } from '@/components/ui/page-loading'
 import { formSelectClass } from '@/components/ui/field'
 import { Button, buttonVariants } from '@/components/ui/button'
-import { Plus, PlayCircle, CheckCircle, XCircle, ClipboardList, Eye } from 'lucide-react'
+import { Plus, PlayCircle, CheckCircle, ClipboardList, Eye } from 'lucide-react'
 import BukaSesiForm from '@/components/absensi/BukaSesiForm'
 import SesiView from '@/components/absensi/SesiView'
 import TabRekapKelas from '@/components/absensi/TabRekapKelas'
@@ -331,7 +331,6 @@ function RiwayatRow({ pertemuan, onDetail }: { pertemuan: Pertemuan; onDetail: (
   const STATUS_CONFIG = {
     berlangsung: { label: 'Berlangsung', color: 'bg-amber-100 text-amber-700', icon: <PlayCircle className="size-3" /> },
     selesai:     { label: 'Selesai',     color: 'bg-green-100 text-green-700',  icon: <CheckCircle className="size-3" /> },
-    dibatalkan:  { label: 'Dibatalkan',  color: 'bg-destructive/10 text-destructive', icon: <XCircle className="size-3" /> },
   }
   const cfg = STATUS_CONFIG[pertemuan.status]
 
@@ -362,7 +361,6 @@ function RiwayatCard({ pertemuan, onDetail }: { pertemuan: Pertemuan; onDetail: 
   const STATUS_CONFIG = {
     berlangsung: { label: 'Berlangsung', color: 'bg-amber-100 text-amber-700', icon: <PlayCircle className="size-3" /> },
     selesai:     { label: 'Selesai',     color: 'bg-green-100 text-green-700',  icon: <CheckCircle className="size-3" /> },
-    dibatalkan:  { label: 'Dibatalkan',  color: 'bg-destructive/10 text-destructive', icon: <XCircle className="size-3" /> },
   }
   const cfg = STATUS_CONFIG[pertemuan.status]
 

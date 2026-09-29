@@ -6,7 +6,8 @@ import { Jadwal } from './jadwal'
 
 export type StatusAbsensiMurid = 'hadir' | 'izin' | 'sakit' | 'alpha' | 'terlambat'
 export type StatusAbsensiPengajar = 'hadir' | 'berhalangan' | 'digantikan'
-export type StatusPertemuan = 'berlangsung' | 'selesai' | 'dibatalkan'
+// Sesi yang dibatalkan dihapus dari database, jadi tidak ada status 'batal'
+export type StatusPertemuan = 'berlangsung' | 'selesai'
 
 export interface AbsensiMurid {
   id: number

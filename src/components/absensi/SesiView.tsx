@@ -21,6 +21,7 @@ import { id as localeId } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 import { Modal } from '@/components/ui/modal'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { MateriIndividuSesi } from './MateriIndividuSesi'
 import { Button } from '@/components/ui/button'
 import { PageLoading } from '@/components/ui/page-loading'
 import { Field, formSelectClass } from '@/components/ui/field'
@@ -191,7 +192,7 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
 
   const handleBatalkan = () => {
     batalkanSesi(undefined, {
-      onSuccess: () => { toast.success('Sesi dibatalkan'); setShowBatalkan(false); onKembali() },
+      onSuccess: () => { toast.success('Sesi dibatalkan dan dihapus'); setShowBatalkan(false); onKembali() },
       onError: () => { toast.error('Gagal membatalkan sesi'); setShowBatalkan(false) },
     })
   }
@@ -223,9 +224,6 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
         )}
         {pertemuan.status === 'selesai' && (
           <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium shrink-0">Selesai</span>
-        )}
-        {pertemuan.status === 'dibatalkan' && (
-          <span className="text-xs bg-destructive/10 text-destructive px-2 py-1 rounded-full font-medium shrink-0">Dibatalkan</span>
         )}
       </div>
 
@@ -336,7 +334,7 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
       {isBerlangsung && !isMurid && kurikulumAktif && kurikulumAktif.total_materi_umum > 0 && (
         <div className="rounded-xl border border-border bg-card p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold">Materi Kurikulum</h2>
+            <h2 className="text-sm font-semibold">Materi Umum</h2>
             <span className="text-xs text-muted-foreground">
               {kurikulumAktif.total_selesai + newlySelectedMateri.size}/{kurikulumAktif.total_materi_umum} selesai
             </span>
@@ -424,6 +422,17 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
         </div>
       )}
 
+      {/* Materi individu — capaian per murid yang hadir, dicatat ke sesi ini */}
+      {isBerlangsung && !isMurid && kurikulumAktif && (
+        <MateriIndividuSesi
+          kurikulumId={kurikulumAktif.kurikulum_id}
+          pertemuanId={pertemuanId}
+          kelasId={pertemuan.kelas_id}
+          tanggal={pertemuan.tanggal}
+          absensiMurid={absensiList}
+        />
+      )}
+
       {/* Materi & Catatan — read-only saat selesai */}
       {!isBerlangsung && (pertemuan.materi || pertemuan.catatan) && (
         <div className="rounded-xl border border-border bg-card p-4 space-y-3">
@@ -443,7 +452,7 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
         </div>
       )}
 
-      {/* Materi Kurikulum — read-only di detail sesi */}
+      {/* Materi umum — read-only di detail sesi */}
       {!isBerlangsung && kurikulumAktif && (() => {
         const materiDicatat = kurikulumAktif.bab.flatMap((b) =>
           b.materi_umum
@@ -518,11 +527,11 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
         open={showBatalkan}
         onOpenChange={setShowBatalkan}
         title="Batalkan sesi ini?"
-        description="Sesi akan ditandai dibatalkan. Data absensi yang sudah diisi tetap tersimpan."
+        description="Sesi beserta seluruh absensi murid & pengajar yang sudah diisi akan dihapus permanen dan tidak dapat dikembalikan."
         icon={XCircle}
         variant="destructive"
-        confirmLabel="Ya, Batalkan"
-        confirmLoadingLabel="Membatalkan..."
+        confirmLabel="Ya, Batalkan & Hapus"
+        confirmLoadingLabel="Menghapus..."
         cancelLabel="Kembali"
         onConfirm={handleBatalkan}
         isLoading={isBatal}
