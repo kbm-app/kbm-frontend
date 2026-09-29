@@ -11,7 +11,7 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   title: "KBM - Kegiatan Belajar Mengajar",
-  description: "Aplikasi Manajemen Kegiatan Belajar Mengajar Masjid",
+  description: "Aplikasi Manajemen Kegiatan Belajar Mengajar Kelompok Sidomulyo 1",
 };
 
 export default function RootLayout({

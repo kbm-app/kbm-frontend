@@ -141,7 +141,7 @@ export function MusyawarahDetail({ musyawarahId }: Props) {
         <div className="flex items-center gap-3 mb-3">
           <div className="h-px flex-1 bg-border" />
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-            Notulensi Rapat
+            Notulensi Musyawarah
           </span>
           <div className="h-px flex-1 bg-border" />
         </div>

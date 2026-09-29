@@ -59,7 +59,7 @@ export default function Sidebar() {
       <div className="mb-6 px-3 flex items-start justify-between">
         <div>
           <span className="font-heading text-lg font-bold text-sidebar-primary">KBM</span>
-          <p className="text-[11px] text-sidebar-foreground/60 mt-0.5">Belajar Mengajar Masjid</p>
+          <p className="text-[11px] text-sidebar-foreground/60 mt-0.5">Kelompok Sidomulyo 1</p>
         </div>
         <button
           onClick={close}
