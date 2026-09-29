@@ -20,11 +20,12 @@ import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
 import { cn } from '@/lib/utils'
 import { Modal } from '@/components/ui/modal'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Button } from '@/components/ui/button'
 import { PageLoading } from '@/components/ui/page-loading'
 import { Field, formSelectClass } from '@/components/ui/field'
 import { toast } from 'sonner'
-import { Check, CheckCircle } from 'lucide-react'
+import { Check, CheckCircle, XCircle } from 'lucide-react'
 
 interface Props {
   pertemuanId: number
@@ -51,6 +52,7 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
   const { mutateAsync: selesaikanMateri } = useSelesaikanMateriUmum(kurikulumAktif?.kurikulum_id ?? 0)
 
   const [showKonfirmasi, setShowKonfirmasi] = useState(false)
+  const [showBatalkan, setShowBatalkan] = useState(false)
   const [materi, setMateri] = useState('')
   const [catatan, setCatatan] = useState('')
   const [jamSelesai, setJamSelesai] = useState('')
@@ -188,10 +190,9 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
   }
 
   const handleBatalkan = () => {
-    if (!confirm('Batalkan sesi ini? Data absensi yang sudah diisi akan tetap tersimpan.')) return
     batalkanSesi(undefined, {
-      onSuccess: () => { toast.success('Sesi dibatalkan'); onKembali() },
-      onError: () => toast.error('Gagal membatalkan sesi'),
+      onSuccess: () => { toast.success('Sesi dibatalkan'); setShowBatalkan(false); onKembali() },
+      onError: () => { toast.error('Gagal membatalkan sesi'); setShowBatalkan(false) },
     })
   }
 
@@ -497,7 +498,7 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
       {/* Tombol aksi */}
       {isBerlangsung && (
         <div className="flex gap-3">
-          <Button variant="outline" size="lg" onClick={handleBatalkan} disabled={isBatal}>
+          <Button variant="outline" size="lg" onClick={() => setShowBatalkan(true)} disabled={isBatal}>
             {isBatal ? 'Membatalkan...' : 'Batalkan Sesi'}
           </Button>
           <Button
@@ -511,6 +512,21 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
           </Button>
         </div>
       )}
+
+      {/* Modal konfirmasi batalkan */}
+      <ConfirmDialog
+        open={showBatalkan}
+        onOpenChange={setShowBatalkan}
+        title="Batalkan sesi ini?"
+        description="Sesi akan ditandai dibatalkan. Data absensi yang sudah diisi tetap tersimpan."
+        icon={XCircle}
+        variant="destructive"
+        confirmLabel="Ya, Batalkan"
+        confirmLoadingLabel="Membatalkan..."
+        cancelLabel="Kembali"
+        onConfirm={handleBatalkan}
+        isLoading={isBatal}
+      />
 
       {/* Modal konfirmasi selesai */}
       <Modal open={showKonfirmasi} onOpenChange={setShowKonfirmasi} title="Selesaikan Sesi?" maxWidth="sm">

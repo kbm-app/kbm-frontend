@@ -1,10 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
 import { toast } from 'sonner'
 import { RefreshCw, CheckCircle, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { ExportButton } from '@/components/ui/export-button'
 import { PageLoading } from '@/components/ui/page-loading'
 import { LaporanKelasCard } from './LaporanKelasCard'
@@ -21,6 +23,7 @@ export function MusyawarahDetail({ musyawarahId }: Props) {
   const { data, isLoading }                               = useMusyawarahDetail(musyawarahId)
   const { mutate: selesai, isPending: isClosing }         = useSelesaiMusyawarah(musyawarahId)
   const { mutate: regenerate, isPending: isRegenerating } = useRegenerateMusyawarah(musyawarahId)
+  const [showTutup, setShowTutup] = useState(false)
 
   if (isLoading) return <PageLoading />
   if (!data) return null
@@ -36,10 +39,9 @@ export function MusyawarahDetail({ musyawarahId }: Props) {
   )
 
   const handleSelesai = () => {
-    if (!confirm('Tutup musyawarah ini? Status tidak bisa dikembalikan ke draft.')) return
     selesai(undefined, {
-      onSuccess: () => toast.success('Musyawarah ditutup'),
-      onError:   () => toast.error('Gagal menutup musyawarah'),
+      onSuccess: () => { toast.success('Musyawarah ditutup'); setShowTutup(false) },
+      onError:   () => { toast.error('Gagal menutup musyawarah'); setShowTutup(false) },
     })
   }
 
@@ -81,7 +83,7 @@ export function MusyawarahDetail({ musyawarahId }: Props) {
                 <RefreshCw className={cn('size-3.5', isRegenerating && 'animate-spin')} />
                 Regenerate Semua
               </Button>
-              <Button size="sm" onClick={handleSelesai} disabled={isClosing} className="col-span-2">
+              <Button size="sm" onClick={() => setShowTutup(true)} disabled={isClosing} className="col-span-2">
                 <CheckCircle className="size-3.5" />
                 {isClosing ? 'Menutup...' : 'Tutup Musyawarah'}
               </Button>
@@ -149,6 +151,18 @@ export function MusyawarahDetail({ musyawarahId }: Props) {
           isSelesai={isSelesai}
         />
       </div>
+
+      <ConfirmDialog
+        open={showTutup}
+        onOpenChange={setShowTutup}
+        title="Tutup musyawarah ini?"
+        description="Status tidak bisa dikembalikan ke draft, dan laporan tidak bisa diubah lagi."
+        icon={CheckCircle}
+        confirmLabel="Ya, Tutup"
+        confirmLoadingLabel="Menutup..."
+        onConfirm={handleSelesai}
+        isLoading={isClosing}
+      />
     </div>
   )
 }

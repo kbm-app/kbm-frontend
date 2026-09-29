@@ -12,7 +12,8 @@ import { Materi, PenyampaianMateri, ProgressMateriMurid, StatusProgress } from '
 import { Kelas } from '@/types/kelas'
 import { cn } from '@/lib/utils'
 import { BULAN_DARI_INDEX_JS, BULAN_LABEL, BULAN_TAHUN_AJARAN } from '@/lib/constants/kurikulum'
-import { ChevronDown, Pencil } from 'lucide-react'
+import { CheckCircle, ChevronDown, Pencil } from 'lucide-react'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 
 const STATUS_PILIHAN: { key: StatusProgress; label: string; active: string }[] = [
   { key: 'belum',   label: 'Belum',   active: 'bg-muted text-foreground' },
@@ -43,6 +44,7 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
   const [editingMetodeId, setEditingMetodeId] = useState<number | null>(null)
   const [metodeInput, setMetodeInput] = useState('')
   const [markingSelesaiId, setMarkingSelesaiId] = useState<number | null>(null)
+  const [konfirmasiMateri, setKonfirmasiMateri] = useState<Materi | null>(null)
 
   const { data, isLoading } = useProgressKelas(kurikulumId, kelasId)
   const { mutate: updateProgress } = useUpdateProgress(kurikulumId)
@@ -93,9 +95,9 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
     }
   }
 
+  const namaKelasAktif = kelasList.find((k) => k.id === kelasId)?.nama
+
   const handleTandaiSelesai = async (materiId: number) => {
-    const namaKelas = kelasList.find((k) => k.id === kelasId)?.nama
-    if (!confirm(`Tandai materi ini selesai disampaikan${namaKelas ? ` di ${namaKelas}` : ''}?`)) return
     setMarkingSelesaiId(materiId)
     try {
       await selesaikanUmum({ materiId, kelasId })
@@ -104,6 +106,7 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
       toast.error('Gagal menandai materi')
     } finally {
       setMarkingSelesaiId(null)
+      setKonfirmasiMateri(null)
     }
   }
 
@@ -256,7 +259,7 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
                     <div key={m.id} className="flex items-start sm:items-center gap-3 px-4 py-3 hover:bg-muted/20 transition-colors">
                       {/* Status icon — klik untuk tandai selesai jika belum */}
                       <button
-                        onClick={() => !sudahDisampaikan && handleTandaiSelesai(m.id)}
+                        onClick={() => !sudahDisampaikan && setKonfirmasiMateri(m)}
                         disabled={sudahDisampaikan || isMarking || readOnly}
                         title={sudahDisampaikan ? 'Sudah disampaikan' : readOnly ? 'Belum disampaikan' : 'Klik untuk tandai sudah disampaikan'}
                         className={cn(
@@ -436,6 +439,18 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!konfirmasiMateri}
+        onOpenChange={(open) => { if (!open) setKonfirmasiMateri(null) }}
+        title="Tandai materi selesai disampaikan?"
+        description={`"${konfirmasiMateri?.judul}" akan dicatat sudah disampaikan${namaKelasAktif ? ` di ${namaKelasAktif}` : ''}.`}
+        icon={CheckCircle}
+        confirmLabel="Tandai Selesai"
+        confirmLoadingLabel="Menyimpan..."
+        onConfirm={() => konfirmasiMateri && handleTandaiSelesai(konfirmasiMateri.id)}
+        isLoading={markingSelesaiId !== null}
+      />
     </div>
   )
 }
