@@ -64,7 +64,12 @@ export function LaporanKelasCard({ musyawarahId, laporan, evaluasi, isSelesai }:
             )}
           </div>
           {(progressUmum !== null || progressInd !== null || progressTotal !== null) && (
-            <div className="grid grid-cols-3 gap-2 mt-2.5 sm:flex sm:flex-wrap sm:gap-x-3 sm:gap-y-1 sm:mt-0.5">
+            <>
+            {/* Judul kelompok hanya di mobile — di desktop label lengkap sudah tampil inline */}
+            <p className="mt-3 mb-1.5 text-[11px] font-medium text-muted-foreground sm:hidden">
+              Progres Pencapaian Materi
+            </p>
+            <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-x-3 sm:gap-y-1 sm:mt-0.5">
               {progressUmum !== null && (
                 <ProgressStat label="Progress Materi Umum" shortLabel="Umum" value={progressUmum} />
               )}
@@ -75,6 +80,7 @@ export function LaporanKelasCard({ musyawarahId, laporan, evaluasi, isSelesai }:
                 <ProgressStat label="Progress Materi Keseluruhan" shortLabel="Keseluruhan" value={progressTotal} delta={evaluasi?.delta_progress} />
               )}
             </div>
+            </>
           )}
         </div>
         {expanded ? <ChevronUp className="size-4 text-muted-foreground shrink-0 mt-0.5" /> : <ChevronDown className="size-4 text-muted-foreground shrink-0 mt-0.5" />}

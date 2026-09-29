@@ -48,13 +48,19 @@ function TrenTooltip({ active, payload, label }: any) {
   )
 }
 
-function DistribusiTooltip({ active, payload }: any) {
+/** Persentase satu desimal, mis. 42.9 */
+const persenDari = (jumlah: number, total: number) =>
+  total > 0 ? Math.round((jumlah / total) * 1000) / 10 : 0
+
+function DistribusiTooltip({ active, payload, total }: any) {
   if (!active || !payload?.length) return null
   const item = payload[0]?.payload
   return (
     <div className="rounded-lg border border-border bg-card px-3 py-2 shadow-sm text-xs">
       <p className="font-medium text-foreground">{STATUS_CONFIG[item.status]?.label}</p>
-      <p className="text-muted-foreground">{item.jumlah} murid</p>
+      <p className="text-muted-foreground">
+        {item.jumlah} absensi · {persenDari(item.jumlah, total)}%
+      </p>
     </div>
   )
 }
@@ -180,10 +186,10 @@ export default function ChartAbsensi() {
                           />
                         ))}
                     </Pie>
-                    <Tooltip content={<DistribusiTooltip />} />
+                    <Tooltip content={<DistribusiTooltip total={totalDistribusi} />} />
                   </PieChart>
                 </ResponsiveContainer>
-                <ul className="flex-1 space-y-2">
+                <ul className="flex-1 min-w-0 space-y-2">
                   {data!.distribusi.map((d) => (
                     <li key={d.status} className="flex items-center justify-between text-xs">
                       <span className="flex items-center gap-1.5">
@@ -193,7 +199,10 @@ export default function ChartAbsensi() {
                         />
                         <span className="text-foreground">{STATUS_CONFIG[d.status]?.label}</span>
                       </span>
-                      <span className="font-medium text-foreground">{d.jumlah}</span>
+                      <span className="tabular-nums text-muted-foreground">
+                        <span className="font-medium text-foreground">{persenDari(d.jumlah, totalDistribusi)}%</span>
+                        {' '}({d.jumlah})
+                      </span>
                     </li>
                   ))}
                 </ul>
