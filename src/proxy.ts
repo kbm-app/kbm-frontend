@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const PUBLIC_ROUTES = ['/login']
+// /set-password dibuka dari link email (atur/reset password) oleh user yang belum login
+const PUBLIC_ROUTES = ['/login', '/set-password']
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
