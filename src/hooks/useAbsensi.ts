@@ -112,11 +112,22 @@ export const useInputAbsensi = (pertemuanId: number) => {
   })
 }
 
+// Koreksi absensi pada sesi yang sudah selesai (super admin)
 export const useKoreksiAbsensi = (pertemuanId: number) => {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, ...payload }: { id: number; status: string; keterangan?: string }) =>
+    mutationFn: ({ id, ...payload }: { id: number; status: string; keterangan?: string | null }) =>
       api.put<{ absensi: AbsensiMurid }>(`/api/absensi-murid/${id}`, payload),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pertemuan', pertemuanId] }),
+  })
+}
+
+// Tambahkan murid yang belum ada di daftar absensi sesi; absensi yang sudah terisi tidak diubah
+export const useSinkronMuridSesi = (pertemuanId: number) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () =>
+      api.post<{ ditambahkan: string[] }>(`/api/pertemuan/${pertemuanId}/sinkron-murid`).then((r) => r.data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pertemuan', pertemuanId] }),
   })
 }

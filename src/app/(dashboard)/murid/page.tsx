@@ -2,13 +2,14 @@
 
 import { useState } from 'react'
 import { DataTable } from '@/components/ui/data-table'
-import { useMuridList, useCreateMurid, useUpdateMurid, useDeleteMurid, useMuridDetail, useMuridDeleteImpact } from '@/hooks/useMurid'
+import { useMuridList, useCreateMurid, useUpdateMurid, useDeleteMurid, useMuridDetail, useMuridDeleteImpact, cekDampakTanggalMasuk, DampakTanggalMasuk } from '@/hooks/useMurid'
 import { useKelasList } from '@/hooks/useKelas'
 import { Murid, MuridStatus } from '@/types/murid'
 import MuridForm from '@/components/murid/MuridForm'
 import { MuridDetail } from '@/components/murid/MuridDetail'
 import { getMuridColumns, STATUS_LABEL, STATUS_CLASS } from '@/components/murid/muridColumns'
 import { DeleteDialog } from '@/components/ui/delete-dialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Pagination } from '@/components/ui/pagination'
 import { ExportButton } from '@/components/ui/export-button'
 import { ImportButton } from '@/components/ui/import-button'
@@ -18,7 +19,7 @@ import { getMuridFotoUrl, toFormData } from '@/lib/murid-utils'
 import { cn, formatDate } from '@/lib/utils'
 import { toast } from 'sonner'
 import { MuridFormData } from '@/lib/schemas/murid'
-import { Calendar, MapPin } from 'lucide-react'
+import { Calendar, CalendarX, MapPin } from 'lucide-react'
 import { useIsSuperAdmin } from '@/hooks/useAuth'
 
 export default function MuridPage() {
@@ -27,6 +28,9 @@ export default function MuridPage() {
   const [mode, setMode] = useState<Mode>('tambah')
   const [selected, setSelected] = useState<Murid | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Murid | null>(null)
+  // Konfirmasi saat tanggal bergabung diubah & ada absensi sebelum tanggal itu
+  const [konfirmasiTanggal, setKonfirmasiTanggal] = useState<{ data: MuridFormData; dampak: DampakTanggalMasuk } | null>(null)
+  const [isCekDampak, setIsCekDampak] = useState(false)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState<MuridStatus | ''>('')
   const [kelasIds, setKelasIds] = useState<number[]>([])
@@ -83,11 +87,34 @@ export default function MuridPage() {
     })
   }
 
-  const handleUpdate = (formData: MuridFormData) => {
-    updateMurid(toFormData(formData, 'PUT'), {
-      onSuccess: () => { toast.success('Murid berhasil diperbarui'); goBack() },
+  const simpanUpdate = (formData: MuridFormData, hapusAbsensi = false) => {
+    const fd = toFormData(formData, 'PUT')
+    if (hapusAbsensi) fd.append('hapus_absensi_sebelum_masuk', '1')
+    updateMurid(fd, {
+      onSuccess: () => { toast.success('Murid berhasil diperbarui'); setKonfirmasiTanggal(null); goBack() },
       onError: () => toast.error('Gagal memperbarui murid, coba lagi'),
     })
+  }
+
+  const handleUpdate = async (formData: MuridFormData) => {
+    const lama = selected?.tanggal_masuk?.split('T')[0] ?? ''
+    const baru = formData.tanggal_masuk ?? ''
+    if (selected && baru && baru !== lama) {
+      setIsCekDampak(true)
+      try {
+        const dampak = await cekDampakTanggalMasuk(selected.id, baru)
+        if (dampak.jumlah > 0) {
+          setKonfirmasiTanggal({ data: formData, dampak })
+          return
+        }
+      } catch {
+        toast.error('Gagal memeriksa absensi murid, coba lagi')
+        return
+      } finally {
+        setIsCekDampak(false)
+      }
+    }
+    simpanUpdate(formData)
   }
 
   const handleDelete = (m: Murid) => setDeleteTarget(m)
@@ -330,7 +357,7 @@ export default function MuridPage() {
               })) ?? [],
             }}
             onSubmit={handleUpdate}
-            isLoading={isUpdating}
+            isLoading={isUpdating || isCekDampak}
             onCancel={goBack}
           />
         )
@@ -346,6 +373,36 @@ export default function MuridPage() {
           canManage={isSuperAdmin}
         />
       )}
+
+      <ConfirmDialog
+        open={konfirmasiTanggal !== null}
+        onOpenChange={(open) => { if (!open) setKonfirmasiTanggal(null) }}
+        icon={CalendarX}
+        variant="destructive"
+        title="Absensi sebelum tanggal bergabung akan dihapus"
+        description={konfirmasiTanggal
+          ? `Tanggal bergabung ${selected?.nama ?? 'murid'} diubah menjadi ${formatDate(konfirmasiTanggal.data.tanggal_masuk)}. Absensi sebelum tanggal itu dianggap tidak berlaku.`
+          : undefined}
+        confirmLabel="Hapus absensi & simpan"
+        confirmLoadingLabel="Menyimpan..."
+        isLoading={isUpdating}
+        onConfirm={() => konfirmasiTanggal && simpanUpdate(konfirmasiTanggal.data, true)}
+      >
+        {konfirmasiTanggal && (
+          <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3 text-xs text-muted-foreground space-y-1">
+            <p>
+              <span className="font-medium text-foreground">{konfirmasiTanggal.dampak.jumlah} absensi</span>{' '}
+              dari {formatDate(konfirmasiTanggal.dampak.dari)} s/d {formatDate(konfirmasiTanggal.dampak.sampai)}
+              {konfirmasiTanggal.dampak.kelas.length > 0 && ` (${konfirmasiTanggal.dampak.kelas.join(', ')})`}
+            </p>
+            <p>
+              {Object.entries(konfirmasiTanggal.dampak.per_status)
+                .map(([status, n]) => `${n} ${status}`)
+                .join(', ')}
+            </p>
+          </div>
+        )}
+      </ConfirmDialog>
 
       <DeleteDialog
         open={deleteTarget !== null}

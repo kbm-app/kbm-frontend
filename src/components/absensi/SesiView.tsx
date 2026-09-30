@@ -8,9 +8,11 @@ import {
   useSelesaiSesi,
   useBatalkanSesi,
   useUpdatePertemuan,
+  useKoreksiAbsensi,
+  useSinkronMuridSesi,
 } from '@/hooks/useAbsensi'
 import { usePengajarList } from '@/hooks/usePengajar'
-import { useIsMurid } from '@/hooks/useAuth'
+import { useIsMurid, useIsSuperAdmin } from '@/hooks/useAuth'
 import { useKurikulumAktifKelas, useSelesaikanMateriUmum } from '@/hooks/useKurikulum'
 import { StatusAbsensiMurid, StatusAbsensiPengajar, AbsensiMurid } from '@/types/absensi'
 import { STATUS_MURID, STATUS_PENGAJAR } from '@/lib/constants/absensi'
@@ -26,7 +28,7 @@ import { Button } from '@/components/ui/button'
 import { PageLoading } from '@/components/ui/page-loading'
 import { Field, formSelectClass } from '@/components/ui/field'
 import { toast } from 'sonner'
-import { Check, CheckCircle, XCircle } from 'lucide-react'
+import { Check, CheckCircle, Pencil, RefreshCw, XCircle } from 'lucide-react'
 
 interface Props {
   pertemuanId: number
@@ -43,6 +45,11 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
   const { mutate: updatePertemuan } = useUpdatePertemuan(pertemuanId)
   const { data: pengajarList } = usePengajarList({})
   const isMurid = useIsMurid()
+  const isSuperAdmin = useIsSuperAdmin()
+  const { mutate: koreksiAbsensi } = useKoreksiAbsensi(pertemuanId)
+  const { mutate: sinkronMurid, isPending: isSinkron } = useSinkronMuridSesi(pertemuanId)
+  // Super admin bisa mengoreksi absensi sesi yang sudah selesai (mis. isian pengajar/penerobos)
+  const [modeKoreksi, setModeKoreksi] = useState(false)
 
   // Berlangsung: tanpa pertemuanId (progres sesi ini belum tersimpan)
   // Selesai/detail: dengan pertemuanId agar dicatat_di_sesi_ini terisi
@@ -84,6 +91,9 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
   }
 
   const isBerlangsung = pertemuan.status === 'berlangsung'
+  const bisaKoreksi = isSuperAdmin && pertemuan.status === 'selesai'
+  const sedangKoreksi = bisaKoreksi && modeKoreksi
+  const bisaEditAbsensi = isBerlangsung || sedangKoreksi
   const absensiList = pertemuan.absensi_murid ?? []
   const semuaSudahDiisi = absensiList.length > 0
   const ringkasan = {
@@ -97,6 +107,27 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
   const handleStatusMurid = (muridId: number, status: StatusAbsensiMurid, keterangan?: string | null) => {
     inputAbsensi([{ murid_id: muridId, status, keterangan }], {
       onError: () => toast.error('Gagal menyimpan, coba lagi'),
+    })
+  }
+
+  // Hanya menambah murid yang belum ada di daftar; status yang sudah diisi tidak berubah
+  const handleSinkronMurid = () => {
+    sinkronMurid(undefined, {
+      onSuccess: ({ ditambahkan }) => {
+        if (ditambahkan.length === 0) toast.info('Daftar murid sudah terbaru')
+        else toast.success(`Ditambahkan: ${ditambahkan.join(', ')}. Silakan isi status kehadirannya.`)
+      },
+      onError: () => toast.error('Gagal memperbarui daftar murid'),
+    })
+  }
+
+  const handleSimpanAbsensi = (absensi: AbsensiMurid, status: StatusAbsensiMurid, keterangan: string | null) => {
+    if (isBerlangsung) {
+      handleStatusMurid(absensi.murid_id, status, keterangan)
+      return
+    }
+    koreksiAbsensi({ id: absensi.id, status, keterangan }, {
+      onError: () => toast.error('Gagal mengoreksi absensi, coba lagi'),
     })
   }
 
@@ -229,10 +260,43 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
 
       {/* Absensi Murid */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
-        <div className="px-4 py-3 bg-muted/40 border-b border-border flex items-center justify-between">
-          <h2 className="text-sm font-semibold">Daftar Kehadiran Murid</h2>
-          <span className="text-xs text-muted-foreground">{absensiList.length} murid</span>
+        <div className="px-4 py-3 bg-muted/40 border-b border-border flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold">Daftar Kehadiran Murid</h2>
+            <span className="text-xs text-muted-foreground">{absensiList.length} murid</span>
+          </div>
+          <div className="flex items-center gap-2">
+            {bisaEditAbsensi && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={handleSinkronMurid}
+                disabled={isSinkron}
+                title="Tambahkan murid yang baru didaftarkan ke daftar ini. Status yang sudah diisi tidak berubah."
+              >
+                <RefreshCw className={cn('size-3.5', isSinkron && 'animate-spin')} />
+                Perbarui daftar murid
+              </Button>
+            )}
+            {bisaKoreksi && (
+              <Button
+                type="button"
+                size="sm"
+                variant={modeKoreksi ? 'default' : 'outline'}
+                onClick={() => setModeKoreksi((v) => !v)}
+              >
+                {modeKoreksi ? <Check className="size-3.5" /> : <Pencil className="size-3.5" />}
+                {modeKoreksi ? 'Selesai edit' : 'Edit absensi'}
+              </Button>
+            )}
+          </div>
         </div>
+        {sedangKoreksi && (
+          <p className="px-4 py-2 text-xs text-amber-700 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400 border-b border-border">
+            Mode koreksi: perubahan status langsung tersimpan.
+          </p>
+        )}
         {absensiList.length === 0 ? (
           <p className="text-sm text-muted-foreground py-8 text-center">Tidak ada murid di kelas ini.</p>
         ) : (
@@ -241,8 +305,8 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
               <AbsensiMuridRow
                 key={absensi.id}
                 absensi={absensi}
-                readonly={!isBerlangsung}
-                onSave={(status, keterangan) => handleStatusMurid(absensi.murid_id, status, keterangan)}
+                readonly={!bisaEditAbsensi}
+                onSave={(status, keterangan) => handleSimpanAbsensi(absensi, status, keterangan)}
               />
             ))}
           </ul>

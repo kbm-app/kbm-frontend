@@ -51,6 +51,22 @@ export const useUpdateMurid = (id: number) => {
   })
 }
 
+export interface DampakTanggalMasuk {
+  jumlah: number
+  dari: string | null
+  sampai: string | null
+  per_status: Record<string, number>
+  kelas: string[]
+}
+
+/** Absensi yang akan terhapus bila tanggal bergabung murid diubah ke `tanggalMasuk` */
+export const cekDampakTanggalMasuk = async (muridId: number, tanggalMasuk: string) => {
+  const { data } = await api.get<DampakTanggalMasuk>(`/api/murid/${muridId}/dampak-tanggal-masuk`, {
+    params: { tanggal_masuk: tanggalMasuk },
+  })
+  return data
+}
+
 export const useMuridDeleteImpact = (id: number, options?: { enabled?: boolean }) =>
   useQuery({
     queryKey: ['murid', id, 'dampak-hapus'],
