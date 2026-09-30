@@ -3,22 +3,24 @@ import api from '@/lib/axios'
 import { Jadwal, JadwalFilters, JadwalMingguIni } from '@/types/jadwal'
 import { JadwalFormData } from '@/lib/schemas/jadwal'
 
-export const useJadwalList = (filters: JadwalFilters = {}) =>
+export const useJadwalList = (filters: JadwalFilters = {}, enabled = true) =>
   useQuery({
     queryKey: ['jadwal', filters],
     queryFn: async () => {
       const { data } = await api.get<{ data: Jadwal[] }>('/api/jadwal', { params: filters })
       return data.data
     },
+    enabled,
   })
 
-export const useJadwalMingguIni = (filters: Pick<JadwalFilters, 'program_id' | 'kelas_id'> = {}) =>
+export const useJadwalMingguIni = (filters: Pick<JadwalFilters, 'program_id' | 'kelas_id'> = {}, enabled = true) =>
   useQuery({
     queryKey: ['jadwal', 'minggu-ini', filters],
     queryFn: async () => {
       const { data } = await api.get<{ data: JadwalMingguIni }>('/api/jadwal/minggu-ini', { params: filters })
       return data.data
     },
+    enabled,
   })
 
 export const useJadwalKelas = (kelasId: number) =>

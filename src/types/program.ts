@@ -27,6 +27,16 @@ export const JENIS_COLOR: Record<JenisProgram, string> = {
   amal_sholih: 'bg-teal-100 text-teal-700',
 }
 
+// Warna pekat untuk penanda kecil (titik) di kalender
+export const JENIS_DOT_COLOR: Record<JenisProgram, string> = {
+  pengajian_rutin: 'bg-blue-500',
+  persinas_asad: 'bg-red-500',
+  keakraban: 'bg-orange-500',
+  kemandirian: 'bg-purple-500',
+  tahfidz: 'bg-green-500',
+  amal_sholih: 'bg-teal-500',
+}
+
 export interface Program {
   id: number
   nama: string

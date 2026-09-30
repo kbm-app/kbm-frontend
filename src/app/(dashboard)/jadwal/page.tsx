@@ -10,18 +10,20 @@ import { JENIS_COLOR, JENIS_LABEL } from '@/types/program'
 import { JadwalFormData } from '@/lib/schemas/jadwal'
 import JadwalForm from '@/components/jadwal/JadwalForm'
 import { JadwalKalenderMinggu } from '@/components/jadwal/JadwalKalenderMinggu'
+import { JadwalKalenderBulan } from '@/components/jadwal/JadwalKalenderBulan'
 import { DeleteDialog } from '@/components/ui/delete-dialog'
 import { Card, CardContent } from '@/components/ui/card'
 import { DetailRow } from '@/components/ui/detail-row'
 import { formSelectClass } from '@/components/ui/field'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import { CalendarDays, List, Pencil, Trash2, X } from 'lucide-react'
+import { format } from 'date-fns'
+import { CalendarDays, CalendarRange, List, Pencil, Trash2, X } from 'lucide-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 
 type Tab = 'daftar' | 'form'
 type Mode = 'tambah' | 'ganti'
-type ViewMode = 'kalender' | 'list'
+type ViewMode = 'bulan' | 'minggu' | 'list'
 
 function JadwalPageContent() {
   const searchParams = useSearchParams()
@@ -32,7 +34,7 @@ function JadwalPageContent() {
   const [tab, setTab] = useState<Tab>(searchParams.get('tambah') === '1' ? 'form' : 'daftar')
   const [mode, setMode] = useState<Mode>('tambah')
   const [selected, setSelected] = useState<Jadwal | null>(null)
-  const [viewMode, setViewMode] = useState<ViewMode>('kalender')
+  const [viewMode, setViewMode] = useState<ViewMode>('bulan')
   const [deleteTarget, setDeleteTarget] = useState<Jadwal | null>(null)
 
   // Filters
@@ -40,7 +42,7 @@ function JadwalPageContent() {
   const [filterKelasId, setFilterKelasId] = useState<number | undefined>()
   const [filterHari, setFilterHari] = useState<HariEnum | undefined>()
 
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const todayStr = format(new Date(), 'yyyy-MM-dd')
 
   const { data: programOptions } = useProgramList({ is_aktif: true })
   const { data: kelasOptions } = useKelasList({ is_aktif: true })
@@ -48,13 +50,18 @@ function JadwalPageContent() {
   const { data: mingguIni, isLoading: isLoadingKalender } = useJadwalMingguIni({
     program_id: filterProgramId,
     kelas_id: filterKelasId,
-  })
+  }, viewMode === 'minggu')
+  // Tanpa hanya_aktif: jadwal yang sudah diganti tetap tampil di bulan-bulan lampau
+  const { data: semuaJadwal, isLoading: isLoadingBulan } = useJadwalList({
+    program_id: filterProgramId,
+    kelas_id: filterKelasId,
+  }, viewMode === 'bulan')
   const { data: listJadwal, isLoading: isLoadingList } = useJadwalList({
     hanya_aktif: true,
     program_id: filterProgramId,
     kelas_id: filterKelasId,
     hari: filterHari,
-  })
+  }, viewMode === 'list')
   const { mutate: createJadwal, isPending: isCreating } = useCreateJadwal()
   const { mutate: deleteJadwal, isPending: isDeleting } = useDeleteJadwal()
   const { mutate: gantiJadwal, isPending: isGanting } = useGantiJadwal(selected?.id ?? 0)
@@ -105,7 +112,7 @@ function JadwalPageContent() {
       <div>
         <h1 className="text-xl font-semibold">Jadwal</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Template jadwal rutin — mingguan maupun bulanan. Kalender hanya menampilkan jadwal yang aktif pekan ini.
+          Template jadwal rutin — mingguan maupun bulanan. Kalender bulanan menampilkan jadwal sesuai masa berlakunya.
         </p>
       </div>
 
@@ -193,31 +200,49 @@ function JadwalPageContent() {
 
             {/* View toggle — pushed to right */}
             <div className="ml-auto flex items-center gap-0 rounded-lg border border-border overflow-hidden text-sm">
-              <button
-                onClick={() => setViewMode('kalender')}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 transition-colors',
-                  viewMode === 'kalender' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'
-                )}
-              >
-                <CalendarDays className="size-3.5" />
-                Kalender
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 transition-colors',
-                  viewMode === 'list' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'
-                )}
-              >
-                <List className="size-3.5" />
-                List
-              </button>
+              {([
+                { value: 'bulan', label: 'Bulan', icon: CalendarDays },
+                { value: 'minggu', label: 'Minggu', icon: CalendarRange },
+                { value: 'list', label: 'List', icon: List },
+              ] as const).map(({ value, label, icon: Icon }) => (
+                <button
+                  key={value}
+                  onClick={() => setViewMode(value)}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-1.5 transition-colors',
+                    viewMode === value ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted'
+                  )}
+                >
+                  <Icon className="size-3.5" />
+                  {label}
+                </button>
+              ))}
             </div>
           </div>
 
+          {/* Kalender Bulanan */}
+          {viewMode === 'bulan' && (
+            <>
+              {isLoadingBulan ? (
+                <div className="flex flex-col items-center gap-2 py-16 text-sm text-muted-foreground">
+                  <div className="size-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  Memuat jadwal...
+                </div>
+              ) : !semuaJadwal ? (
+                <div className="py-16 text-center text-sm text-muted-foreground">Gagal memuat jadwal.</div>
+              ) : (
+                <JadwalKalenderBulan
+                  jadwals={semuaJadwal}
+                  onEdit={isSuperAdmin ? openGanti : undefined}
+                  onDelete={isSuperAdmin ? setDeleteTarget : undefined}
+                  isSuperAdmin={isSuperAdmin}
+                />
+              )}
+            </>
+          )}
+
           {/* Kalender Mingguan */}
-          {viewMode === 'kalender' && (
+          {viewMode === 'minggu' && (
             <>
               {isLoadingKalender ? (
                 <div className="flex flex-col items-center gap-2 py-16 text-sm text-muted-foreground">
