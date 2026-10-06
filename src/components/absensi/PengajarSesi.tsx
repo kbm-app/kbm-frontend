@@ -11,6 +11,13 @@ import { formSelectClass } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { X } from 'lucide-react'
+import type { AxiosError } from 'axios'
+
+/** Pesan dari server (validasi/hak akses) agar penyebab gagal terlihat, bukan pesan umum saja */
+const pesanError = (error: unknown, fallback: string) => {
+  const res = (error as AxiosError<{ message?: string; errors?: Record<string, string[]> }>).response?.data
+  return Object.values(res?.errors ?? {})[0]?.[0] ?? res?.message ?? fallback
+}
 
 interface Props {
   pertemuan: Pertemuan
@@ -37,7 +44,7 @@ export function PengajarSesi({ pertemuan, bisaEdit, pengajarList }: Props) {
 
   const tambahPengajar = (pengajarId: number) => {
     simpan({ pengajar_id: pengajarId, status: 'hadir' }, {
-      onError: () => toast.error('Gagal menambah pengajar'),
+      onError: (e) => toast.error(pesanError(e, 'Gagal menambah pengajar')),
     })
   }
 
@@ -107,7 +114,7 @@ function PengajarSesiRow({
     if (s === 'digantikan') return
     setPenggantiId(null)
     simpan({ pengajar_id: a.pengajar_id, status: s }, {
-      onError: () => { toast.error('Gagal menyimpan status pengajar'); setStatus(a.status) },
+      onError: (e) => { toast.error(pesanError(e, 'Gagal menyimpan status pengajar')); setStatus(a.status) },
     })
   }
 
@@ -115,14 +122,14 @@ function PengajarSesiRow({
     if (!penggantiId) return
     simpan({ pengajar_id: a.pengajar_id, status: 'digantikan', pengganti_id: penggantiId }, {
       onSuccess: () => toast.success('Status pengajar disimpan'),
-      onError: () => toast.error('Gagal menyimpan status pengajar'),
+      onError: (e) => toast.error(pesanError(e, 'Gagal menyimpan status pengajar')),
     })
   }
 
   const handleLepas = () => {
     lepas(a.id, {
       onSuccess: () => toast.success(`${nama} dilepas dari sesi ini`),
-      onError: () => toast.error('Gagal melepas pengajar'),
+      onError: (e) => toast.error(pesanError(e, 'Gagal melepas pengajar')),
     })
   }
 
