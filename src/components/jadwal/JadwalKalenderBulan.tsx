@@ -9,8 +9,11 @@ import { id as localeId } from 'date-fns/locale'
 import { Jadwal, MINGGU_KE_LABEL } from '@/types/jadwal'
 import { JENIS_COLOR, JENIS_DOT_COLOR, JENIS_LABEL } from '@/types/program'
 import { cekTanggalSesuaiJadwal } from '@/lib/jadwal'
+import { cariLibur, formatRentangLibur } from '@/lib/libur'
+import { useLiburList } from '@/hooks/useLibur'
+import { Libur } from '@/types/libur'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react'
+import { CalendarOff, ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react'
 
 interface JadwalKalenderBulanProps {
   /** Semua jadwal (termasuk yang sudah/belum berlaku) — masa berlaku disaring per tanggal */
@@ -25,6 +28,8 @@ const MAKS_CHIP = 3
 
 const toKey = (d: Date) => format(d, 'yyyy-MM-dd')
 
+type JadwalHari = { jadwal: Jadwal; libur?: Libur }
+
 export function JadwalKalenderBulan({ jadwals, onDelete, onEdit, isSuperAdmin }: JadwalKalenderBulanProps) {
   const todayKey = toKey(new Date())
   const [bulan, setBulan] = useState(() => startOfMonth(new Date()))
@@ -35,19 +40,28 @@ export function JadwalKalenderBulan({ jadwals, onDelete, onEdit, isSuperAdmin }:
     end: endOfWeek(endOfMonth(bulan), { weekStartsOn: 1 }),
   }), [bulan])
 
-  // Jadwal per tanggal, memakai aturan yang sama dengan validasi absensi
+  const { data: libur } = useLiburList({ dari: toKey(days[0]), sampai: toKey(days[days.length - 1]) })
+
+  // Jadwal per tanggal, memakai aturan yang sama dengan validasi absensi, beserta liburnya (jika ada)
   const jadwalPerTanggal = useMemo(() => {
     const sorted = [...jadwals].sort((a, b) => a.jam_mulai.localeCompare(b.jam_mulai))
-    const map = new Map<string, Jadwal[]>()
+    const map = new Map<string, JadwalHari[]>()
     for (const day of days) {
       const key = toKey(day)
-      map.set(key, sorted.filter((j) => cekTanggalSesuaiJadwal(j, key) === null))
+      map.set(key, sorted
+        .filter((j) => cekTanggalSesuaiJadwal(j, key) === null)
+        .map((j) => ({ jadwal: j, libur: cariLibur(libur, { kelasId: j.kelas_id, jadwalId: j.id, tanggal: key }) })))
     }
     return map
-  }, [jadwals, days])
+  }, [jadwals, days, libur])
+
+  // Libur yang berlaku untuk semua kelas pada satu tanggal (ditampilkan di sel kalender)
+  const liburSemuaKelas = (key: string) =>
+    libur?.find((l) => l.kelas_id === null && l.tanggal_mulai.slice(0, 10) <= key && l.tanggal_selesai.slice(0, 10) >= key)
 
   const selectedDate = new Date(`${selectedKey}T00:00:00`)
   const selectedJadwals = jadwalPerTanggal.get(selectedKey) ?? []
+  const selectedLiburUmum = liburSemuaKelas(selectedKey)
 
   const gantiBulan = (target: Date) => {
     setBulan(startOfMonth(target))
@@ -105,6 +119,7 @@ export function JadwalKalenderBulan({ jadwals, onDelete, onEdit, isSuperAdmin }:
             const diBulanIni = isSameMonth(day, bulan)
             const isToday = key === todayKey
             const isSelected = key === selectedKey
+            const liburUmum = liburSemuaKelas(key)
             return (
               <button
                 key={key}
@@ -124,28 +139,43 @@ export function JadwalKalenderBulan({ jadwals, onDelete, onEdit, isSuperAdmin }:
                   {day.getDate()}
                 </span>
 
-                {/* Mobile — titik warna per jadwal */}
-                {items.length > 0 && (
+                {liburUmum && (
+                  <span
+                    className="self-center md:self-stretch truncate rounded bg-muted px-1 py-0.5 text-[9px] md:text-[10px] font-medium text-muted-foreground"
+                    title={liburUmum.keterangan}
+                  >
+                    <span className="md:hidden">Libur</span>
+                    <span className="hidden md:inline">Libur · {liburUmum.keterangan}</span>
+                  </span>
+                )}
+
+                {/* Mobile — titik warna per jadwal; jadwal yang libur berupa lingkaran kosong */}
+                {items.length > 0 && !liburUmum && (
                   <div className="md:hidden flex flex-wrap justify-center gap-0.5">
-                    {items.slice(0, 4).map((j) => (
+                    {items.slice(0, 4).map(({ jadwal: j, libur: l }) => (
                       <span
                         key={j.id}
-                        className={cn('size-1.5 rounded-full', j.program ? JENIS_DOT_COLOR[j.program.jenis] : 'bg-muted-foreground')}
+                        className={cn(
+                          'size-1.5 rounded-full',
+                          l ? 'ring-1 ring-inset ring-muted-foreground/60'
+                            : j.program ? JENIS_DOT_COLOR[j.program.jenis] : 'bg-muted-foreground'
+                        )}
                       />
                     ))}
                   </div>
                 )}
 
-                {/* Desktop — chip jam + program */}
+                {/* Desktop — chip jam + program; jadwal yang libur dicoret */}
                 <div className={cn('hidden md:flex flex-col gap-0.5', !diBulanIni && 'opacity-60')}>
-                  {items.slice(0, MAKS_CHIP).map((j) => (
+                  {items.slice(0, MAKS_CHIP).map(({ jadwal: j, libur: l }) => (
                     <span
                       key={j.id}
                       className={cn(
                         'truncate rounded px-1.5 py-0.5 text-[10px] leading-tight',
-                        j.program ? JENIS_COLOR[j.program.jenis] : 'bg-muted text-muted-foreground'
+                        l ? 'bg-muted text-muted-foreground line-through'
+                          : j.program ? JENIS_COLOR[j.program.jenis] : 'bg-muted text-muted-foreground'
                       )}
-                      title={`${j.jam_mulai.slice(0, 5)} ${j.program?.nama ?? ''}${j.kelas ? ` · ${j.kelas.nama}` : ''}`}
+                      title={`${j.jam_mulai.slice(0, 5)} ${j.program?.nama ?? ''}${j.kelas ? ` · ${j.kelas.nama}` : ''}${l ? ` — Libur: ${l.keterangan}` : ''}`}
                     >
                       <span className="font-semibold">{j.jam_mulai.slice(0, 5)}</span> {j.program?.nama ?? '-'}
                     </span>
@@ -171,18 +201,28 @@ export function JadwalKalenderBulan({ jadwals, onDelete, onEdit, isSuperAdmin }:
           </span>
         </p>
 
+        {selectedLiburUmum && (
+          <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs">
+            <CalendarOff className="size-4 text-muted-foreground shrink-0" />
+            <span>
+              <span className="font-medium">Libur semua kelas: {selectedLiburUmum.keterangan}</span>
+              <span className="text-muted-foreground"> ({formatRentangLibur(selectedLiburUmum)})</span>
+            </span>
+          </div>
+        )}
+
         {selectedJadwals.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border py-8 text-center text-sm text-muted-foreground">
             Tidak ada jadwal pada tanggal ini.
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {selectedJadwals.map((j) => (
-              <div key={j.id} className="rounded-xl border border-border bg-card p-3.5 space-y-2">
+            {selectedJadwals.map(({ jadwal: j, libur: l }) => (
+              <div key={j.id} className={cn('rounded-xl border border-border bg-card p-3.5 space-y-2', l && 'bg-muted/30')}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-semibold text-sm">{j.program?.nama ?? '-'}</span>
+                      <span className={cn('font-semibold text-sm', l && 'line-through text-muted-foreground')}>{j.program?.nama ?? '-'}</span>
                       {j.program && (
                         <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full', JENIS_COLOR[j.program.jenis])}>
                           {JENIS_LABEL[j.program.jenis]}
@@ -221,6 +261,11 @@ export function JadwalKalenderBulan({ jadwals, onDelete, onEdit, isSuperAdmin }:
                     </div>
                   )}
                 </div>
+                {l && (
+                  <p className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                    <CalendarOff className="size-3" /> Libur: {l.keterangan}
+                  </p>
+                )}
                 <div className="flex flex-col gap-0.5 text-xs text-muted-foreground pt-2 border-t border-border">
                   <span>Kelas: <span className="text-foreground">{j.kelas?.nama ?? <em>Semua kelas</em>}</span></span>
                   <span>Pengajar: <span className="text-foreground">{j.pengajar?.user?.name ?? '-'}</span></span>

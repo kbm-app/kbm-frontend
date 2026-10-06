@@ -11,13 +11,14 @@ import { JadwalFormData } from '@/lib/schemas/jadwal'
 import JadwalForm from '@/components/jadwal/JadwalForm'
 import { JadwalKalenderMinggu } from '@/components/jadwal/JadwalKalenderMinggu'
 import { JadwalKalenderBulan } from '@/components/jadwal/JadwalKalenderBulan'
+import { DaftarLibur } from '@/components/libur/DaftarLibur'
 import { DeleteDialog } from '@/components/ui/delete-dialog'
 import { Card, CardContent } from '@/components/ui/card'
 import { DetailRow } from '@/components/ui/detail-row'
 import { formSelectClass } from '@/components/ui/field'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
-import { format } from 'date-fns'
+import { addYears, format } from 'date-fns'
 import { CalendarDays, CalendarRange, List, Pencil, Trash2, X } from 'lucide-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 
@@ -231,12 +232,22 @@ function JadwalPageContent() {
               ) : !semuaJadwal ? (
                 <div className="py-16 text-center text-sm text-muted-foreground">Gagal memuat jadwal.</div>
               ) : (
-                <JadwalKalenderBulan
-                  jadwals={semuaJadwal}
-                  onEdit={isSuperAdmin ? openGanti : undefined}
-                  onDelete={isSuperAdmin ? setDeleteTarget : undefined}
-                  isSuperAdmin={isSuperAdmin}
-                />
+                <>
+                  <DaftarLibur
+                    title="Libur mendatang"
+                    dari={todayStr}
+                    sampai={format(addYears(new Date(), 1), 'yyyy-MM-dd')}
+                    kelasId={filterKelasId}
+                    bolehKelola={user?.role !== 'murid'}
+                    emptyText="Belum ada libur yang dijadwalkan."
+                  />
+                  <JadwalKalenderBulan
+                    jadwals={semuaJadwal}
+                    onEdit={isSuperAdmin ? openGanti : undefined}
+                    onDelete={isSuperAdmin ? setDeleteTarget : undefined}
+                    isSuperAdmin={isSuperAdmin}
+                  />
+                </>
               )}
             </>
           )}

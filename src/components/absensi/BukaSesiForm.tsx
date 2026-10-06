@@ -15,6 +15,12 @@ import { toast } from 'sonner'
 import { HARI_LABEL } from '@/types/jadwal'
 import { JS_DAY_TO_HARI } from '@/lib/constants/absensi'
 import { cekTanggalSesuaiJadwal } from '@/lib/jadwal'
+import { useState } from 'react'
+import { format } from 'date-fns'
+import { useDeleteLibur, useLiburList } from '@/hooks/useLibur'
+import { cakupanLibur, cariLibur, formatRentangLibur } from '@/lib/libur'
+import { LiburDialog } from '@/components/libur/LiburDialog'
+import { CalendarOff } from 'lucide-react'
 
 interface Props {
   onSuccess: (pertemuanId: number) => void
@@ -26,7 +32,7 @@ const inputClass =
 
 export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
   const now = new Date()
-  const tanggalHariIni = now.toISOString().split('T')[0]
+  const tanggalHariIni = format(now, 'yyyy-MM-dd')
   const jamSekarang = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
   const hariIni = JS_DAY_TO_HARI[now.getDay()]
 
@@ -70,6 +76,26 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
   const selectedJadwal = jadwalList?.find((j) => j.id === jadwalId)
   const tanggal = watch('tanggal')
   const jadwalError = selectedJadwal ? cekTanggalSesuaiJadwal(selectedJadwal, tanggal) : null
+
+  // Libur pada tanggal terpilih untuk kelas ini
+  const [showLibur, setShowLibur] = useState(false)
+  const { data: liburList } = useLiburList(
+    { dari: tanggal, sampai: tanggal, kelas_id: kelasId },
+    !!kelasId && !!tanggal
+  )
+  const { mutate: hapusLibur, isPending: isHapusLibur } = useDeleteLibur()
+  const liburJadwal = selectedJadwal && !jadwalError
+    ? cariLibur(liburList, { kelasId, jadwalId: selectedJadwal.id, tanggal })
+    : undefined
+  // Sesi tanpa jadwal (mis. sesi pengganti) tetap boleh dibuka di hari libur — cukup diberi tahu
+  const liburTanpaJadwal = !selectedJadwal && kelasId
+    ? cariLibur(liburList, { kelasId, jadwalId: null, tanggal })
+    : undefined
+  const labelLibur = (j: NonNullable<typeof jadwalList>[number]) =>
+    cekTanggalSesuaiJadwal(j, tanggal) === null && cariLibur(liburList, { kelasId, jadwalId: j.id, tanggal })
+      ? ' (libur)'
+      : ''
+  const kelasNama = kelasList?.data.find((k) => k.id === kelasId)?.nama ?? ''
 
   const kelasReg = register('kelas_id', { valueAsNumber: true })
 
@@ -159,6 +185,7 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
                       {' — '}{j.jam_mulai.slice(0, 5)}
                       {j.pengajar?.user?.name ? ` — ${j.pengajar.user.name}` : ''}
                       {labelJadwalTerpakai(j.id)}
+                      {labelLibur(j)}
                     </option>
                   ))}
                 </optgroup>
@@ -173,6 +200,7 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
                       {' — '}{j.jam_mulai.slice(0, 5)}
                       {j.pengajar?.user?.name ? ` — ${j.pengajar.user.name}` : ''}
                       {labelJadwalTerpakai(j.id)}
+                      {labelLibur(j)}
                     </option>
                   ))}
                 </optgroup>
@@ -188,6 +216,40 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
                 <p className="text-muted-foreground text-xs">{selectedJadwal.pengajar.user.name}</p>
               )}
             </div>
+          )}
+
+          {/* Jadwal terpilih diliburkan pada tanggal ini */}
+          {liburJadwal && (
+            <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30 px-3.5 py-2.5 text-sm space-y-1.5">
+              <p className="flex items-center gap-1.5 font-medium text-amber-800 dark:text-amber-300">
+                <CalendarOff className="size-4" /> Diliburkan: {liburJadwal.keterangan}
+              </p>
+              <p className="text-xs text-amber-700/90 dark:text-amber-400/90">
+                {formatRentangLibur(liburJadwal)} · {cakupanLibur(liburJadwal)}.{' '}
+                {liburJadwal.jadwal_id
+                  ? 'Hapus liburnya bila sesi tetap diadakan.'
+                  : 'Bagian dari libur periode — hapus dari daftar libur di tab Riwayat bila sesi tetap diadakan.'}
+              </p>
+              {liburJadwal.jadwal_id && (
+                <button
+                  type="button"
+                  disabled={isHapusLibur}
+                  onClick={() => hapusLibur(liburJadwal.id, {
+                    onSuccess: () => toast.success('Libur dihapus, sesi bisa dibuka'),
+                    onError: () => toast.error('Gagal menghapus libur'),
+                  })}
+                  className="text-xs font-medium text-amber-800 dark:text-amber-300 underline underline-offset-2 hover:no-underline"
+                >
+                  {isHapusLibur ? 'Menghapus...' : 'Hapus libur'}
+                </button>
+              )}
+            </div>
+          )}
+
+          {liburTanpaJadwal && (
+            <p className="rounded-lg border border-border bg-muted/40 px-3.5 py-2 text-xs text-muted-foreground">
+              Tanggal ini termasuk libur ({liburTanpaJadwal.keterangan}). Sesi tanpa jadwal, mis. sesi pengganti, tetap bisa dibuka.
+            </p>
           )}
 
           {/* Program — hanya tampil jika tidak ada jadwal terpilih */}
@@ -242,10 +304,25 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
         >
           Batal
         </button>
-        <Button type="submit" size="lg" disabled={isPending || !!jadwalError} className="flex-1">
+        {selectedJadwal && !jadwalError && !liburJadwal && (
+          <Button type="button" variant="outline" size="lg" onClick={() => setShowLibur(true)} className="flex-1">
+            <CalendarOff className="size-4" />
+            Liburkan
+          </Button>
+        )}
+        <Button type="submit" size="lg" disabled={isPending || !!jadwalError || !!liburJadwal} className="flex-1">
           {isPending ? 'Membuka...' : 'Buka Sesi'}
         </Button>
       </div>
+
+      {selectedJadwal && kelasId && (
+        <LiburDialog
+          open={showLibur}
+          onOpenChange={setShowLibur}
+          sesi={{ kelasId, kelasNama, jadwal: selectedJadwal, tanggal }}
+          onSuccess={onCancel}
+        />
+      )}
     </form>
   )
 }

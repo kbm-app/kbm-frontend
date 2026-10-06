@@ -17,6 +17,7 @@ import SesiView from '@/components/absensi/SesiView'
 import TabRekapKelas from '@/components/absensi/TabRekapKelas'
 import TabRekapMurid from '@/components/absensi/TabRekapMurid'
 import { RiwayatList } from '@/components/absensi/RiwayatList'
+import { DaftarLibur } from '@/components/libur/DaftarLibur'
 
 type TabTetap = 'berlangsung' | 'riwayat' | 'rekap-kelas' | 'rekap-murid'
 type TabDinamis = 'buka-sesi' | 'sesi-berlangsung' | 'detail-sesi'
@@ -217,6 +218,15 @@ export default function AbsensiPage() {
               ))}
             </select>
           </div>
+
+          <DaftarLibur
+            title="Libur bulan ini"
+            dari={format(new Date(tahun, bulan - 1, 1), 'yyyy-MM-dd')}
+            sampai={format(new Date(tahun, bulan, 0), 'yyyy-MM-dd')}
+            kelasId={kelasId}
+            bolehKelola
+            emptyText="Tidak ada libur di bulan ini."
+          />
 
           {loadingRiwayat ? (
             <PageLoading />
