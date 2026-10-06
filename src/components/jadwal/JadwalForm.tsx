@@ -5,13 +5,14 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { jadwalSchema, JadwalFormData } from '@/lib/schemas/jadwal'
 import { HARI_LABEL, HARI_ORDER, MINGGU_KE_LABEL } from '@/types/jadwal'
 import { useProgramList } from '@/hooks/useProgram'
-import { useKelasList } from '@/hooks/useKelas'
+import { useKelasList, usePengajarKelas } from '@/hooks/useKelas'
 import { usePengajarList } from '@/hooks/usePengajar'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Field, formSelectClass } from '@/components/ui/field'
+import { PilihPengajar } from '@/components/pengajar/PilihPengajar'
 
 interface JadwalFormProps {
   defaultValues?: Partial<JadwalFormData>
@@ -34,6 +35,7 @@ export default function JadwalForm({
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<JadwalFormData>({
     resolver: zodResolver(jadwalSchema),
@@ -50,6 +52,10 @@ export default function JadwalForm({
   const { data: programData } = useProgramList({ is_aktif: true })
   const { data: kelasData } = useKelasList({ is_aktif: true })
   const { data: pengajarData } = usePengajarList({ is_aktif: true })
+  // Jadwal satu kelas hanya untuk pengajar kelas itu; jadwal semua kelas boleh semua pengajar
+  const kelasId = watch('kelas_id')
+  const { data: pengajarKelas } = usePengajarKelas(kelasId)
+  const pengajarOptions = kelasId ? pengajarKelas : pengajarData?.data ?? []
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -77,7 +83,11 @@ export default function JadwalForm({
             <Field label="Kelas" error={errors.kelas_id?.message}>
               <select
                 className={formSelectClass}
-                {...register('kelas_id', { setValueAs: (v) => v === '' ? null : Number(v) })}
+                {...register('kelas_id', {
+                  setValueAs: (v) => v === '' ? null : Number(v),
+                  // Pengajar dari kelas sebelumnya dilepas agar tidak tersimpan ke kelas lain
+                  onChange: () => setValue('pengajar_ids', []),
+                })}
               >
                 <option value="">Semua kelas</option>
                 {kelasData?.data.map((k) => (
@@ -86,17 +96,21 @@ export default function JadwalForm({
               </select>
             </Field>
 
-            <Field label="Pengajar" error={errors.pengajar_id?.message}>
-              <select
-                className={formSelectClass}
-                {...register('pengajar_id', { setValueAs: (v) => v === '' ? null : Number(v) })}
+            <div className="col-span-2">
+              <Field
+                label="Pengajar"
+                error={errors.pengajar_ids?.message}
+                hint={kelasId && pengajarKelas.length === 0
+                  ? 'Belum ada pengajar yang ditugaskan di kelas ini — atur dulu di halaman Kelas.'
+                  : 'Boleh lebih dari satu; siapa yang bertugas dipilih saat buka sesi'}
               >
-                <option value="">Tidak ditentukan</option>
-                {pengajarData?.data.map((p) => (
-                  <option key={p.id} value={p.id}>{p.user?.name}</option>
-                ))}
-              </select>
-            </Field>
+                <PilihPengajar
+                  value={watch('pengajar_ids') ?? []}
+                  onChange={(ids) => setValue('pengajar_ids', ids, { shouldDirty: true })}
+                  pengajarList={pengajarOptions}
+                />
+              </Field>
+            </div>
 
             <Field label="Frekuensi" error={errors.frekuensi?.message}>
               <select className={formSelectClass} {...register('frekuensi')}>

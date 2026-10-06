@@ -9,6 +9,7 @@ import { Field } from '@/components/ui/field'
 import { LaporanMusyawarah, EvaluasiPerKelas } from '@/types/musyawarah'
 import { useUpdateLaporan, useRegenerateLaporan } from '@/hooks/useMusyawarah'
 import { cn } from '@/lib/utils'
+import { daftarGuruKelas } from '@/lib/kelas'
 
 interface Props {
   musyawarahId: number
@@ -57,6 +58,11 @@ export function LaporanKelasCard({ musyawarahId, laporan, evaluasi, isSelesai }:
       >
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm">{laporan.kelas?.nama ?? `Kelas #${laporan.kelas_id}`}</p>
+          {!!laporan.kelas?.kelas_guru?.length && (
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Pengajar: {daftarGuruKelas(laporan.kelas.kelas_guru).map((g) => g.asisten ? `${g.nama} (asisten)` : g.nama).join(', ')}
+            </p>
+          )}
           <div className="flex items-center gap-x-3 gap-y-1 mt-0.5 flex-wrap">
             <Stat label="Murid" value={`${laporan.snapshot_jumlah_murid} murid`} />
             {kehadiran !== null && (

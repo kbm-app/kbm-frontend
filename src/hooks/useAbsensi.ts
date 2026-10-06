@@ -149,6 +149,19 @@ export const useInputAbsensiPengajar = (pertemuanId: number) => {
   })
 }
 
+// Lepas satu pengajar dari sesi (minimal satu pengajar tersisa)
+export const useHapusPengajarSesi = (pertemuanId: number) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (absensiPengajarId: number) =>
+      api.delete(`/api/pertemuan/${pertemuanId}/absensi-pengajar/${absensiPengajarId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pertemuan', pertemuanId] })
+      queryClient.invalidateQueries({ queryKey: ['pertemuan'] })
+    },
+  })
+}
+
 // --- Rekap ---
 
 export const useRekapAbsensiMurid = (

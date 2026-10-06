@@ -11,6 +11,7 @@ import { Pagination } from '@/components/ui/pagination'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { Tab, Mode } from '@/types/common'
 import { cn } from '@/lib/utils'
+import { daftarGuruKelas } from '@/lib/kelas'
 import { toast } from 'sonner'
 import { Users, GraduationCap, Eye, Pencil, Trash2 } from 'lucide-react'
 import { useIsSuperAdmin } from '@/hooks/useAuth'
@@ -151,7 +152,7 @@ export default function KelasPage() {
               <thead className="bg-muted/40 border-b border-border">
                 <tr>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Nama Kelas</th>
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pengajar Utama</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Pengajar</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Murid Aktif</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
                   <th className="px-4 py-3" />
@@ -180,7 +181,7 @@ export default function KelasPage() {
                   </tr>
                 ) : (
                   data.data.map((kelas) => {
-                    const pengajarUtama = kelas.kelas_guru?.find((kg) => kg.peran === 'utama')
+                    const guru = daftarGuruKelas(kelas.kelas_guru)
                     return (
                       <tr key={kelas.id} className="hover:bg-muted/40 transition-colors">
                         <td className="px-4 py-3.5">
@@ -192,7 +193,16 @@ export default function KelasPage() {
                           )}
                         </td>
                         <td className="px-4 py-3.5 text-muted-foreground">
-                          {pengajarUtama?.pengajar?.user?.name ?? (
+                          {guru.length > 0 ? (
+                            <div className="space-y-0.5">
+                              {guru.map((g) => (
+                                <p key={g.nama}>
+                                  {g.nama}
+                                  {g.asisten && <span className="ml-1 text-[11px] text-muted-foreground/80">(asisten)</span>}
+                                </p>
+                              ))}
+                            </div>
+                          ) : (
                             <span className="italic text-xs">Belum ada</span>
                           )}
                         </td>
@@ -247,7 +257,7 @@ export default function KelasPage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {data.data.map((kelas) => {
-                  const pengajarUtama = kelas.kelas_guru?.find((kg) => kg.peran === 'utama')
+                  const guru = daftarGuruKelas(kelas.kelas_guru)
                   return (
                     <button
                       key={kelas.id}
@@ -268,10 +278,10 @@ export default function KelasPage() {
                           <Users className="size-3.5" />
                           {kelas.murid_aktif_count ?? 0} murid
                         </span>
-                        <span className="flex items-center gap-1 min-w-0">
-                          <GraduationCap className="size-3.5 shrink-0" />
-                          <span className="truncate">
-                            {pengajarUtama?.pengajar?.user?.name ?? 'Belum ada pengajar'}
+                        <span className="flex items-start gap-1 min-w-0">
+                          <GraduationCap className="size-3.5 shrink-0 mt-px" />
+                          <span className="line-clamp-2" title={guru.map((g) => g.nama).join(', ')}>
+                            {guru.length > 0 ? guru.map((g) => g.nama).join(', ') : 'Belum ada pengajar'}
                           </span>
                         </span>
                       </div>

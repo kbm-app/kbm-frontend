@@ -4,7 +4,7 @@ export const jadwalSchema = z
   .object({
     program_id: z.number({ error: 'Program wajib dipilih' }).int().min(1, 'Program wajib dipilih'),
     kelas_id: z.number().int().positive().optional().nullable(),
-    pengajar_id: z.number().int().positive().optional().nullable(),
+    pengajar_ids: z.array(z.number().int().positive()).optional(),
     frekuensi: z.enum(['mingguan', 'bulanan'], { error: 'Frekuensi wajib dipilih' }),
     minggu_ke: z.number().int().min(1).max(4).optional().nullable(),
     hari: z.enum(

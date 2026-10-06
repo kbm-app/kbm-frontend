@@ -1,4 +1,5 @@
 import { HARI_LABEL, Jadwal } from '@/types/jadwal'
+import { Pengajar } from '@/types/pengajar'
 import { JS_DAY_TO_HARI } from '@/lib/constants/absensi'
 
 /**
@@ -27,4 +28,10 @@ export function cekTanggalSesuaiJadwal(jadwal: Jadwal, tanggal: string): string 
   }
 
   return null
+}
+
+/** "Ust. A, Ust. B" — atau fallback bila belum ada pengajar */
+export function namaPengajar(pengajar: Pengajar[] | undefined, fallback = '-'): string {
+  const nama = (pengajar ?? []).map((p) => p.user?.name).filter(Boolean)
+  return nama.length ? nama.join(', ') : fallback
 }

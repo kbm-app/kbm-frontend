@@ -5,6 +5,7 @@ import { usePertemuanList } from '@/hooks/useAbsensi'
 import { useKelasList } from '@/hooks/useKelas'
 import { Pertemuan } from '@/types/absensi'
 import { cn } from '@/lib/utils'
+import { namaPengajarSesi } from '@/lib/pertemuan'
 import { format } from 'date-fns'
 import { id as localeId } from 'date-fns/locale'
 import { bulanOptions, tahunOptions } from '@/lib/date-options'
@@ -277,7 +278,7 @@ function SesiCard({ pertemuan, onLanjutkan }: { pertemuan: Pertemuan; onLanjutka
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-semibold">{pertemuan.kelas?.nama ?? '-'}</p>
-          <p className="text-xs text-muted-foreground">{pertemuan.program?.nama ?? '-'}</p>
+          <p className="text-xs text-muted-foreground">{pertemuan.program?.nama ?? '-'} · {namaPengajarSesi(pertemuan)}</p>
         </div>
         <span className="inline-flex items-center gap-1 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium shrink-0">
           <PlayCircle className="size-3" /> Berlangsung
@@ -298,7 +299,7 @@ function BerlangsungRow({ pertemuan, onLanjutkan }: { pertemuan: Pertemuan; onLa
     <tr className="hover:bg-muted/40 transition-colors">
       <td className="px-4 py-3.5 font-medium">{pertemuan.kelas?.nama ?? '-'}</td>
       <td className="px-4 py-3.5 text-muted-foreground">{pertemuan.program?.nama ?? '-'}</td>
-      <td className="px-4 py-3.5 text-muted-foreground">{pertemuan.pengajar?.user?.name ?? '-'}</td>
+      <td className="px-4 py-3.5 text-muted-foreground">{namaPengajarSesi(pertemuan)}</td>
       <td className="px-4 py-3.5 text-muted-foreground whitespace-nowrap">
         {format(new Date(pertemuan.tanggal), 'EEE, d MMM', { locale: localeId })} · {pertemuan.jam_mulai.slice(0, 5)}
       </td>

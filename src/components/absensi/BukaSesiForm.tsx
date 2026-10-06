@@ -4,9 +4,8 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { bukaSesiSchema, BukaSesiFormData } from '@/lib/schemas/absensi'
 import { useBukaSesi, usePertemuanList } from '@/hooks/useAbsensi'
-import { useKelasList } from '@/hooks/useKelas'
+import { useKelasList, usePengajarKelas } from '@/hooks/useKelas'
 import { useProgramList } from '@/hooks/useProgram'
-import { usePengajarList } from '@/hooks/usePengajar'
 import { useJadwalKelas } from '@/hooks/useJadwal'
 import { Field, formSelectClass } from '@/components/ui/field'
 import { Button, buttonVariants } from '@/components/ui/button'
@@ -14,7 +13,8 @@ import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { HARI_LABEL } from '@/types/jadwal'
 import { JS_DAY_TO_HARI } from '@/lib/constants/absensi'
-import { cekTanggalSesuaiJadwal } from '@/lib/jadwal'
+import { cekTanggalSesuaiJadwal, namaPengajar } from '@/lib/jadwal'
+import { PilihPengajar } from '@/components/pengajar/PilihPengajar'
 import { useState } from 'react'
 import { format } from 'date-fns'
 import { useDeleteLibur, useLiburList } from '@/hooks/useLibur'
@@ -39,11 +39,10 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
   const { mutate: bukaSesi, isPending } = useBukaSesi()
   const { data: kelasList } = useKelasList({ is_aktif: true })
   const { data: programList } = useProgramList({ is_aktif: true })
-  const { data: pengajarList } = usePengajarList({})
 
   const { register, handleSubmit, watch, setValue, resetField, formState: { errors } } = useForm<BukaSesiFormData>({
     resolver: zodResolver(bukaSesiSchema),
-    defaultValues: { tanggal: tanggalHariIni, jam_mulai: jamSekarang },
+    defaultValues: { tanggal: tanggalHariIni, jam_mulai: jamSekarang, pengajar_ids: [] },
   })
 
   const kelasId = watch('kelas_id')
@@ -97,6 +96,11 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
       : ''
   const kelasNama = kelasList?.data.find((k) => k.id === kelasId)?.nama ?? ''
 
+  // Pengajar yang bertugas hanya dari pengajar yang ditugaskan di kelas ini
+  const { data: pengajarKelas, isLoading: loadingPengajarKelas } = usePengajarKelas(kelasId)
+  const idPengajarKelas = new Set(pengajarKelas.map((p) => p.id))
+  const pengajarJadwalDiKelas = (selectedJadwal?.pengajar ?? []).filter((p) => idPengajarKelas.has(p.id))
+
   const kelasReg = register('kelas_id', { valueAsNumber: true })
 
   const onSubmit = (data: BukaSesiFormData) => {
@@ -127,7 +131,7 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
             kelasReg.onChange(e)
             setValue('jadwal_id', null)
             resetField('program_id')
-            resetField('pengajar_id')
+            setValue('pengajar_ids', [])
             setValue('jam_mulai', jamSekarang)
           }}
           className={formSelectClass}
@@ -158,7 +162,7 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
 
                 if (!id) {
                   resetField('program_id')
-                  resetField('pengajar_id')
+                  setValue('pengajar_ids', [])
                   setValue('jam_mulai', jamSekarang)
                   return
                 }
@@ -166,8 +170,9 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
                 const jadwal = jadwalList?.find((j) => j.id === id)
                 if (!jadwal) return
                 setValue('program_id', jadwal.program_id)
-                if (jadwal.pengajar_id) setValue('pengajar_id', jadwal.pengajar_id)
-                else resetField('pengajar_id')
+                // Satu pengajar → langsung terpilih; lebih dari satu → pilih siapa yang bertugas hari ini
+                const pengajarJadwal = (jadwal.pengajar ?? []).filter((p) => idPengajarKelas.has(p.id))
+                setValue('pengajar_ids', pengajarJadwal.length === 1 ? [pengajarJadwal[0].id] : [])
                 setValue('jam_mulai', jadwal.jam_mulai.slice(0, 5))
               }}
               disabled={loadingJadwal}
@@ -183,7 +188,7 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
                     <option key={j.id} value={j.id} disabled={jadwalTerpakai(j.id)}>
                       {j.program?.nama ?? `Program #${j.program_id}`}
                       {' — '}{j.jam_mulai.slice(0, 5)}
-                      {j.pengajar?.user?.name ? ` — ${j.pengajar.user.name}` : ''}
+                      {j.pengajar?.length ? ` — ${namaPengajar(j.pengajar)}` : ''}
                       {labelJadwalTerpakai(j.id)}
                       {labelLibur(j)}
                     </option>
@@ -198,7 +203,7 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
                       {HARI_LABEL[j.hari]}
                       {' — '}{j.program?.nama ?? `Program #${j.program_id}`}
                       {' — '}{j.jam_mulai.slice(0, 5)}
-                      {j.pengajar?.user?.name ? ` — ${j.pengajar.user.name}` : ''}
+                      {j.pengajar?.length ? ` — ${namaPengajar(j.pengajar)}` : ''}
                       {labelJadwalTerpakai(j.id)}
                       {labelLibur(j)}
                     </option>
@@ -212,8 +217,8 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
           {selectedJadwal && (
             <div className="rounded-lg bg-muted/50 border border-border/60 px-3.5 py-2.5 text-sm space-y-0.5">
               <p className="font-medium">{selectedJadwal.program?.nama}</p>
-              {selectedJadwal.pengajar?.user?.name && (
-                <p className="text-muted-foreground text-xs">{selectedJadwal.pengajar.user.name}</p>
+              {!!selectedJadwal.pengajar?.length && (
+                <p className="text-muted-foreground text-xs">Pengajar jadwal: {namaPengajar(selectedJadwal.pengajar)}</p>
               )}
             </div>
           )}
@@ -264,17 +269,23 @@ export default function BukaSesiForm({ onSuccess, onCancel }: Props) {
             </Field>
           )}
 
-          {/* Pengajar — tampil jika tidak ada jadwal terpilih, atau jadwal tidak punya pengajar */}
-          {!selectedJadwal?.pengajar_id && (
-            <Field label="Pengajar" error={errors.pengajar_id?.message}>
-              <select {...register('pengajar_id', { valueAsNumber: true })} className={formSelectClass}>
-                <option value="">Pilih pengajar...</option>
-                {pengajarList?.data.map((p) => (
-                  <option key={p.id} value={p.id}>{p.user?.name ?? `Pengajar #${p.id}`}</option>
-                ))}
-              </select>
-            </Field>
-          )}
+          {/* Pengajar yang bertugas di sesi ini — pengajar jadwal tampil sebagai pilihan centang */}
+          <Field
+            label="Pengajar yang bertugas"
+            error={errors.pengajar_ids?.message}
+            hint={!loadingPengajarKelas && pengajarKelas.length === 0
+              ? 'Belum ada pengajar yang ditugaskan di kelas ini — atur dulu di halaman Kelas.'
+              : pengajarJadwalDiKelas.length > 1
+                ? 'Centang siapa yang mengajar di sesi ini (boleh lebih dari satu). Yang pertama dipilih menjadi pengajar utama.'
+                : 'Hanya pengajar yang ditugaskan di kelas ini. Boleh lebih dari satu bila mengajar bergantian atau bersamaan.'}
+          >
+            <PilihPengajar
+              value={watch('pengajar_ids') ?? []}
+              onChange={(ids) => setValue('pengajar_ids', ids, { shouldValidate: !!errors.pengajar_ids })}
+              pengajarList={pengajarKelas}
+              disarankan={pengajarJadwalDiKelas}
+            />
+          </Field>
 
           <div className="grid grid-cols-2 gap-4">
             <Field label="Tanggal" error={errors.tanggal?.message ?? jadwalError ?? undefined}>

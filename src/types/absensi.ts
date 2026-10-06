@@ -54,7 +54,8 @@ export interface Pertemuan {
   pengajar?: Pengajar
   jadwal?: Jadwal | null
   absensi_murid?: AbsensiMurid[]
-  absensi_pengajar?: AbsensiPengajar
+  /** Satu baris per pengajar yang bertugas di sesi */
+  absensi_pengajar?: AbsensiPengajar[]
   total_murid?: number
   total_hadir?: number
   total_alpha?: number

@@ -44,7 +44,6 @@ export interface Jadwal {
   id: number
   program_id: number
   kelas_id: number | null
-  pengajar_id: number | null
   frekuensi: FrekuensiEnum
   minggu_ke: number | null
   hari: HariEnum
@@ -56,7 +55,8 @@ export interface Jadwal {
   updated_at: string
   program?: Program
   kelas?: Kelas
-  pengajar?: Pengajar
+  /** Semua pengajar jadwal; yang bertugas di tiap sesi dipilih saat buka sesi */
+  pengajar?: Pengajar[]
 }
 
 export interface JadwalFilters {

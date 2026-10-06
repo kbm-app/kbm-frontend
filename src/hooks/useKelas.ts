@@ -1,3 +1,4 @@
+import { Pengajar } from '@/types/pengajar'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '@/lib/axios'
 import { Kelas, KelasFilters, KelasGuru, KelasPengurus, MuridKelas } from '@/types/kelas'
@@ -41,6 +42,16 @@ export const useKelasPengajar = (kelasId: number, tahunAjaran?: string) =>
     },
     enabled: kelasId > 0,
   })
+
+/** Pengajar yang ditugaskan di kelas (utama lebih dulu), tanpa duplikat antar tahun ajaran. */
+export const usePengajarKelas = (kelasId: number | null | undefined) => {
+  const query = useKelasPengajar(kelasId ?? 0)
+  const urut = [...(query.data ?? [])].sort((a, b) => Number(b.peran === 'utama') - Number(a.peran === 'utama'))
+  const data = urut
+    .map((kg) => kg.pengajar)
+    .filter((p, i, arr): p is Pengajar => !!p && arr.findIndex((x) => x?.id === p.id) === i)
+  return { data, isLoading: query.isLoading && !!kelasId }
+}
 
 export const useKelasMurid = (kelasId: number) =>
   useQuery({

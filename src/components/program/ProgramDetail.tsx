@@ -20,6 +20,7 @@ import { Pencil, Trash2, Plus, School, CalendarDays } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 import { formSelectClass } from '@/components/ui/field'
+import { namaPengajar } from '@/lib/jadwal'
 
 type DetailTab = 'info' | 'kelas' | 'jadwal'
 
@@ -274,7 +275,7 @@ export function ProgramDetail({ selected, onEdit, onDelete, onTambahJadwal, canM
                         <td className="px-4 py-3.5 font-medium">{HARI_LABEL[j.hari]}</td>
                         <td className="px-4 py-3.5 text-muted-foreground">{j.jam_mulai.slice(0, 5)} – {j.jam_selesai.slice(0, 5)}</td>
                         <td className="px-4 py-3.5 text-muted-foreground">{j.kelas?.nama ?? <span className="italic text-xs">Semua kelas</span>}</td>
-                        <td className="px-4 py-3.5 text-muted-foreground">{j.pengajar?.user?.name ?? '-'}</td>
+                        <td className="px-4 py-3.5 text-muted-foreground">{namaPengajar(j.pengajar)}</td>
                         <td className="px-4 py-3.5 text-right">
                           {canManage && (
                             <button
@@ -313,7 +314,7 @@ export function ProgramDetail({ selected, onEdit, onDelete, onTambahJadwal, canM
                     </div>
                     <div className="text-sm text-muted-foreground space-y-0.5">
                       <p>Kelas: {j.kelas?.nama ?? <span className="italic">Semua kelas</span>}</p>
-                      <p>Pengajar: {j.pengajar?.user?.name ?? '-'}</p>
+                      <p>Pengajar: {namaPengajar(j.pengajar)}</p>
                     </div>
                   </div>
                 ))}

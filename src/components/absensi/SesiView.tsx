@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   usePertemuanDetail,
   useInputAbsensi,
-  useInputAbsensiPengajar,
   useSelesaiSesi,
   useBatalkanSesi,
   useUpdatePertemuan,
@@ -14,8 +13,8 @@ import {
 import { usePengajarList } from '@/hooks/usePengajar'
 import { useIsMurid, useIsSuperAdmin } from '@/hooks/useAuth'
 import { useBatalkanMateriUmum, useKurikulumAktifKelas, useSelesaikanMateriUmum } from '@/hooks/useKurikulum'
-import { StatusAbsensiMurid, StatusAbsensiPengajar, AbsensiMurid, Pertemuan } from '@/types/absensi'
-import { STATUS_MURID, STATUS_PENGAJAR } from '@/lib/constants/absensi'
+import { StatusAbsensiMurid, AbsensiMurid, Pertemuan } from '@/types/absensi'
+import { STATUS_MURID } from '@/lib/constants/absensi'
 import { BULAN_DARI_INDEX_JS, BULAN_LABEL, BULAN_TAHUN_AJARAN } from '@/lib/constants/kurikulum'
 import { BabAktif, MateriUmumAktif } from '@/types/kurikulum'
 import { format } from 'date-fns'
@@ -24,9 +23,10 @@ import { cn } from '@/lib/utils'
 import { Modal } from '@/components/ui/modal'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { MateriIndividuSesi } from './MateriIndividuSesi'
+import { PengajarSesi } from './PengajarSesi'
 import { Button } from '@/components/ui/button'
 import { PageLoading } from '@/components/ui/page-loading'
-import { Field, formSelectClass } from '@/components/ui/field'
+import { Field } from '@/components/ui/field'
 import { toast } from 'sonner'
 import type { AxiosError } from 'axios'
 import { Check, CheckCircle, Pencil, RefreshCw, XCircle } from 'lucide-react'
@@ -40,7 +40,6 @@ interface Props {
 export default function SesiView({ pertemuanId, onKembali }: Props) {
   const { data: pertemuan, isLoading } = usePertemuanDetail(pertemuanId)
   const { mutate: inputAbsensi } = useInputAbsensi(pertemuanId)
-  const { mutate: inputAbsensiPengajar, isPending: isSavingPengajar } = useInputAbsensiPengajar(pertemuanId)
   const { mutate: selesaiSesi, isPending: isSelesai } = useSelesaiSesi(pertemuanId)
   const { mutate: batalkanSesi, isPending: isBatal } = useBatalkanSesi(pertemuanId)
   const { mutateAsync: updatePertemuan } = useUpdatePertemuan(pertemuanId)
@@ -72,18 +71,6 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
 
   // Materi umum yang baru dicentang pengajar di sesi ini (belum selesai sebelumnya)
   const [newlySelectedMateri, setNewlySelectedMateri] = useState<Set<number>>(new Set())
-
-  // Draft state untuk absensi pengajar
-  const [pengajarStatus, setPengajarStatus] = useState<StatusAbsensiPengajar | null>(null)
-  const [penggantiId, setPenggantiId] = useState<number | null>(null)
-
-  // Sync local draft dari data server saat pertama load
-  useEffect(() => {
-    if (pertemuan?.absensi_pengajar && pengajarStatus === null) {
-      setPengajarStatus(pertemuan.absensi_pengajar.status)
-      setPenggantiId(pertemuan.absensi_pengajar.pengganti_id)
-    }
-  }, [pertemuan?.absensi_pengajar])
 
   if (isLoading) {
     return <PageLoading message="Memuat data sesi..." />
@@ -131,24 +118,6 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
     }
     koreksiAbsensi({ id: absensi.id, status, keterangan }, {
       onError: () => toast.error('Gagal mengoreksi absensi, coba lagi'),
-    })
-  }
-
-  const handleClickStatusPengajar = (status: StatusAbsensiPengajar) => {
-    setPengajarStatus(status)
-    if (status !== 'digantikan') {
-      setPenggantiId(null)
-      inputAbsensiPengajar({ status }, {
-        onError: () => toast.error('Gagal menyimpan status pengajar'),
-      })
-    }
-  }
-
-  const handleSimpanDigantikan = () => {
-    if (!penggantiId) return
-    inputAbsensiPengajar({ status: 'digantikan', pengganti_id: penggantiId }, {
-      onSuccess: () => toast.success('Status pengajar disimpan'),
-      onError: () => toast.error('Gagal menyimpan status pengajar'),
     })
   }
 
@@ -259,8 +228,6 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
   const textareaClass =
     'h-auto w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 resize-none'
 
-  const currentPengajarStatus = pengajarStatus ?? pertemuan.absensi_pengajar?.status ?? 'hadir'
-
   return (
     <div className="space-y-5">
       {/* Header — mobile: judul & badge di atas, tombol edit selebar layar di bawahnya */}
@@ -347,66 +314,8 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
         )}
       </div>
 
-      {/* Status Pengajar */}
-      <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-        <h2 className="text-sm font-semibold">Status Kehadiran Pengajar</h2>
-        <p className="text-xs text-muted-foreground">
-          Pengajar: <span className="font-medium text-foreground">{pertemuan.pengajar?.user?.name ?? '-'}</span>
-        </p>
-        <div className="flex gap-2 flex-wrap">
-          {STATUS_PENGAJAR.map(({ key, label }) => (
-            <button
-              key={key}
-              disabled={!bisaEditAbsensi}
-              onClick={() => handleClickStatusPengajar(key)}
-              className={cn(
-                'text-sm px-3 h-8 rounded-lg border transition-colors',
-                currentPengajarStatus === key
-                  ? 'border-primary bg-primary/10 text-primary font-semibold'
-                  : 'border-border text-muted-foreground hover:border-primary/50 hover:text-foreground',
-                !bisaEditAbsensi && 'cursor-default opacity-70'
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* Pengganti selection — tampil hanya jika status = digantikan */}
-        {!bisaEditAbsensi && currentPengajarStatus === 'digantikan' && pertemuan.absensi_pengajar?.pengganti && (
-          <p className="text-xs text-muted-foreground">
-            Digantikan oleh:{' '}
-            <span className="font-medium text-foreground">{pertemuan.absensi_pengajar.pengganti.user?.name ?? '-'}</span>
-          </p>
-        )}
-
-        {bisaEditAbsensi && currentPengajarStatus === 'digantikan' && (
-          <div className="flex items-end gap-3 pt-1">
-            <div className="flex-1 space-y-1.5">
-              <label className="text-xs text-muted-foreground">Pengajar pengganti</label>
-              <select
-                value={penggantiId ?? ''}
-                onChange={(e) => setPenggantiId(e.target.value ? Number(e.target.value) : null)}
-                className={formSelectClass}
-              >
-                <option value="">Pilih pengajar pengganti...</option>
-                {pengajarList?.data
-                  .filter((p) => p.id !== pertemuan.pengajar_id)
-                  .map((p) => (
-                    <option key={p.id} value={p.id}>{p.user?.name ?? `Pengajar #${p.id}`}</option>
-                  ))}
-              </select>
-            </div>
-            <Button
-              size="sm"
-              disabled={!penggantiId || isSavingPengajar}
-              onClick={handleSimpanDigantikan}
-            >
-              {isSavingPengajar ? 'Menyimpan...' : 'Simpan'}
-            </Button>
-          </div>
-        )}
-      </div>
+      {/* Pengajar yang bertugas — satu baris per pengajar */}
+      <PengajarSesi pertemuan={pertemuan} bisaEdit={bisaEditAbsensi} pengajarList={pengajarList?.data ?? []} />
 
       {/* Materi & Catatan — editable saat berlangsung */}
       {isBerlangsung && (

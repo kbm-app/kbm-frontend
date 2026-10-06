@@ -3,7 +3,9 @@ import { z } from 'zod'
 export const bukaSesiSchema = z.object({
   kelas_id: z.number({ error: 'Kelas wajib dipilih' }).int().positive(),
   program_id: z.number({ error: 'Program wajib dipilih' }).int().positive(),
-  pengajar_id: z.number({ error: 'Pengajar wajib dipilih' }).int().positive(),
+  // Pengajar yang bertugas; yang pertama menjadi pengajar utama sesi
+  pengajar_ids: z.array(z.number().int().positive(), { error: 'Pilih pengajar yang bertugas' })
+    .min(1, 'Pilih minimal satu pengajar yang bertugas'),
   jadwal_id: z.number().int().positive().optional().nullable(),
   tanggal: z.string().min(1, 'Tanggal wajib diisi'),
   jam_mulai: z.string().regex(/^\d{2}:\d{2}$/, 'Format jam: HH:MM'),
@@ -21,6 +23,7 @@ export const inputAbsensiBulkSchema = z.object({
 })
 
 export const absensiPengajarSchema = z.object({
+  pengajar_id: z.number().int().positive(),
   status: z.enum(['hadir', 'berhalangan', 'digantikan']),
   pengganti_id: z.number().int().positive().optional().nullable(),
   keterangan: z.string().max(500).optional().nullable(),

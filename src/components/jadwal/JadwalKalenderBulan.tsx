@@ -8,7 +8,7 @@ import {
 import { id as localeId } from 'date-fns/locale'
 import { Jadwal, MINGGU_KE_LABEL } from '@/types/jadwal'
 import { JENIS_COLOR, JENIS_DOT_COLOR, JENIS_LABEL } from '@/types/program'
-import { cekTanggalSesuaiJadwal } from '@/lib/jadwal'
+import { cekTanggalSesuaiJadwal, namaPengajar } from '@/lib/jadwal'
 import { cariLibur, formatRentangLibur } from '@/lib/libur'
 import { useLiburList } from '@/hooks/useLibur'
 import { Libur } from '@/types/libur'
@@ -268,7 +268,7 @@ export function JadwalKalenderBulan({ jadwals, onDelete, onEdit, isSuperAdmin }:
                 )}
                 <div className="flex flex-col gap-0.5 text-xs text-muted-foreground pt-2 border-t border-border">
                   <span>Kelas: <span className="text-foreground">{j.kelas?.nama ?? <em>Semua kelas</em>}</span></span>
-                  <span>Pengajar: <span className="text-foreground">{j.pengajar?.user?.name ?? '-'}</span></span>
+                  <span>Pengajar: <span className="text-foreground">{namaPengajar(j.pengajar)}</span></span>
                 </div>
               </div>
             ))}

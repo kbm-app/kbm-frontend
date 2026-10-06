@@ -6,6 +6,7 @@ import { id as localeId } from 'date-fns/locale'
 import { Pertemuan } from '@/types/absensi'
 import { JENIS_COLOR } from '@/types/program'
 import { cn } from '@/lib/utils'
+import { namaPengajarSesi } from '@/lib/pertemuan'
 import { AlertTriangle, ChevronRight, X } from 'lucide-react'
 import {
   AMBANG_KEHADIRAN_RENDAH, KehadiranBar, LegendKehadiran, RincianKehadiran, Stat, hitungPersen, warnaPersen,
@@ -170,7 +171,7 @@ function RiwayatItem({
           )}
         </div>
         <p className="text-xs text-muted-foreground truncate">
-          {jam} · {p.pengajar?.user?.name ?? '-'}
+          {jam} · {namaPengajarSesi(p)}
         </p>
       </div>
 

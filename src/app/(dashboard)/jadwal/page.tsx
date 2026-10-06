@@ -17,6 +17,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { DetailRow } from '@/components/ui/detail-row'
 import { formSelectClass } from '@/components/ui/field'
 import { cn } from '@/lib/utils'
+import { namaPengajar } from '@/lib/jadwal'
 import { toast } from 'sonner'
 import { addYears, format } from 'date-fns'
 import { CalendarDays, CalendarRange, List, Pencil, Trash2, X } from 'lucide-react'
@@ -340,7 +341,7 @@ function JadwalPageContent() {
                                 <td className="px-4 py-3.5 text-muted-foreground">
                                   {j.kelas?.nama ?? <span className="italic text-xs">Semua kelas</span>}
                                 </td>
-                                <td className="px-4 py-3.5 text-muted-foreground">{j.pengajar?.user?.name ?? '-'}</td>
+                                <td className="px-4 py-3.5 text-muted-foreground">{namaPengajar(j.pengajar)}</td>
                                 <td className="px-4 py-3.5 text-muted-foreground">
                                   {j.selesai_berlaku
                                     ? new Date(j.selesai_berlaku).toLocaleDateString('id-ID')
@@ -414,7 +415,7 @@ function JadwalPageContent() {
                                     Kelas: <span className="text-foreground">{j.kelas?.nama ?? <em>Semua kelas</em>}</span>
                                   </span>
                                   <span>
-                                    Pengajar: <span className="text-foreground">{j.pengajar?.user?.name ?? '-'}</span>
+                                    Pengajar: <span className="text-foreground">{namaPengajar(j.pengajar)}</span>
                                   </span>
                                   <span>
                                     Berlaku:{' '}
@@ -453,7 +454,7 @@ function JadwalPageContent() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-8 gap-y-3">
                 <DetailRow label="Program" value={selected.program?.nama} />
                 <DetailRow label="Kelas" value={selected.kelas?.nama ?? 'Semua kelas'} />
-                <DetailRow label="Pengajar" value={selected.pengajar?.user?.name ?? '–'} />
+                <DetailRow label="Pengajar" value={namaPengajar(selected.pengajar, '–')} />
                 <DetailRow label="Hari" value={HARI_LABEL[selected.hari]} />
                 <DetailRow
                   label="Jam"
@@ -472,7 +473,7 @@ function JadwalPageContent() {
             defaultValues={{
               program_id: selected.program_id,
               kelas_id: selected.kelas_id,
-              pengajar_id: selected.pengajar_id,
+              pengajar_ids: selected.pengajar?.map((p) => p.id) ?? [],
               frekuensi: selected.frekuensi,
               minggu_ke: selected.minggu_ke,
               hari: selected.hari,
