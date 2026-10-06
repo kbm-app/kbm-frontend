@@ -7,22 +7,16 @@ import { Pertemuan } from '@/types/absensi'
 import { JENIS_COLOR } from '@/types/program'
 import { cn } from '@/lib/utils'
 import { AlertTriangle, ChevronRight, X } from 'lucide-react'
-
-/** Sesi dengan persentase kehadiran di bawah angka ini ditandai sebagai kehadiran rendah. */
-export const AMBANG_KEHADIRAN_RENDAH = 60
+import {
+  AMBANG_KEHADIRAN_RENDAH, KehadiranBar, LegendKehadiran, RincianKehadiran, Stat, hitungPersen, warnaPersen,
+} from './kehadiran'
 
 interface Props {
   pertemuan: Pertemuan[]
   onDetail: (id: number) => void
 }
 
-type Kehadiran = {
-  total: number
-  hadir: number // termasuk terlambat
-  izinSakit: number
-  alpha: number
-  persen: number | null
-}
+type Kehadiran = RincianKehadiran & { persen: number | null }
 
 function hitungKehadiran(p: Pertemuan): Kehadiran {
   const total = p.total_murid ?? 0
@@ -33,7 +27,7 @@ function hitungKehadiran(p: Pertemuan): Kehadiran {
     hadir,
     alpha,
     izinSakit: Math.max(total - hadir - alpha, 0),
-    persen: total > 0 ? Math.round((hadir / total) * 100) : null,
+    persen: hitungPersen(hadir, total),
   }
 }
 
@@ -101,10 +95,8 @@ export function RiwayatList({ pertemuan, onDetail }: Props) {
             />
           </button>
         </div>
-        <div className="flex items-center gap-3 flex-wrap text-[11px] text-muted-foreground pt-3 border-t border-border">
-          <Legend className="bg-green-500" label="Hadir / terlambat" />
-          <Legend className="bg-blue-400" label="Izin / sakit" />
-          <Legend className="bg-red-500" label="Alpha" />
+        <div className="pt-3 border-t border-border">
+          <LegendKehadiran />
         </div>
       </div>
 
@@ -182,66 +174,9 @@ function RiwayatItem({
         </p>
       </div>
 
-      <KehadiranBar kehadiran={k} />
+      <KehadiranBar rincian={k} />
 
       <ChevronRight className="size-4 text-muted-foreground shrink-0" />
     </button>
-  )
-}
-
-function KehadiranBar({ kehadiran: k }: { kehadiran: Kehadiran }) {
-  const lebar = (n: number) => `${(n / k.total) * 100}%`
-
-  return (
-    <div className="w-24 sm:w-40 shrink-0 space-y-1">
-      <div className="flex items-baseline justify-between gap-2 text-xs">
-        <span className="text-muted-foreground">
-          <span className="font-medium text-foreground">{k.hadir}</span>/{k.total}
-        </span>
-        <span className={cn('font-semibold', warnaPersen(k.persen))}>
-          {k.persen === null ? '–' : `${k.persen}%`}
-        </span>
-      </div>
-      <div
-        className="flex h-1.5 rounded-full overflow-hidden bg-muted"
-        title={`Hadir ${k.hadir} · Izin/sakit ${k.izinSakit} · Alpha ${k.alpha}`}
-      >
-        {k.total > 0 && (
-          <>
-            <div className="bg-green-500" style={{ width: lebar(k.hadir) }} />
-            <div className="bg-blue-400" style={{ width: lebar(k.izinSakit) }} />
-            <div className="bg-red-500" style={{ width: lebar(k.alpha) }} />
-          </>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function warnaPersen(persen: number | null) {
-  if (persen === null) return 'text-muted-foreground'
-  if (persen < AMBANG_KEHADIRAN_RENDAH) return 'text-red-600'
-  if (persen < 80) return 'text-amber-600'
-  return 'text-green-600'
-}
-
-function Stat({ label, value, valueClass, icon }: { label: string; value: string; valueClass?: string; icon?: React.ReactNode }) {
-  return (
-    <div className="min-w-0">
-      <p className={cn('flex items-center gap-1.5 text-xl font-bold', valueClass)}>
-        {value}
-        {icon}
-      </p>
-      <p className="text-[11px] sm:text-xs text-muted-foreground leading-tight">{label}</p>
-    </div>
-  )
-}
-
-function Legend({ className, label }: { className: string; label: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className={cn('size-2 rounded-full', className)} />
-      {label}
-    </span>
   )
 }

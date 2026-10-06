@@ -6,6 +6,8 @@ import {
   AbsensiPengajar,
   PertemuanFilters,
   RekapMuridItem,
+  RekapPertemuanItem,
+  TrenKehadiranItem,
 } from '@/types/absensi'
 import {
   BukaSesiFormData,
@@ -156,7 +158,7 @@ export const useRekapAbsensiMurid = (
   useQuery({
     queryKey: ['rekap-absensi', filters],
     queryFn: async () => {
-      const { data } = await api.get<{ data: RekapMuridItem[]; total_pertemuan: number }>(
+      const { data } = await api.get<{ data: RekapMuridItem[]; total_pertemuan: number; pertemuan: RekapPertemuanItem[] }>(
         '/api/rekap/absensi-murid',
         { params: filters }
       )
@@ -177,6 +179,23 @@ export const useRekapSatuMurid = (
         { params: filters }
       )
       return data
+    },
+    enabled: muridId > 0 && !!filters.bulan && !!filters.tahun,
+  })
+
+// Persentase kehadiran per bulan, `jumlah` bulan yang berakhir di bulan/tahun terpilih
+export const useTrenSatuMurid = (
+  muridId: number,
+  filters: { bulan?: number; tahun?: number; jumlah?: number }
+) =>
+  useQuery({
+    queryKey: ['rekap-absensi', muridId, 'tren', filters],
+    queryFn: async () => {
+      const { data } = await api.get<{ data: TrenKehadiranItem[] }>(
+        `/api/murid/${muridId}/tren-kehadiran`,
+        { params: filters }
+      )
+      return data.data
     },
     enabled: muridId > 0 && !!filters.bulan && !!filters.tahun,
   })

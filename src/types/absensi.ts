@@ -19,7 +19,7 @@ export interface AbsensiMurid {
   created_at: string
   updated_at: string
   murid?: Murid
-  pertemuan?: { tanggal: string; jam_mulai: string }
+  pertemuan?: Pick<Pertemuan, 'tanggal' | 'jam_mulai' | 'jam_selesai' | 'kelas' | 'program'>
 }
 
 export interface AbsensiPengajar {
@@ -70,6 +70,23 @@ export interface RekapMuridItem {
   alpha: number
   total_pertemuan: number
   persentase: number
+  /** pertemuan_id → status; sesi tanpa entri = murid belum terdaftar di sesi itu */
+  status_per_sesi: Record<string, StatusAbsensiMurid>
+}
+
+export interface RekapPertemuanItem {
+  id: number
+  tanggal: string
+  jam_mulai: string
+  program: string | null
+}
+
+export interface TrenKehadiranItem {
+  bulan: number
+  tahun: number
+  total: number
+  hadir: number
+  persentase: number | null
 }
 
 export interface PertemuanFilters {

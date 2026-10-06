@@ -33,7 +33,7 @@ export default function AbsensiPage() {
   const [tab, setTab] = useState<Tab>('berlangsung')
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [tabAsal, setTabAsal] = useState<TabTetap>('berlangsung')
-  const [rekapMurid, setRekapMurid] = useState<{ id: number; nama: string } | undefined>()
+  const [rekapMurid, setRekapMurid] = useState<{ id: number; nama: string; bulan?: number; tahun?: number } | undefined>()
 
   const [kelasId, setKelasId] = useState<number | undefined>()
   const [bulan, setBulan] = useState(new Date().getMonth() + 1)
@@ -75,8 +75,8 @@ export default function AbsensiPage() {
     setSelectedId(null)
   }
 
-  const pindahKeRekapMurid = (muridId: number, muridNama: string) => {
-    setRekapMurid({ id: muridId, nama: muridNama })
+  const pindahKeRekapMurid = (muridId: number, muridNama: string, periode?: { bulan: number; tahun: number }) => {
+    setRekapMurid({ id: muridId, nama: muridNama, ...periode })
     setTab('rekap-murid')
   }
 
