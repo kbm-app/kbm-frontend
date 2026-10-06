@@ -29,6 +29,9 @@ export const absensiPengajarSchema = z.object({
 export const updatePertemuanSchema = z.object({
   materi: z.string().max(1000).optional().nullable(),
   catatan: z.string().max(1000).optional().nullable(),
+  // Hanya untuk koreksi sesi selesai oleh super admin
+  jam_mulai: z.string().regex(/^\d{2}:\d{2}$/, 'Format jam: HH:MM').optional(),
+  jam_selesai: z.string().regex(/^\d{2}:\d{2}$/, 'Format jam: HH:MM').optional(),
 })
 
 export type BukaSesiFormData = z.infer<typeof bukaSesiSchema>

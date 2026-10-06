@@ -49,7 +49,8 @@ export const useUpdatePertemuan = (id: number) => {
   return useMutation({
     mutationFn: (payload: UpdatePertemuanFormData) =>
       api.put<{ pertemuan: Pertemuan }>(`/api/pertemuan/${id}`, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pertemuan', id] }),
+    // Seluruh 'pertemuan' agar jam di daftar sesi ikut diperbarui
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pertemuan'] }),
   })
 }
 

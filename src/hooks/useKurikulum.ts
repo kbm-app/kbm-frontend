@@ -201,8 +201,23 @@ export const useSelesaikanMateriUmum = (kurikulumId: number) => {
     // Catat penyampaian materi umum di satu kelas; `metode` (bila dikirim) mengisi/mengubah cara penyampaiannya
     mutationFn: ({ materiId, pertemuanId, kelasId, metode }: { materiId: number; pertemuanId?: number; kelasId?: number; metode?: string }) =>
       api.post(`/api/materi/${materiId}/selesai-umum`, { pertemuan_id: pertemuanId, kelas_id: kelasId, metode }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId, 'progress'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId, 'progress'] })
+      queryClient.invalidateQueries({ queryKey: ['kurikulum-aktif-kelas'] })
+    },
+  })
+}
+
+// Batalkan penyampaian materi umum yang tercatat di satu sesi (koreksi sesi selesai)
+export const useBatalkanMateriUmum = (kurikulumId: number) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ materiId, pertemuanId }: { materiId: number; pertemuanId: number }) =>
+      api.delete(`/api/materi/${materiId}/selesai-umum`, { data: { pertemuan_id: pertemuanId } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kurikulum', kurikulumId, 'progress'] })
+      queryClient.invalidateQueries({ queryKey: ['kurikulum-aktif-kelas'] })
+    },
   })
 }
 
