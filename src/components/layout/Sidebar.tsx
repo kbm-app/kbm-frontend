@@ -51,12 +51,14 @@ export default function Sidebar() {
       )}
 
       <aside className={cn(
-        'flex flex-col w-60 border-r border-sidebar-border bg-sidebar px-3 py-5 overflow-y-auto',
-        'fixed inset-y-0 left-0 z-50 h-screen lg:static lg:h-full',
+        // h-dvh: di HP, 100vh (h-screen) lebih tinggi dari layar yang terlihat sehingga
+        // bagian bawah (profil & Keluar) tertutup toolbar browser
+        'flex flex-col w-60 border-r border-sidebar-border bg-sidebar px-3 pt-5 overflow-hidden',
+        'fixed inset-y-0 left-0 z-50 h-dvh lg:static lg:h-full',
         'transition-transform duration-200 ease-in-out',
         isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
       )}>
-      <div className="mb-6 px-3 flex items-start justify-between">
+      <div className="mb-6 px-3 flex items-start justify-between shrink-0">
         <div>
           <span className="font-heading text-lg font-bold text-sidebar-primary">KBM</span>
           <p className="text-[11px] text-sidebar-foreground/60 mt-0.5">Kelompok Sidomulyo 1</p>
@@ -70,7 +72,8 @@ export default function Sidebar() {
         </button>
       </div>
 
-      <nav className="flex-1 space-y-0.5">
+      {/* Hanya menu yang di-scroll; profil & Keluar selalu terlihat di bawah */}
+      <nav className="flex-1 min-h-0 overflow-y-auto space-y-0.5 -mx-1 px-1">
         {visibleItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
           return (
@@ -91,7 +94,7 @@ export default function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-sidebar-border pt-3 mt-3">
+      <div className="shrink-0 border-t border-sidebar-border pt-3 mt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <Link
           href="/profile"
           className={cn(
