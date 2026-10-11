@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import api from '@/lib/axios'
+import api, { withAuthTransition } from '@/lib/axios'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { User, UserRole } from '@/types/user'
 
@@ -14,14 +14,21 @@ const ROLE_REDIRECT: Record<UserRole, string> = {
 export const useLogin = () => {
   const router = useRouter()
   const setUser = useAuthStore((s) => s.setUser)
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (credentials: { email: string; password: string }) => {
-      await api.get('/sanctum/csrf-cookie')
-      const { data } = await api.post<{ user: User }>('/api/auth/login', credentials)
-      return data
-    },
+    // Lewat withAuthTransition: request lain yang masih berjalan (mis. cek sesi di halaman
+    // login) tidak boleh menimpa cookie sesi baru — lihat lib/axios.ts
+    mutationFn: (credentials: { email: string; password: string }) =>
+      withAuthTransition(async () => {
+        await api.get('/sanctum/csrf-cookie', { authTransition: true })
+        const { data } = await api.post<{ user: User }>('/api/auth/login', credentials, { authTransition: true })
+        return data
+      }),
     onSuccess: ({ user }) => {
+      // Buang cache (termasuk error 401 dari sebelum login) agar tidak ada data akun lain
+      queryClient.clear()
+      queryClient.setQueryData(['auth/me'], user)
       setUser(user)
       router.push(ROLE_REDIRECT[user.role])
     },
@@ -34,7 +41,7 @@ export const useLogout = () => {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: () => api.post('/api/auth/logout'),
+    mutationFn: () => withAuthTransition(() => api.post('/api/auth/logout', null, { authTransition: true })),
     onSuccess: () => {
       clearUser()
       queryClient.clear()
@@ -43,10 +50,11 @@ export const useLogout = () => {
   })
 }
 
-export const useMe = () => {
+export const useMe = (options?: { retry?: boolean }) => {
   const setUser = useAuthStore((s) => s.setUser)
 
   return useQuery({
+    retry: options?.retry ?? 1,
     queryKey: ['auth/me'],
     queryFn: async () => {
       const { data } = await api.get<{ user: User }>('/api/auth/me')

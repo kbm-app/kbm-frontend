@@ -7,7 +7,9 @@ import { useMe } from '@/hooks/useAuth'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { data: user } = useMe()
+  // Tanpa retry: 401 di halaman login itu wajar, dan retry yang berjalan bersamaan dengan
+  // login bisa menimpa cookie sesi baru
+  const { data: user } = useMe({ retry: false })
 
   useEffect(() => {
     if (user) router.replace('/dashboard')
