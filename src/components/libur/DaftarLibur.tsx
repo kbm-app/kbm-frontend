@@ -14,7 +14,8 @@ interface Props {
   title: string
   dari: string
   sampai: string
-  kelasId?: number
+  /** Satu kelas atau beberapa kelas (kosong/undefined = semua) */
+  kelasId?: number | number[]
   /** Tampilkan tombol tambah & hapus (pengelola absensi / super admin) */
   bolehKelola: boolean
   /** Teks saat tidak ada libur (kartu disembunyikan bila juga tidak boleh mengelola) */
@@ -23,7 +24,8 @@ interface Props {
 
 export function DaftarLibur({ title, dari, sampai, kelasId, bolehKelola, emptyText }: Props) {
   const isSuperAdmin = useIsSuperAdmin()
-  const { data: libur } = useLiburList({ dari, sampai, kelas_id: kelasId })
+  const kelasFilter = Array.isArray(kelasId) ? (kelasId.length ? kelasId : undefined) : kelasId
+  const { data: libur } = useLiburList({ dari, sampai, kelas_id: kelasFilter })
   const { mutate: hapusLibur, isPending: isHapus } = useDeleteLibur()
   const [showTambah, setShowTambah] = useState(false)
   const [hapusTarget, setHapusTarget] = useState<Libur | null>(null)
@@ -87,7 +89,7 @@ export function DaftarLibur({ title, dari, sampai, kelasId, bolehKelola, emptyTe
         </ul>
       )}
 
-      <LiburDialog open={showTambah} onOpenChange={setShowTambah} defaultKelasId={kelasId} />
+      <LiburDialog open={showTambah} onOpenChange={setShowTambah} defaultKelasId={Array.isArray(kelasId) ? (kelasId.length === 1 ? kelasId[0] : undefined) : kelasId} />
 
       <ConfirmDialog
         open={hapusTarget !== null}

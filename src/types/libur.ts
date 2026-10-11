@@ -19,7 +19,8 @@ export interface Libur {
 export interface LiburFilters {
   dari: string
   sampai: string
-  kelas_id?: number
+  /** Satu kelas atau beberapa kelas */
+  kelas_id?: number | number[]
 }
 
 export interface LiburPayload {

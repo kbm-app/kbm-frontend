@@ -19,6 +19,7 @@ import TabRekapKelas from '@/components/absensi/TabRekapKelas'
 import TabRekapMurid from '@/components/absensi/TabRekapMurid'
 import { RiwayatList } from '@/components/absensi/RiwayatList'
 import { DaftarLibur } from '@/components/libur/DaftarLibur'
+import { MultiSelect } from '@/components/ui/multi-select'
 
 type TabTetap = 'berlangsung' | 'riwayat' | 'rekap-kelas' | 'rekap-murid'
 type TabDinamis = 'buka-sesi' | 'sesi-berlangsung' | 'detail-sesi'
@@ -38,6 +39,8 @@ export default function AbsensiPage() {
   const [rekapMurid, setRekapMurid] = useState<{ id: number; nama: string; bulan?: number; tahun?: number } | undefined>()
 
   const [kelasId, setKelasId] = useState<number | undefined>()
+  // Riwayat bisa memfilter beberapa kelas sekaligus; kosong = semua kelas
+  const [riwayatKelasIds, setRiwayatKelasIds] = useState<number[]>([])
   const [bulan, setBulan] = useState(new Date().getMonth() + 1)
   const [tahun, setTahun] = useState(new Date().getFullYear())
 
@@ -47,7 +50,7 @@ export default function AbsensiPage() {
     kelas_id: kelasId,
   })
   const { data: riwayat, isLoading: loadingRiwayat } = usePertemuanList({
-    kelas_id: kelasId,
+    kelas_id: riwayatKelasIds.length ? riwayatKelasIds : undefined,
     bulan: tab === 'riwayat' ? bulan : undefined,
     tahun: tab === 'riwayat' ? tahun : undefined,
   })
@@ -198,16 +201,14 @@ export default function AbsensiPage() {
       {tab === 'riwayat' && (
         <div className="space-y-4">
           <div className="flex items-center gap-2 flex-wrap">
-            <select
-              value={kelasId ?? ''}
-              onChange={(e) => setKelasId(e.target.value ? Number(e.target.value) : undefined)}
-              className={cn(formSelectClass, 'w-44')}
-            >
-              <option value="">Semua kelas</option>
-              {kelasList?.data.map((k) => (
-                <option key={k.id} value={k.id}>{k.nama}</option>
-              ))}
-            </select>
+            <MultiSelect
+              options={(kelasList?.data ?? []).map((k) => ({ value: k.id, label: k.nama }))}
+              selected={riwayatKelasIds}
+              onChange={setRiwayatKelasIds}
+              placeholder="Semua kelas"
+              allLabel="Semua kelas"
+              className="w-full sm:w-auto"
+            />
             <select value={bulan} onChange={(e) => setBulan(Number(e.target.value))} className={cn(formSelectClass, 'w-36')}>
               {bulanOptions.map((b) => (
                 <option key={b.value} value={b.value}>{b.label}</option>
@@ -224,7 +225,7 @@ export default function AbsensiPage() {
             title="Libur bulan ini"
             dari={format(new Date(tahun, bulan - 1, 1), 'yyyy-MM-dd')}
             sampai={format(new Date(tahun, bulan, 0), 'yyyy-MM-dd')}
-            kelasId={kelasId}
+            kelasId={riwayatKelasIds}
             bolehKelola
             emptyText="Tidak ada libur di bulan ini."
           />
@@ -238,7 +239,7 @@ export default function AbsensiPage() {
           ) : (
             // key: reset filter "kehadiran rendah" saat kelas/bulan/tahun berganti
             <RiwayatList
-              key={`${kelasId ?? 'semua'}-${bulan}-${tahun}`}
+              key={`${riwayatKelasIds.join(',') || 'semua'}-${bulan}-${tahun}`}
               pertemuan={riwayatFiltered}
               onDetail={detailSesi}
             />

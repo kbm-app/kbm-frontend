@@ -91,7 +91,8 @@ export interface TrenKehadiranItem {
 }
 
 export interface PertemuanFilters {
-  kelas_id?: number
+  /** Satu kelas atau beberapa kelas */
+  kelas_id?: number | number[]
   program_id?: number
   status?: StatusPertemuan
   bulan?: number
