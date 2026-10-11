@@ -147,10 +147,23 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
     {}
   )
 
-  // Umum progress summary — berdasarkan progress_materi_murid, bukan field metode
-  const tersampaikan = filteredMateri.filter((m) => isUmumSelesai(m.id)).length
-  const totalUmum = filteredMateri.length
-  const persenUmum = totalUmum > 0 ? Math.round((tersampaikan / totalUmum) * 100) : 0
+  // Ringkasan kedua jenis materi (mengikuti filter bulan & kelas), tampil di kedua sub-tab
+  const sesuaiBulan = (list: Materi[]) => filterBulan ? list.filter((m) => m.target_bulan === filterBulan) : list
+  const umumBulan = sesuaiBulan(data?.materi.umum ?? [])
+  const individuBulan = sesuaiBulan(data?.materi.individu ?? [])
+
+  // Umum: materi yang sudah disampaikan di kelas (penyampaian_materi), bukan per murid
+  const tersampaikan = umumBulan.filter((m) => isUmumSelesai(m.id)).length
+  const persenUmum = umumBulan.length > 0 ? Math.round((tersampaikan / umumBulan.length) * 100) : null
+
+  // Individu: rata-rata persentase penyelesaian tiap murid
+  const persenMurid = (muridId: number, materi: Materi[]) =>
+    materi.length > 0
+      ? (materi.filter((m) => getProgress(muridId, m.id)?.status === 'selesai').length / materi.length) * 100
+      : 0
+  const rataIndividu = individuBulan.length > 0 && muridList.length > 0
+    ? Math.round(muridList.reduce((n, murid) => n + persenMurid(murid.id, individuBulan), 0) / muridList.length)
+    : null
 
   return (
     <div className="space-y-4">
@@ -202,6 +215,33 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
         </span>
       </div>
 
+      {/* Ringkasan rata-rata — klik untuk pindah sub-tab */}
+      {!isLoading && data && (
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          <RingkasanMateri
+            judul="Materi Umum"
+            persen={persenUmum}
+            keterangan={umumBulan.length > 0
+              ? `${tersampaikan} dari ${umumBulan.length} materi sudah disampaikan`
+              : 'Belum ada materi umum'}
+            aktif={subTab === 'umum'}
+            onClick={() => { setSubTab('umum'); setOpenMuridIds(new Set()) }}
+          />
+          <RingkasanMateri
+            judul="Materi Individu"
+            persen={rataIndividu}
+            labelPersen="rata-rata"
+            keterangan={individuBulan.length === 0
+              ? 'Belum ada materi individu'
+              : muridList.length === 0
+                ? 'Belum ada murid aktif'
+                : `Rata-rata penyelesaian ${muridList.length} murid · ${individuBulan.length} materi`}
+            aktif={subTab === 'individu'}
+            onClick={() => { setSubTab('individu'); setOpenMuridIds(new Set()) }}
+          />
+        </div>
+      )}
+
       {isLoading ? (
         <div className="flex items-center justify-center py-16">
           <div className="size-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -215,30 +255,6 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
 
         /* ── MATERI UMUM: list berbasis metode ── */
         <div className="space-y-4">
-          {/* Summary progress */}
-          <div className="rounded-xl border border-border bg-card p-4 space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">
-                {tersampaikan} dari {totalUmum} materi sudah disampaikan
-              </span>
-              <span className={cn(
-                'font-semibold tabular-nums',
-                persenUmum === 100 ? 'text-green-600' : persenUmum >= 50 ? 'text-yellow-600' : 'text-muted-foreground'
-              )}>
-                {persenUmum}%
-              </span>
-            </div>
-            <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
-              <div
-                className={cn(
-                  'h-full rounded-full transition-all duration-500',
-                  persenUmum === 100 ? 'bg-green-500' : 'bg-primary'
-                )}
-                style={{ width: `${persenUmum}%` }}
-              />
-            </div>
-          </div>
-
           {/* Materi list grouped by bab */}
           {Object.entries(groupedByBab).map(([babId, group]) => (
             <div key={babId} className="rounded-xl border border-border bg-card overflow-hidden">
@@ -362,7 +378,7 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
             {muridList.map((murid) => {
               const selesai = filteredMateri.filter((m) => getProgress(murid.id, m.id)?.status === 'selesai').length
               const sedang = filteredMateri.filter((m) => getProgress(murid.id, m.id)?.status === 'sedang').length
-              const persen = filteredMateri.length > 0 ? Math.round((selesai / filteredMateri.length) * 100) : 0
+              const persen = Math.round(persenMurid(murid.id, filteredMateri))
               const isOpen = openMuridIds.has(murid.id)
 
               return (
@@ -377,6 +393,7 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
                         <span className="text-sm font-medium truncate">{murid.nama}</span>
                         <span className="text-xs text-muted-foreground tabular-nums shrink-0">
                           {selesai}/{filteredMateri.length}
+                          <span className="font-medium text-foreground"> · {persen}%</span>
                           {sedang > 0 && <span className="text-yellow-600"> · {sedang} sedang</span>}
                         </span>
                       </div>
@@ -433,5 +450,48 @@ export function ProgressTab({ kurikulumId, kelasList = [], kelasDiajarIds = [], 
         isLoading={markingSelesaiId !== null}
       />
     </div>
+  )
+}
+
+function RingkasanMateri({
+  judul,
+  persen,
+  labelPersen,
+  keterangan,
+  aktif,
+  onClick,
+}: {
+  judul: string
+  persen: number | null
+  labelPersen?: string
+  keterangan: string
+  aktif: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={aktif}
+      className={cn(
+        'text-left rounded-xl border bg-card p-3 sm:p-4 space-y-2 transition-colors',
+        aktif ? 'border-primary/60 ring-1 ring-primary/20' : 'border-border hover:border-primary/40'
+      )}
+    >
+      <div>
+        <p className="text-xs sm:text-sm font-medium">{judul}</p>
+        <p className="flex items-baseline gap-1.5">
+          <span className="text-xl sm:text-2xl font-bold tabular-nums">{persen === null ? '–' : `${persen}%`}</span>
+          {labelPersen && persen !== null && <span className="text-[11px] text-muted-foreground">{labelPersen}</span>}
+        </p>
+      </div>
+      <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
+        <div
+          className={cn('h-full rounded-full transition-all duration-500', persen === 100 ? 'bg-green-500' : 'bg-primary')}
+          style={{ width: `${persen ?? 0}%` }}
+        />
+      </div>
+      <p className="text-[11px] sm:text-xs text-muted-foreground leading-snug">{keterangan}</p>
+    </button>
   )
 }
