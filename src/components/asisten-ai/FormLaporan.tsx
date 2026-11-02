@@ -17,10 +17,19 @@ interface Props {
   onHasil: (kelasId: number, kelasNama: string, res: EkstrakAbsensiResponse) => void
 }
 
-const CONTOH = `Kelas Pra Remaja, Ahad 26 Okt jam 08.00
+const CONTOH = `Bisa berupa pesan WhatsApp, laporan tertulis, atau instruksi penyesuaian.
+
+Contoh 1 (Laporan WA / Tertulis):
+Kelas Pra Remaja, Ahad 26 Okt jam 08.00
 Pengajar: Ust. Ahmad
-Yang tidak masuk: Rina (sakit), Budi izin acara keluarga, Fajar tanpa kabar
-Materi: Bab 3 Adab kepada orang tua`
+Yang tidak masuk: Rina (sakit), Budi izin acara keluarga
+Materi: Bab 3 Adab kepada orang tua
+
+Contoh 2 (Instruksi Khusus / Penyesuaian saat ada Foto):
+Khusus tanggal 10-15 jam 16:30 - 18:00. Materi tanggal 1-10 Bab 1, tanggal 12 ke atas Bab 2. Tanggal 16 pengajar digantikan Ust. Fajar.
+
+Contoh 3 (Instruksi Saja tanpa Foto):
+Catat sesi pertemuan Ahad kemarin jam 08:00, materi Tahsin, pengajar Ust. Ahmad, semua murid hadir.`
 
 export default function FormLaporan({ onHasil }: Props) {
   const { data: kelasList } = useKelasList({ is_aktif: true })
@@ -28,7 +37,6 @@ export default function FormLaporan({ onHasil }: Props) {
 
   const [kelasId, setKelasId] = useState<number | ''>('')
   const [teks, setTeks] = useState('')
-  const [instruksi, setInstruksi] = useState('')
   const [foto, setFoto] = useState<{ file: File; url: string }[]>([])
   const [provider, setProvider] = useState<'openai' | 'anthropic' | ''>('')
   const [modelPilihan, setModelPilihan] = useState('')
@@ -60,16 +68,17 @@ export default function FormLaporan({ onHasil }: Props) {
 
   const proses = () => {
     if (!kelasId) return toast.error('Pilih kelas terlebih dahulu')
-    if (!teks.trim() && foto.length === 0) return toast.error('Tempel teks laporan atau unggah foto lembar absen')
+    if (!teks.trim() && foto.length === 0) {
+      return toast.error('Masukkan pesan laporan/instruksi atau unggah foto lembar absen')
+    }
 
     ekstrak(
       {
         kelas_id: kelasId,
-        teks,
+        teks: teks.trim(),
         gambar: foto.map((f) => f.file),
         ...(provider ? { provider } : {}),
         ...(modelAktif ? { model: modelAktif } : {}),
-        ...(instruksi.trim() ? { instruksi: instruksi.trim() } : {}),
       },
       {
         onSuccess: (res) => {
@@ -97,14 +106,17 @@ export default function FormLaporan({ onHasil }: Props) {
         </select>
       </Field>
 
-      <Field label="Teks laporan" hint="Tempel pesan WA dari pengajar apa adanya — tidak perlu dirapikan">
+      <Field
+        label="Pesan laporan / Instruksi"
+        hint="Tempel pesan WA pengajar, ketik laporan tertulis, atau berikan instruksi khusus/penyesuaian"
+      >
         <Textarea
           value={teks}
           onChange={(e) => setTeks(e.target.value)}
           rows={7}
           placeholder={CONTOH}
           disabled={isPending}
-          className="min-h-36"
+          className="min-h-36 text-sm"
         />
       </Field>
 
@@ -142,25 +154,11 @@ export default function FormLaporan({ onHasil }: Props) {
         </div>
       </Field>
 
-      <Field
-        label="Instruksi Khusus untuk AI (Opsional)"
-        hint="Berikan instruksi penyesuaian khusus yang ingin diprioritaskan AI saat menyusun draf"
-      >
-        <Textarea
-          value={instruksi}
-          onChange={(e) => setInstruksi(e.target.value)}
-          rows={3}
-          placeholder={`Contoh:\n• Khusus tanggal 10-15 Okt jam kegiatan 16:30 - 18:00\n• Materi tanggal 1-10 Bab 1, tanggal 12 ke atas Bab 2\n• Tanggal 16 Okt pengajar digantikan Ust. Fajar\n• Azril izin sakit tanggal 12 sampai 15 Okt`}
-          disabled={isPending}
-          className="text-xs min-h-20"
-        />
-      </Field>
-
       <div className="pt-1 border-t border-border/50">
         <button
           type="button"
           onClick={() => setShowModelConfig(!showModelConfig)}
-          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
         >
           <Settings2 className="size-3.5" />
           <span>Pengaturan Model AI (Opsional)</span>
@@ -168,7 +166,7 @@ export default function FormLaporan({ onHasil }: Props) {
         </button>
 
         {showModelConfig && (
-          <div className="mt-3 p-3.5 rounded-lg border border-border/70 bg-muted/30 space-y-3 text-xs">
+          <div className="mt-3 p-3.5 rounded-lg border border-border/70 bg-muted/30 space-y-3">
             <Field label="Penyedia AI" hint="Kosongkan untuk memakai AI_PROVIDER di .env server">
               <select
                 value={provider}
@@ -216,7 +214,7 @@ export default function FormLaporan({ onHasil }: Props) {
                   value={customModel}
                   placeholder="Ketik nama model (contoh: gpt-5-mini)"
                   onChange={(e) => setCustomModel(e.target.value)}
-                  className="mt-2 h-8 w-full rounded-md border border-input bg-background px-2.5 py-1 text-xs outline-none focus-visible:border-ring"
+                  className="mt-2 h-8 w-full rounded-md border border-input bg-background px-2.5 py-1 text-sm outline-none focus-visible:border-ring"
                 />
               )}
             </Field>

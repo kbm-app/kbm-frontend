@@ -346,7 +346,7 @@ function DrafSingleSesi({ kelasId, kelasNama, data, onKembali, onTersimpan }: Pr
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{m.nama}</p>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       {v.namaDiLaporan
                         ? <>AI: tertulis &ldquo;{v.namaDiLaporan}&rdquo;</>
                         : v.status ? 'Tidak disebut di laporan' : 'Belum diisi'}
@@ -371,7 +371,7 @@ function DrafSingleSesi({ kelasId, kelasNama, data, onKembali, onTersimpan }: Pr
                     value={v.keterangan}
                     onChange={(e) => ubahMurid(m.id, { keterangan: e.target.value })}
                     placeholder="Keterangan (opsional)"
-                    className={cn(inputClass, 'h-7 text-xs')}
+                    className={cn(inputClass, 'h-8 text-sm')}
                   />
                 )}
               </div>

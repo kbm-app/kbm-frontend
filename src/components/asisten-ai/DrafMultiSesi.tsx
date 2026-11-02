@@ -200,7 +200,7 @@ export default function DrafMultiSesi({ kelasId, kelasNama, data, onKembali, onT
 
       {/* Header Info */}
       <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-2">
-        <div className="flex items-center gap-2 font-medium text-foreground">
+        <div className="flex items-center gap-2 font-semibold text-foreground text-sm sm:text-base">
           <Sparkles className="size-5 text-primary" />
           <span>Rekap Absensi Multi-Hari / Bulanan: Kelas {kelasNama}</span>
         </div>
@@ -215,11 +215,11 @@ export default function DrafMultiSesi({ kelasId, kelasNama, data, onKembali, onT
 
         {/* Badge Metrik */}
         <div className="flex flex-wrap gap-2 pt-1 text-xs">
-          <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 px-2.5 py-1 font-medium">
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 px-2.5 py-1 font-medium">
             <CheckCircle2 className="size-3.5" /> {sesiBaru.length} Sesi Baru
           </span>
           {sesiDilewati.length > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-muted text-muted-foreground px-2.5 py-1 font-medium">
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted text-muted-foreground px-2.5 py-1 font-medium">
               {sesiDilewati.length} Sudah Ada (Dilewati)
             </span>
           )}
@@ -228,11 +228,11 @@ export default function DrafMultiSesi({ kelasId, kelasNama, data, onKembali, onT
 
       {/* Catatan / Nama Tidak Dikenali */}
       {(hasil.catatan.length > 0 || hasil.nama_tidak_dikenali.length > 0) && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30 px-3.5 py-2.5 text-xs text-amber-800 dark:text-amber-300 space-y-1">
-          <p className="font-semibold flex items-center gap-1.5">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30 px-3.5 py-2.5 text-sm space-y-1">
+          <p className="flex items-center gap-1.5 font-medium text-amber-800 dark:text-amber-300">
             <AlertTriangle className="size-4 shrink-0" /> Catatan AI
           </p>
-          <ul className="list-disc pl-5 space-y-0.5">
+          <ul className="list-disc pl-5 text-xs text-amber-800/90 dark:text-amber-300/90 space-y-0.5">
             {hasil.catatan.map((c, i) => (
               <li key={i}>{c}</li>
             ))}
@@ -360,11 +360,11 @@ export default function DrafMultiSesi({ kelasId, kelasNama, data, onKembali, onT
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-medium">{labelTanggal}</span>
                       {s.sudah_ada ? (
-                        <span className="text-[11px] font-medium bg-muted text-muted-foreground px-2 py-0.5 rounded">
+                        <span className="text-xs font-medium bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
                           Sudah Ada di Database (Dilewati)
                         </span>
                       ) : (
-                        <span className="text-[11px] font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 rounded">
+                        <span className="text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 px-2 py-0.5 rounded-full">
                           Baru
                         </span>
                       )}
@@ -400,17 +400,18 @@ export default function DrafMultiSesi({ kelasId, kelasNama, data, onKembali, onT
                         return (
                           <div
                             key={m.id}
-                            className="flex items-center justify-between gap-2 p-2 rounded-md border border-border/50 text-xs bg-card"
+                            className="flex items-center justify-between gap-2 p-2.5 rounded-lg border border-border/60 bg-card"
                           >
-                            <span className="font-medium truncate">{m.nama}</span>
+                            <span className="text-sm font-medium truncate">{m.nama}</span>
                             <div className="flex gap-1 shrink-0">
                               {STATUS_MURID.map((sm) => (
                                 <button
                                   key={sm.key}
                                   type="button"
+                                  title={sm.key}
                                   onClick={() => ubahMurid(s.tanggal, m.id, sm.key)}
                                   className={cn(
-                                    'size-6 rounded border text-[11px] font-medium transition-colors',
+                                    'size-7 sm:size-8 rounded-lg border text-xs font-medium transition-colors',
                                     status === sm.key ? sm.active : sm.idle
                                   )}
                                 >
