@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useLogout } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Users, GraduationCap, BookUser, LogOut, UserCircle, School, Layers, CalendarDays, ClipboardList, BookOpen, Wallet, Megaphone, Bell, Settings, MessagesSquare, X } from 'lucide-react'
+import { LayoutDashboard, Users, GraduationCap, BookUser, LogOut, UserCircle, School, Layers, CalendarDays, ClipboardList, BookOpen, Wallet, Megaphone, Bell, Settings, MessagesSquare, Sparkles, X } from 'lucide-react'
 import { useSidebar } from './SidebarContext'
 import { canAccessRoute } from '@/config/access'
 
@@ -19,6 +19,7 @@ const navItems = [
   { href: '/program', label: 'Program', icon: Layers },
   { href: '/jadwal', label: 'Jadwal', icon: CalendarDays },
   { href: '/absensi', label: 'Absensi', icon: ClipboardList },
+  { href: '/asisten-ai', label: 'Asisten AI', icon: Sparkles },
   { href: '/kurikulum', label: 'Kurikulum', icon: BookOpen },
   { href: '/kas', label: 'Kas', icon: Wallet },
   { href: '/musyawarah', label: 'Musyawarah', icon: MessagesSquare },

@@ -21,6 +21,7 @@ export const ROUTE_ROLES: Record<string, UserRole[]> = {
   '/kas': ['super_admin', 'pengajar'],
   '/kas/kategori': ['super_admin'],
   '/musyawarah': ['super_admin'],
+  '/asisten-ai': ['super_admin'],
   '/pengumuman': ['super_admin'],
   '/notifikasi/log': ['super_admin'],
   '/settings/wa': ['super_admin'],
