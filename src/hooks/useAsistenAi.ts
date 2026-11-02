@@ -14,13 +14,14 @@ export function pesanErrorApi(err: unknown, fallback: string): string {
 /** Baca laporan teks/foto menjadi draf absensi — tidak menyimpan apa pun */
 export const useEkstrakAbsensi = () =>
   useMutation({
-    mutationFn: async ({ kelas_id, teks, gambar, provider, model }: EkstrakAbsensiPayload) => {
+    mutationFn: async ({ kelas_id, teks, gambar, provider, model, instruksi }: EkstrakAbsensiPayload) => {
       const form = new FormData()
       form.append('kelas_id', String(kelas_id))
       if (teks.trim()) form.append('teks', teks)
       gambar.forEach((file) => form.append('gambar[]', file))
       if (provider) form.append('provider', provider)
       if (model?.trim()) form.append('model', model.trim())
+      if (instruksi?.trim()) form.append('instruksi', instruksi.trim())
       const { data } = await api.post<EkstrakAbsensiResponse>('/api/asisten-ai/absensi/ekstrak', form, {
         headers: { 'Content-Type': 'multipart/form-data' },
         // Membaca foto tulisan tangan bisa butuh waktu

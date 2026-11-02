@@ -72,6 +72,7 @@ export interface EkstrakAbsensiPayload {
   gambar: File[]
   provider?: 'openai' | 'anthropic'
   model?: string
+  instruksi?: string
 }
 
 export interface SimpanSesiItemPayload {

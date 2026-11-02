@@ -28,6 +28,7 @@ export default function FormLaporan({ onHasil }: Props) {
 
   const [kelasId, setKelasId] = useState<number | ''>('')
   const [teks, setTeks] = useState('')
+  const [instruksi, setInstruksi] = useState('')
   const [foto, setFoto] = useState<{ file: File; url: string }[]>([])
   const [provider, setProvider] = useState<'openai' | 'anthropic' | ''>('')
   const [modelPilihan, setModelPilihan] = useState('')
@@ -68,6 +69,7 @@ export default function FormLaporan({ onHasil }: Props) {
         gambar: foto.map((f) => f.file),
         ...(provider ? { provider } : {}),
         ...(modelAktif ? { model: modelAktif } : {}),
+        ...(instruksi.trim() ? { instruksi: instruksi.trim() } : {}),
       },
       {
         onSuccess: (res) => {
@@ -138,6 +140,20 @@ export default function FormLaporan({ onHasil }: Props) {
             </label>
           )}
         </div>
+      </Field>
+
+      <Field
+        label="Instruksi Khusus untuk AI (Opsional)"
+        hint="Berikan instruksi penyesuaian khusus yang ingin diprioritaskan AI saat menyusun draf"
+      >
+        <Textarea
+          value={instruksi}
+          onChange={(e) => setInstruksi(e.target.value)}
+          rows={3}
+          placeholder={`Contoh:\n• Khusus tanggal 10-15 Okt jam kegiatan 16:30 - 18:00\n• Materi tanggal 1-10 Bab 1, tanggal 12 ke atas Bab 2\n• Tanggal 16 Okt pengajar digantikan Ust. Fajar\n• Azril izin sakit tanggal 12 sampai 15 Okt`}
+          disabled={isPending}
+          className="text-xs min-h-20"
+        />
       </Field>
 
       <div className="pt-1 border-t border-border/50">
