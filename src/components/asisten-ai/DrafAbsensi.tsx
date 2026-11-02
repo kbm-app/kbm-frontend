@@ -24,25 +24,20 @@ interface Props {
   onTersimpan: (pertemuanId?: number, jumlah?: number) => void
 }
 
-type BarisPengajar = SimpanAbsensiAiPayload['pengajar'][number]
+type BarisPengajar = NonNullable<SimpanAbsensiAiPayload['pengajar']>[number]
 type IsianMurid = { status: StatusAbsensiMurid | null; keterangan: string; namaDiLaporan: string | null }
 
 const inputClass =
   'h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50'
 
-export default function DrafAbsensi({ kelasId, kelasNama, data, onKembali, onTersimpan }: Props) {
-  if (data.hasil.total_sesi > 1 || (data.hasil.sesi && data.hasil.sesi.length > 1)) {
-    return (
-      <DrafMultiSesi
-        kelasId={kelasId}
-        kelasNama={kelasNama}
-        data={data}
-        onKembali={onKembali}
-        onTersimpan={onTersimpan}
-      />
-    )
+export default function DrafAbsensi(props: Props) {
+  if (props.data.hasil.total_sesi > 1 || (props.data.hasil.sesi && props.data.hasil.sesi.length > 1)) {
+    return <DrafMultiSesi {...props} />
   }
+  return <DrafSingleSesi {...props} />
+}
 
+function DrafSingleSesi({ kelasId, kelasNama, data, onKembali, onTersimpan }: Props) {
   const { hasil, referensi } = data
   const { mutate: simpan, isPending } = useSimpanAbsensiAi()
   const { data: jadwalList } = useJadwalKelas(kelasId)
@@ -63,22 +58,25 @@ export default function DrafAbsensi({ kelasId, kelasNama, data, onKembali, onTer
     if (pengajarAwal.length) return pengajarAwal
     // Kelas dengan satu pengajar: kemungkinan besar dia yang mengajar
     return referensi.pengajar_kelas.length === 1
-      ? [{ pengajar_id: referensi.pengajar_kelas[0].id, status: 'hadir', pengganti_id: null, keterangan: null }]
+      ? [{ pengajar_id: referensi.pengajar_kelas[0].id, status: 'hadir' as StatusAbsensiPengajar, pengganti_id: null, keterangan: null }]
       : []
   })
 
   const muridAwal = hasil.murid?.length ? hasil.murid : sesiPertama?.absensi ?? []
   const [isian, setIsian] = useState<Record<number, IsianMurid>>(() => {
     const dariAi = new Map(muridAwal.map((m) => [m.murid_id, m]))
-    const statusLain = (hasil.status_murid_lain ?? sesiPertama?.status_murid_lain) === 'tidak_diketahui'
-      ? null
-      : (hasil.status_murid_lain ?? sesiPertama?.status_murid_lain ?? null)
-    return Object.fromEntries(referensi.murid.map((m) => {
+    const rawStatus = hasil.status_murid_lain ?? sesiPertama?.status_murid_lain
+    const statusLain: StatusAbsensiMurid | null =
+      rawStatus === 'hadir' || rawStatus === 'alpha' ? rawStatus : null
+
+    const map: Record<number, IsianMurid> = {}
+    for (const m of referensi.murid) {
       const ai = dariAi.get(m.id)
-      return [m.id, ai
+      map[m.id] = ai
         ? { status: ai.status, keterangan: ai.keterangan ?? '', namaDiLaporan: ai.nama_di_laporan }
-        : { status: statusLain, keterangan: '', namaDiLaporan: null }]
-    }))
+        : { status: statusLain, keterangan: '', namaDiLaporan: null }
+    }
+    return map
   })
 
   // Peserta sesi: murid aktif yang sudah bergabung pada tanggal sesi (sama seperti backend)

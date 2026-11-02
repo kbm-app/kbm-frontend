@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
 import api from '@/lib/axios'
-import { Pertemuan } from '@/types/absensi'
 import { EkstrakAbsensiPayload, EkstrakAbsensiResponse, SimpanAbsensiAiPayload, SimpanAbsensiResponse } from '@/types/asisten-ai'
 
 /** Pesan error pertama dari respons Laravel (validasi atau message), atau fallback */

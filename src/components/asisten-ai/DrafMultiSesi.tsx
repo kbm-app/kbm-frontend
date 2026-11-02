@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
-  Clock,
   Sparkles,
   Users,
 } from 'lucide-react'
@@ -97,12 +96,12 @@ export default function DrafMultiSesi({ kelasId, kelasNama, data, onKembali, onT
         }
       }
 
-      const pengajarAktif = s.pengajar.length
+      const pengajarAktif: BarisPengajar[] = s.pengajar.length
         ? s.pengajar
         : hasil.pengajar_umum.length
         ? hasil.pengajar_umum
         : referensi.pengajar_kelas.length
-        ? [{ pengajar_id: referensi.pengajar_kelas[0].id, status: 'hadir', pengganti_id: null, keterangan: null }]
+        ? [{ pengajar_id: referensi.pengajar_kelas[0].id, status: 'hadir' as StatusAbsensiPengajar, pengganti_id: null, keterangan: null }]
         : []
 
       return {
@@ -165,7 +164,7 @@ export default function DrafMultiSesi({ kelasId, kelasNama, data, onKembali, onT
           materi: s.materi.trim() || null,
           pengajar: s.pengajar.length
             ? s.pengajar
-            : [{ pengajar_id: referensi.pengajar_kelas[0].id, status: 'hadir', pengganti_id: null, keterangan: null }],
+            : [{ pengajar_id: referensi.pengajar_kelas[0].id, status: 'hadir' as StatusAbsensiPengajar, pengganti_id: null, keterangan: null }],
           absensi: Object.entries(s.absensi).map(([mId, v]) => ({
             murid_id: Number(mId),
             status: v.status,
