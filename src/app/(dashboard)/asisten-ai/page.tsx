@@ -12,7 +12,7 @@ import { EkstrakAbsensiResponse } from '@/types/asisten-ai'
 type Langkah =
   | { tahap: 'laporan' }
   | { tahap: 'draf'; kelasId: number; kelasNama: string; data: EkstrakAbsensiResponse }
-  | { tahap: 'selesai' }
+  | { tahap: 'selesai'; jumlah?: number }
 
 export default function AsistenAiPage() {
   const [langkah, setLangkah] = useState<Langkah>({ tahap: 'laporan' })
@@ -38,14 +38,18 @@ export default function AsistenAiPage() {
           kelasNama={langkah.kelasNama}
           data={langkah.data}
           onKembali={() => setLangkah({ tahap: 'laporan' })}
-          onTersimpan={() => setLangkah({ tahap: 'selesai' })}
+          onTersimpan={(_id, jumlah) => setLangkah({ tahap: 'selesai', jumlah })}
         />
       )}
 
       {langkah.tahap === 'selesai' && (
         <div className="rounded-xl border border-border bg-card p-6 text-center space-y-3">
           <CheckCircle2 className="size-10 mx-auto text-green-600" />
-          <p className="font-medium">Absensi tersimpan</p>
+          <p className="font-medium">
+            {langkah.jumlah && langkah.jumlah > 1
+              ? `${langkah.jumlah} Sesi Pertemuan Berhasil Disimpan`
+              : 'Absensi Berhasil Disimpan'}
+          </p>
           <p className="text-sm text-muted-foreground">Sesi bisa dilihat dan dikoreksi di tab Riwayat halaman Absensi.</p>
           <div className="flex gap-3 justify-center pt-1">
             <Link href="/absensi" className={buttonVariants({ variant: 'outline' })}>Ke Absensi</Link>

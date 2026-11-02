@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
 import api from '@/lib/axios'
 import { Pertemuan } from '@/types/absensi'
-import { EkstrakAbsensiPayload, EkstrakAbsensiResponse, SimpanAbsensiAiPayload } from '@/types/asisten-ai'
+import { EkstrakAbsensiPayload, EkstrakAbsensiResponse, SimpanAbsensiAiPayload, SimpanAbsensiResponse } from '@/types/asisten-ai'
 
 /** Pesan error pertama dari respons Laravel (validasi atau message), atau fallback */
 export function pesanErrorApi(err: unknown, fallback: string): string {
@@ -35,7 +35,7 @@ export const useSimpanAbsensiAi = () => {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (payload: SimpanAbsensiAiPayload) =>
-      api.post<{ pertemuan: Pertemuan }>('/api/asisten-ai/absensi/simpan', payload),
+      api.post<SimpanAbsensiResponse>('/api/asisten-ai/absensi/simpan', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pertemuan'] })
       queryClient.invalidateQueries({ queryKey: ['rekap-absensi'] })

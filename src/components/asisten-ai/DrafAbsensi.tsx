@@ -14,13 +14,14 @@ import { EkstrakAbsensiResponse, SimpanAbsensiAiPayload } from '@/types/asisten-
 import { Field, formSelectClass } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import DrafMultiSesi from './DrafMultiSesi'
 
 interface Props {
   kelasId: number
   kelasNama: string
   data: EkstrakAbsensiResponse
   onKembali: () => void
-  onTersimpan: (pertemuanId: number) => void
+  onTersimpan: (pertemuanId?: number, jumlah?: number) => void
 }
 
 type BarisPengajar = SimpanAbsensiAiPayload['pengajar'][number]
@@ -30,31 +31,48 @@ const inputClass =
   'h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-sm transition-colors outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50'
 
 export default function DrafAbsensi({ kelasId, kelasNama, data, onKembali, onTersimpan }: Props) {
+  if (data.hasil.total_sesi > 1 || (data.hasil.sesi && data.hasil.sesi.length > 1)) {
+    return (
+      <DrafMultiSesi
+        kelasId={kelasId}
+        kelasNama={kelasNama}
+        data={data}
+        onKembali={onKembali}
+        onTersimpan={onTersimpan}
+      />
+    )
+  }
+
   const { hasil, referensi } = data
   const { mutate: simpan, isPending } = useSimpanAbsensiAi()
   const { data: jadwalList } = useJadwalKelas(kelasId)
 
-  const [tanggal, setTanggal] = useState(hasil.tanggal ?? format(new Date(), 'yyyy-MM-dd'))
-  const [jamMulai, setJamMulai] = useState(hasil.jam_mulai ?? '')
-  const [jamSelesai, setJamSelesai] = useState(hasil.jam_selesai ?? '')
-  const [programId, setProgramId] = useState<number | ''>(hasil.program_id ?? '')
-  const [materi, setMateri] = useState(hasil.materi ?? '')
+  const sesiPertama = hasil.sesi?.[0]
+  const [tanggal, setTanggal] = useState(hasil.tanggal ?? sesiPertama?.tanggal ?? format(new Date(), 'yyyy-MM-dd'))
+  const [jamMulai, setJamMulai] = useState(hasil.jam_mulai ?? sesiPertama?.jam_mulai ?? '')
+  const [jamSelesai, setJamSelesai] = useState(hasil.jam_selesai ?? sesiPertama?.jam_selesai ?? '')
+  const [programId, setProgramId] = useState<number | ''>(hasil.program_id ?? sesiPertama?.program_id ?? '')
+  const [materi, setMateri] = useState(hasil.materi ?? sesiPertama?.materi ?? '')
   // undefined = pilih otomatis bila hanya ada satu jadwal yang cocok
   const [jadwalPilihan, setJadwalPilihan] = useState<number | null | undefined>(undefined)
   const [tutupSesi, setTutupSesi] = useState(true)
   const [kirimNotifikasi, setKirimNotifikasi] = useState(false)
 
+  const pengajarAwal = hasil.pengajar?.length ? hasil.pengajar : sesiPertama?.pengajar ?? []
   const [pengajar, setPengajar] = useState<BarisPengajar[]>(() => {
-    if (hasil.pengajar.length) return hasil.pengajar
+    if (pengajarAwal.length) return pengajarAwal
     // Kelas dengan satu pengajar: kemungkinan besar dia yang mengajar
     return referensi.pengajar_kelas.length === 1
       ? [{ pengajar_id: referensi.pengajar_kelas[0].id, status: 'hadir', pengganti_id: null, keterangan: null }]
       : []
   })
 
+  const muridAwal = hasil.murid?.length ? hasil.murid : sesiPertama?.absensi ?? []
   const [isian, setIsian] = useState<Record<number, IsianMurid>>(() => {
-    const dariAi = new Map(hasil.murid.map((m) => [m.murid_id, m]))
-    const statusLain = hasil.status_murid_lain === 'tidak_diketahui' ? null : hasil.status_murid_lain
+    const dariAi = new Map(muridAwal.map((m) => [m.murid_id, m]))
+    const statusLain = (hasil.status_murid_lain ?? sesiPertama?.status_murid_lain) === 'tidak_diketahui'
+      ? null
+      : (hasil.status_murid_lain ?? sesiPertama?.status_murid_lain ?? null)
     return Object.fromEntries(referensi.murid.map((m) => {
       const ai = dariAi.get(m.id)
       return [m.id, ai
@@ -124,7 +142,8 @@ export default function DrafAbsensi({ kelasId, kelasNama, data, onKembali, onTer
     }, {
       onSuccess: (res) => {
         toast.success('Absensi berhasil disimpan')
-        onTersimpan(res.data.pertemuan.id)
+        const pId = Array.isArray(res.data.pertemuan) ? res.data.pertemuan[0]?.id : res.data.pertemuan?.id
+        onTersimpan(pId)
       },
       onError: (err) => toast.error(pesanErrorApi(err, 'Gagal menyimpan absensi, coba lagi')),
     })
@@ -135,7 +154,7 @@ export default function DrafAbsensi({ kelasId, kelasNama, data, onKembali, onTer
     ...(hasil.nama_tidak_dikenali.length
       ? [`Nama tidak dikenali (cek ejaan atau apakah sudah terdaftar di kelas): ${hasil.nama_tidak_dikenali.join(', ')}`]
       : []),
-    ...(hasil.status_murid_lain === 'tidak_diketahui' && peserta.length > hasil.murid.length
+    ...(hasil.status_murid_lain === 'tidak_diketahui' && peserta.length > (hasil.murid?.length ?? 0)
       ? ['Laporan tidak menjelaskan status murid yang tidak disebut — isi manual atau pakai tombol "Sisanya".']
       : []),
   ]
