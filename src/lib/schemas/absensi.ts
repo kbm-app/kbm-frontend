@@ -35,6 +35,7 @@ export const updatePertemuanSchema = z.object({
   // Hanya untuk koreksi sesi selesai oleh super admin
   jam_mulai: z.string().regex(/^\d{2}:\d{2}$/, 'Format jam: HH:MM').optional(),
   jam_selesai: z.string().regex(/^\d{2}:\d{2}$/, 'Format jam: HH:MM').optional(),
+  jadwal_id: z.number().int().positive().optional().nullable(),
 })
 
 export type BukaSesiFormData = z.infer<typeof bukaSesiSchema>

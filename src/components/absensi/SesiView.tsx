@@ -1,6 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo, useEffect } from 'react'
+import { useJadwalKelas } from '@/hooks/useJadwal'
+import { cekTanggalSesuaiJadwal } from '@/lib/jadwal'
 import {
   usePertemuanDetail,
   useInputAbsensi,
@@ -242,6 +244,14 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
             )}
             {pertemuan.status === 'selesai' && (
               <span className="mt-0.5 text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium shrink-0">Selesai</span>
+            )}
+            {!pertemuan.jadwal_id && (
+              <span
+                className="mt-0.5 text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full font-medium shrink-0"
+                title="Sesi dibuka tanpa jadwal, mis. sesi pengganti"
+              >
+                Di luar jadwal
+              </span>
             )}
           </div>
           <p className="text-sm text-muted-foreground">
@@ -659,7 +669,48 @@ export default function SesiView({ pertemuanId, onKembali }: Props) {
 /** Koreksi jam, materi, dan catatan sesi yang sudah selesai (super admin). */
 function KoreksiInfoSesi({ pertemuan }: { pertemuan: Pertemuan }) {
   const { mutate: updatePertemuan, isPending } = useUpdatePertemuan(pertemuan.id)
+  const { data: jadwalList } = useJadwalKelas(pertemuan.kelas_id)
+
+  const kandidatJadwal = useMemo(() => {
+    return (jadwalList ?? []).filter(
+      (j) =>
+        cekTanggalSesuaiJadwal(j, pertemuan.tanggal) === null &&
+        (!pertemuan.program_id || j.program_id === pertemuan.program_id)
+    )
+  }, [jadwalList, pertemuan.tanggal, pertemuan.program_id])
+
+  const temukanJadwalCocok = (jamMulai: string, jamSelesai: string): number | null => {
+    if (!kandidatJadwal.length || !jamMulai) return null
+
+    if (jamSelesai) {
+      const persis = kandidatJadwal.find(
+        (j) => j.jam_mulai.slice(0, 5) === jamMulai && j.jam_selesai.slice(0, 5) === jamSelesai
+      )
+      if (persis) return persis.id
+    }
+
+    const cocokMulai = kandidatJadwal.filter((j) => j.jam_mulai.slice(0, 5) === jamMulai)
+    if (cocokMulai.length === 1) return cocokMulai[0].id
+
+    if (cocokMulai.length > 1 && jamSelesai) {
+      const sorted = [...cocokMulai].sort((a, b) => {
+        const diffA = Math.abs(
+          new Date(`1970-01-01T${a.jam_selesai.slice(0, 5)}:00`).getTime() -
+          new Date(`1970-01-01T${jamSelesai}:00`).getTime()
+        )
+        const diffB = Math.abs(
+          new Date(`1970-01-01T${b.jam_selesai.slice(0, 5)}:00`).getTime() -
+          new Date(`1970-01-01T${jamSelesai}:00`).getTime()
+        )
+        return diffA - diffB
+      })
+      return sorted[0].id
+    }
+
+    return null
+  }
   const awal = {
+    jadwal_id: pertemuan.jadwal_id,
     jam_mulai: pertemuan.jam_mulai.slice(0, 5),
     jam_selesai: pertemuan.jam_selesai?.slice(0, 5) ?? '',
     materi: pertemuan.materi ?? '',
@@ -668,9 +719,51 @@ function KoreksiInfoSesi({ pertemuan }: { pertemuan: Pertemuan }) {
   const [form, setForm] = useState(awal)
   const [errors, setErrors] = useState<Partial<Record<keyof typeof awal, string>>>({})
 
-  const set = (key: keyof typeof awal, value: string) => {
+  useEffect(() => {
+    setForm({
+      jadwal_id: pertemuan.jadwal_id,
+      jam_mulai: pertemuan.jam_mulai.slice(0, 5),
+      jam_selesai: pertemuan.jam_selesai?.slice(0, 5) ?? '',
+      materi: pertemuan.materi ?? '',
+      catatan: pertemuan.catatan ?? '',
+    })
+    setErrors({})
+  }, [pertemuan])
+
+  const set = (key: keyof typeof awal, value: any) => {
     setForm((f) => ({ ...f, [key]: value }))
     setErrors((e) => ({ ...e, [key]: undefined }))
+  }
+
+  const handleJamMulaiChange = (val: string) => {
+    const autoJadwalId = temukanJadwalCocok(val, form.jam_selesai)
+    setForm((f) => ({ ...f, jam_mulai: val, jadwal_id: autoJadwalId }))
+    setErrors((e) => ({ ...e, jam_mulai: undefined, jadwal_id: undefined }))
+  }
+
+  const handleJamSelesaiChange = (val: string) => {
+    const autoJadwalId = temukanJadwalCocok(form.jam_mulai, val)
+    setForm((f) => ({ ...f, jam_selesai: val, jadwal_id: autoJadwalId }))
+    setErrors((e) => ({ ...e, jam_selesai: undefined, jadwal_id: undefined }))
+  }
+
+  const handleJadwalChange = (val: string) => {
+    if (!val) {
+      setForm((f) => ({ ...f, jadwal_id: null }))
+      setErrors((e) => ({ ...e, jadwal_id: undefined }))
+    } else {
+      const jId = Number(val)
+      const target = kandidatJadwal.find((j) => j.id === jId)
+      if (target) {
+        setForm((f) => ({
+          ...f,
+          jadwal_id: jId,
+          jam_mulai: target.jam_mulai.slice(0, 5),
+          jam_selesai: target.jam_selesai.slice(0, 5),
+        }))
+        setErrors((e) => ({ ...e, jam_mulai: undefined, jam_selesai: undefined, jadwal_id: undefined }))
+      }
+    }
   }
 
   const berubah = (Object.keys(awal) as (keyof typeof awal)[]).some((k) => form[k] !== awal[k])
@@ -683,6 +776,7 @@ function KoreksiInfoSesi({ pertemuan }: { pertemuan: Pertemuan }) {
     }
 
     updatePertemuan({
+      jadwal_id: form.jadwal_id,
       jam_mulai: form.jam_mulai,
       jam_selesai: form.jam_selesai,
       materi: form.materi || null,
@@ -693,6 +787,7 @@ function KoreksiInfoSesi({ pertemuan }: { pertemuan: Pertemuan }) {
         const err = error as AxiosError<{ message?: string; errors?: Record<string, string[]> }>
         const serverErrors = err.response?.data?.errors ?? {}
         setErrors({
+          jadwal_id: serverErrors.jadwal_id?.[0],
           jam_mulai: serverErrors.jam_mulai?.[0],
           jam_selesai: serverErrors.jam_selesai?.[0],
           materi: serverErrors.materi?.[0],
@@ -710,13 +805,32 @@ function KoreksiInfoSesi({ pertemuan }: { pertemuan: Pertemuan }) {
 
   return (
     <div className="rounded-xl border border-border bg-card p-4 space-y-4">
-      <h2 className="text-sm font-semibold">Jam, Materi & Catatan</h2>
-      <div className="grid grid-cols-2 gap-3 sm:max-w-sm">
+      <h2 className="text-sm font-semibold">Jadwal, Jam, Materi & Catatan</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Field
+          label="Jadwal"
+          error={errors.jadwal_id}
+          hint={form.jadwal_id ? 'Terkait jadwal' : 'Sesi di luar jadwal'}
+        >
+          <select
+            value={form.jadwal_id ?? ''}
+            onChange={(e) => handleJadwalChange(e.target.value)}
+            className={inputClass}
+          >
+            <option value="">Di luar jadwal</option>
+            {kandidatJadwal.map((j) => (
+              <option key={j.id} value={j.id}>
+                {j.jam_mulai.slice(0, 5)} – {j.jam_selesai.slice(0, 5)}
+                {j.program?.nama ? ` (${j.program.nama})` : ''}
+              </option>
+            ))}
+          </select>
+        </Field>
         <Field label="Jam Mulai" error={errors.jam_mulai}>
-          <input type="time" value={form.jam_mulai} onChange={(e) => set('jam_mulai', e.target.value)} className={inputClass} />
+          <input type="time" value={form.jam_mulai} onChange={(e) => handleJamMulaiChange(e.target.value)} className={inputClass} />
         </Field>
         <Field label="Jam Selesai" error={errors.jam_selesai}>
-          <input type="time" value={form.jam_selesai} onChange={(e) => set('jam_selesai', e.target.value)} className={inputClass} />
+          <input type="time" value={form.jam_selesai} onChange={(e) => handleJamSelesaiChange(e.target.value)} className={inputClass} />
         </Field>
       </div>
       <Field label="Materi" error={errors.materi}>
